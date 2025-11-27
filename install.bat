@@ -1,0 +1,128 @@
+@echo off
+setlocal enabledelayedexpansion
+
+:: ============================================================
+:: Moodle Plugin Installer - local_createassign
+:: ============================================================
+:: This script automatically installs the createassign plugin
+:: into your Moodle installation.
+:: ============================================================
+
+echo.
+echo ============================================================
+echo   Moodle Plugin Installer - local_createassign
+echo ============================================================
+echo.
+
+:: Set the Moodle installation path
+set "MOODLE_PATH=C:\Users\nthol\Documents\Projects\LMS\moodle\MoodleWindowsInstaller-latest\server\moodle"
+set "PLUGIN_NAME=createassign"
+set "PLUGIN_TYPE=local"
+set "DEST_PATH=%MOODLE_PATH%\%PLUGIN_TYPE%\%PLUGIN_NAME%"
+
+:: Check if Moodle directory exists
+if not exist "%MOODLE_PATH%" (
+    echo [ERROR] Moodle directory not found at:
+    echo %MOODLE_PATH%
+    echo.
+    echo Please edit this script and set the correct MOODLE_PATH
+    pause
+    exit /b 1
+)
+
+echo [INFO] Moodle installation found at: %MOODLE_PATH%
+echo [INFO] Plugin will be installed to: %DEST_PATH%
+echo.
+
+:: Check if plugin directory already exists
+if exist "%DEST_PATH%" (
+    echo [WARNING] Plugin directory already exists!
+    echo This will overwrite the existing plugin files.
+    echo.
+    set /p "CONFIRM=Do you want to continue? (Y/N): "
+    if /i not "!CONFIRM!"=="Y" (
+        echo [INFO] Installation cancelled.
+        pause
+        exit /b 0
+    )
+    echo [INFO] Removing existing plugin directory...
+    rmdir /s /q "%DEST_PATH%"
+)
+
+:: Create plugin directory
+echo [INFO] Creating plugin directory...
+mkdir "%DEST_PATH%"
+if errorlevel 1 (
+    echo [ERROR] Failed to create plugin directory
+    pause
+    exit /b 1
+)
+
+:: Create subdirectories
+echo [INFO] Creating subdirectories...
+mkdir "%DEST_PATH%\classes\external"
+mkdir "%DEST_PATH%\db"
+mkdir "%DEST_PATH%\lang\en"
+
+:: Copy plugin files
+echo [INFO] Copying plugin files...
+
+copy /y "version.php" "%DEST_PATH%\version.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy version.php
+    pause
+    exit /b 1
+)
+
+copy /y "classes\external\create_assessment.php" "%DEST_PATH%\classes\external\create_assessment.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy create_assessment.php
+    pause
+    exit /b 1
+)
+
+copy /y "db\access.php" "%DEST_PATH%\db\access.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy db\access.php
+    pause
+    exit /b 1
+)
+
+copy /y "db\services.php" "%DEST_PATH%\db\services.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy db\services.php
+    pause
+    exit /b 1
+)
+
+copy /y "lang\en\local_createassign.php" "%DEST_PATH%\lang\en\local_createassign.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy language file
+    pause
+    exit /b 1
+)
+
+:: Copy README if exists
+if exist "README.md" (
+    copy /y "README.md" "%DEST_PATH%\README.md" >nul
+)
+
+echo.
+echo ============================================================
+echo   Installation completed successfully!
+echo ============================================================
+echo.
+echo Files copied to: %DEST_PATH%
+echo.
+echo NEXT STEPS:
+echo 1. Open your web browser
+echo 2. Go to your Moodle site admin page:
+echo    http://localhost/admin/
+echo 3. Moodle will detect the new plugin and prompt you to upgrade
+echo 4. Follow the on-screen instructions to complete the installation
+echo.
+echo NOTE: You do NOT need to restart the Moodle server.
+echo       Just visit the admin page to complete the installation.
+echo.
+echo ============================================================
+pause
