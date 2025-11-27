@@ -24,7 +24,7 @@ Minimal Moodle plugin for creating assignments via REST API.
 
 ### Add Service Function
 1. Go to Site Administration > Plugins > Web services > External services
-2. Find "Create Assign API" service (or create custom service)
+2. Create a custom service or use an existing one
 3. Click "Functions"
 4. Add function: local_createassign_create_assessment
 

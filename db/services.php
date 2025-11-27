@@ -12,11 +12,3 @@ $functions = array(
     ),
 );
 
-$services = array(
-    'Create Assign API' => array(
-        'functions' => array('local_createassign_create_assessment'),
-        'restrictedusers' => 0,
-        'enabled' => 1,
-        'shortname' => 'createassign'
-    )
-);
