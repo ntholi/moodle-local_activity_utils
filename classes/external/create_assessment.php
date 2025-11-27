@@ -13,9 +13,11 @@ class create_assessment extends external_api {
             'courseid' => new external_value(PARAM_INT, 'Course ID'),
             'name' => new external_value(PARAM_TEXT, 'Assignment name'),
             'intro' => new external_value(PARAM_RAW, 'Assignment description', VALUE_DEFAULT, ''),
+            'activity' => new external_value(PARAM_RAW, 'Activity instructions', VALUE_DEFAULT, ''),
+            'allowsubmissionsfromdate' => new external_value(PARAM_INT, 'Allow submissions from date timestamp', VALUE_DEFAULT, 0),
             'duedate' => new external_value(PARAM_INT, 'Due date timestamp', VALUE_DEFAULT, 0),
-            'cutoffdate' => new external_value(PARAM_INT, 'Cut-off date timestamp', VALUE_DEFAULT, 0),
             'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
+            'introfiles' => new external_value(PARAM_RAW, 'Additional files as JSON array', VALUE_DEFAULT, '[]'),
         ]);
     }
 
@@ -23,9 +25,11 @@ class create_assessment extends external_api {
         int $courseid,
         string $name,
         string $intro = '',
+        string $activity = '',
+        int $allowsubmissionsfromdate = 0,
         int $duedate = 0,
-        int $cutoffdate = 0,
-        int $section = 0
+        int $section = 0,
+        string $introfiles = '[]'
     ): array {
         global $CFG, $DB;
         
@@ -37,9 +41,11 @@ class create_assessment extends external_api {
             'courseid' => $courseid,
             'name' => $name,
             'intro' => $intro,
+            'activity' => $activity,
+            'allowsubmissionsfromdate' => $allowsubmissionsfromdate,
             'duedate' => $duedate,
-            'cutoffdate' => $cutoffdate,
             'section' => $section,
+            'introfiles' => $introfiles,
         ]);
         
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
@@ -60,7 +66,7 @@ class create_assessment extends external_api {
         $assign->sendlatenotifications = 0;
         $assign->sendstudentnotifications = 1;
         $assign->duedate = $params['duedate'];
-        $assign->cutoffdate = $params['cutoffdate'];
+        $assign->cutoffdate = 0;
         $assign->gradingduedate = 0;
         $assign->allowsubmissionsfromdate = 0;
         $assign->grade = 100;
@@ -78,13 +84,14 @@ class create_assessment extends external_api {
         $assign->markingallocation = 0;
         $assign->requiresubmissionstatement = 0;
         $assign->preventsubmissionnotingroup = 0;
-        $assign->activity = null;
-        $assign->activityformat = 0;
+        $assign->activity = $params['activity'];
+        $assign->activityformat = FORMAT_HTML;
         $assign->timelimit = 0;
         $assign->submissionattachments = 0;
+        $assign->allowsubmissionsfromdate = $params['allowsubmissionsfromdate'];
         
         $assignid = $DB->insert_record('assign', $assign);
-        
+
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'assign'], MUST_EXIST);
         
         $cm = new \stdClass();
@@ -130,8 +137,39 @@ class create_assessment extends external_api {
         }
         
         rebuild_course_cache($params['courseid'], true);
-        
+
         grade_update('mod/assign', $params['courseid'], 'mod', 'assign', $assignid, 0, null, ['itemname' => $params['name']]);
+
+        // Handle additional files if provided
+        if (!empty($params['introfiles']) && $params['introfiles'] !== '[]') {
+            $files = json_decode($params['introfiles'], true);
+            if (is_array($files) && !empty($files)) {
+                $fs = get_file_storage();
+                $modulecontext = \context_module::instance($cmid);
+
+                foreach ($files as $file) {
+                    if (isset($file['filename']) && isset($file['content'])) {
+                        $filerecord = [
+                            'contextid' => $modulecontext->id,
+                            'component' => 'mod_assign',
+                            'filearea' => 'intro',
+                            'itemid' => 0,
+                            'filepath' => '/',
+                            'filename' => $file['filename'],
+                            'timecreated' => time(),
+                            'timemodified' => time(),
+                        ];
+
+                        // Decode base64 content if provided
+                        $filecontent = isset($file['base64']) && $file['base64']
+                            ? base64_decode($file['content'])
+                            : $file['content'];
+
+                        $fs->create_file_from_string($filerecord, $filecontent);
+                    }
+                }
+            }
+        }
         
         return [
             'id' => $assignid,
