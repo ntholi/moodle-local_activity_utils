@@ -1,85 +1,88 @@
 # Create Assign - Moodle Plugin
 
-Minimal Moodle plugin for creating assignments via REST API.
+A Moodle plugin that extends Moodle functionality to allow the [Registry Portal](https://github.com/ntholi/registry-web) to create assignments using a REST API.
+
+This plugin provides a simple web service endpoint for programmatically creating assignments in Moodle courses.
 
 ## Installation
 
-1. Copy the `local/createassign` folder to your Moodle installation's `local/` directory
-2. Log in as admin and visit Site Administration > Notifications
-3. Complete the plugin installation
+1. Copy this folder to your Moodle installation's `local/` directory
+2. Log in as admin and go to Site Administration > Notifications
+3. Complete the installation
 
-## Configuration
+## Setup
 
-### Enable Web Services
-1. Go to Site Administration > Advanced features
-2. Enable "Enable web services"
+**1. Enable Web Services**
+- Site Administration > Advanced features
+- Check "Enable web services"
 
-### Enable REST Protocol
-1. Go to Site Administration > Plugins > Web services > Manage protocols
-2. Enable "REST protocol"
+**2. Enable REST Protocol**
+- Site Administration > Plugins > Web services > Manage protocols
+- Enable "REST protocol"
 
-### Create Web Service User
-1. Create a dedicated user for API access or use existing user
-2. Assign appropriate role with capability: local/createassign:createassessment
+**3. Add the Service Function**
+- Site Administration > Plugins > Web services > External services
+- Create a new service or edit an existing one
+- Click "Add functions"
+- Add: `local_createassign_create_assessment`
 
-### Add Service Function
-1. Go to Site Administration > Plugins > Web services > External services
-2. Create a custom service or use an existing one
-3. Click "Functions"
-4. Add function: local_createassign_create_assessment
-
-### Create Token
-1. Go to Site Administration > Plugins > Web services > Manage tokens
-2. Create token for the user and service
+**4. Create an API Token**
+- Site Administration > Plugins > Web services > Manage tokens
+- Create a token for your API user and service
+- Save the token for use in API requests
 
 ## API Usage
 
-### Endpoint
+**Endpoint:**
 ```
 POST https://yourmoodle.com/webservice/rest/server.php
 ```
 
-### Parameters
-- `wstoken`: Your web service token
-- `wsfunction`: local_createassign_create_assessment
-- `moodlewsrestformat`: json
-- `courseid`: Course ID (integer)
-- `name`: Assignment name (string)
-- `intro`: Assignment description (string, optional)
-- `duedate`: Due date unix timestamp (integer, optional)
-- `cutoffdate`: Cut-off date unix timestamp (integer, optional)
-- `section`: Course section number (integer, optional, default 0)
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `wstoken` | string | Yes | Your web service token |
+| `wsfunction` | string | Yes | Must be `local_createassign_create_assessment` |
+| `moodlewsrestformat` | string | Yes | Response format (`json`) |
+| `courseid` | integer | Yes | The course ID where the assignment will be created |
+| `name` | string | Yes | Assignment name/title |
+| `intro` | string | No | Assignment description or instructions |
+| `duedate` | integer | No | Due date (Unix timestamp) |
+| `cutoffdate` | integer | No | Cut-off date (Unix timestamp) |
+| `section` | integer | No | Course section number (default: 0) |
 
-### Example cURL Request
+**Example Request:**
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=YOUR_TOKEN_HERE" \
   -d "wsfunction=local_createassign_create_assessment" \
   -d "moodlewsrestformat=json" \
   -d "courseid=2" \
-  -d "name=Weekly Assignment 1" \
+  -d "name=Weekly Assignment" \
   -d "intro=Complete the exercises" \
-  -d "duedate=1735689600" \
-  -d "section=0"
+  -d "duedate=1735689600"
 ```
 
-### Example Response
+**Response:**
 ```json
 {
   "id": 45,
   "coursemoduleid": 123,
-  "name": "Weekly Assignment 1",
+  "name": "Weekly Assignment",
   "success": true,
   "message": "Assignment created successfully"
 }
 ```
 
-## Required Capabilities
-- local/createassign:createassessment (assigned to editing teachers and managers by default)
-- mod/assign:addinstance (standard Moodle capability)
+## Permissions
+
+The API user needs these capabilities:
+- `local/createassign:createassessment` (granted to editing teachers and managers by default)
+- `mod/assign:addinstance` (standard Moodle capability)
 
 ## Troubleshooting
-- Ensure web services are enabled
-- Verify token has correct permissions
-- Check user has capability in course context
-- Verify course ID exists and section number is valid
+
+- Ensure web services are enabled in Moodle
+- Verify your token has the correct permissions
+- Check that the user has the required capabilities in the course
+- Confirm the course ID and section number are valid
