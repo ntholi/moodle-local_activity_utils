@@ -51,7 +51,7 @@ POST https://yourmoodle.com/webservice/rest/server.php
 | `allowsubmissionsfromdate` | integer | No | Allow submissions from date (Unix timestamp) |
 | `duedate` | integer | No | Due date (Unix timestamp) |
 | `section` | integer | No | Course section number (default: 0) |
-| `introfiles` | string | No | Additional files as JSON array (see File Upload Format below) |
+| `introfiles` | string | No | Additional files as JSON array - files appear in the assignment's "Additional files" section (see File Upload Format below) |
 
 **Example Request:**
 ```bash
@@ -69,7 +69,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 **File Upload Format:**
 
-To attach additional files to the assignment description, use the `introfiles` parameter with a JSON array:
+To attach additional files to the assignment (equivalent to the "Additional files" section in Moodle's UI), use the `introfiles` parameter with a JSON array:
 
 ```json
 [

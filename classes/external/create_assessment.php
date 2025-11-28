@@ -152,7 +152,7 @@ class create_assessment extends external_api {
                         $filerecord = [
                             'contextid' => $modulecontext->id,
                             'component' => 'mod_assign',
-                            'filearea' => 'intro',
+                            'filearea' => 'introattachment',
                             'itemid' => 0,
                             'filepath' => '/',
                             'filename' => $file['filename'],
