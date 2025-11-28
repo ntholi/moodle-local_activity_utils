@@ -140,7 +140,7 @@ class create_assessment extends external_api {
 
         grade_update('mod/assign', $params['courseid'], 'mod', 'assign', $assignid, 0, null, ['itemname' => $params['name']]);
 
-        // Handle additional files if provided
+        
         if (!empty($params['introfiles']) && $params['introfiles'] !== '[]') {
             $files = json_decode($params['introfiles'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($files) && !empty($files)) {
@@ -149,13 +149,13 @@ class create_assessment extends external_api {
 
                 foreach ($files as $file) {
                     if (!empty($file['filename']) && isset($file['content'])) {
-                        // Sanitize filename to prevent path traversal
+                        
                         $filename = clean_param($file['filename'], PARAM_FILE);
                         if (empty($filename)) {
                             continue;
                         }
 
-                        // Check if file already exists and generate unique name if needed
+                        
                         $filepath = '/';
                         $existingfile = $fs->get_file(
                             $modulecontext->id,
@@ -166,7 +166,7 @@ class create_assessment extends external_api {
                             $filename
                         );
                         if ($existingfile) {
-                            // Delete existing file to replace it
+                            
                             $existingfile->delete();
                         }
 
@@ -182,10 +182,10 @@ class create_assessment extends external_api {
                             'timemodified' => time(),
                         ];
 
-                        // Decode base64 content - content is expected to be base64 encoded
+                        
                         $filecontent = base64_decode($file['content'], true);
                         if ($filecontent === false) {
-                            // If base64 decode fails, use content as-is (plain text)
+                            
                             $filecontent = $file['content'];
                         }
 
