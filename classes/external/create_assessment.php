@@ -31,7 +31,7 @@ class create_assessment extends external_api {
         int $section = 0,
         string $introfiles = '[]'
     ): array {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER;
         
         require_once($CFG->dirroot . '/course/lib.php');
         require_once($CFG->dirroot . '/mod/assign/lib.php');
@@ -143,27 +143,51 @@ class create_assessment extends external_api {
         // Handle additional files if provided
         if (!empty($params['introfiles']) && $params['introfiles'] !== '[]') {
             $files = json_decode($params['introfiles'], true);
-            if (is_array($files) && !empty($files)) {
+            if (json_last_error() === JSON_ERROR_NONE && is_array($files) && !empty($files)) {
                 $fs = get_file_storage();
                 $modulecontext = \context_module::instance($cmid);
 
                 foreach ($files as $file) {
-                    if (isset($file['filename']) && isset($file['content'])) {
+                    if (!empty($file['filename']) && isset($file['content'])) {
+                        // Sanitize filename to prevent path traversal
+                        $filename = clean_param($file['filename'], PARAM_FILE);
+                        if (empty($filename)) {
+                            continue;
+                        }
+
+                        // Check if file already exists and generate unique name if needed
+                        $filepath = '/';
+                        $existingfile = $fs->get_file(
+                            $modulecontext->id,
+                            'mod_assign',
+                            'introattachment',
+                            0,
+                            $filepath,
+                            $filename
+                        );
+                        if ($existingfile) {
+                            // Delete existing file to replace it
+                            $existingfile->delete();
+                        }
+
                         $filerecord = [
                             'contextid' => $modulecontext->id,
                             'component' => 'mod_assign',
                             'filearea' => 'introattachment',
                             'itemid' => 0,
-                            'filepath' => '/',
-                            'filename' => $file['filename'],
+                            'filepath' => $filepath,
+                            'filename' => $filename,
+                            'userid' => $USER->id,
                             'timecreated' => time(),
                             'timemodified' => time(),
                         ];
 
-                        // Decode base64 content if provided
-                        $filecontent = isset($file['base64']) && $file['base64']
-                            ? base64_decode($file['content'])
-                            : $file['content'];
+                        // Decode base64 content - content is expected to be base64 encoded
+                        $filecontent = base64_decode($file['content'], true);
+                        if ($filecontent === false) {
+                            // If base64 decode fails, use content as-is (plain text)
+                            $filecontent = $file['content'];
+                        }
 
                         $fs->create_file_from_string($filerecord, $filecontent);
                     }
