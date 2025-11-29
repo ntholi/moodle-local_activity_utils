@@ -5,6 +5,7 @@ A Moodle plugin that extends Moodle functionality to allow external applications
 This plugin provides web service endpoints for:
 - Creating course sections
 - Creating assignments
+- Deleting assignments
 - Creating page activities
 - Creating file resources
 
@@ -31,6 +32,7 @@ This plugin provides web service endpoints for:
 - Click "Add functions"
 - Add the following functions:
   - `local_activity_utils_create_assignment`
+  - `local_activity_utils_delete_assignment`
   - `local_activity_utils_create_section`
   - `local_activity_utils_create_page`
   - `local_activity_utils_create_file`
@@ -119,7 +121,54 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
-## 2. Create Section
+## 2. Delete Assignment
+
+Deletes an existing assignment from a Moodle course.
+
+**Function:** `local_activity_utils_delete_assignment`
+
+**Required Capability:** `local/activity_utils:deleteassignment` and `moodle/course:manageactivities`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `cmid` | integer | Yes | The course module ID of the assignment to delete |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_delete_assignment" \
+  -d "moodlewsrestformat=json" \
+  -d "cmid=123"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Assignment \"Weekly Assignment\" deleted successfully"
+}
+```
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "message": "Course module not found"
+}
+```
+
+```json
+{
+  "success": false,
+  "message": "The specified course module is not an assignment"
+}
+```
+
+---
+
+## 3. Create Section
 
 Creates a new section in a Moodle course.
 
@@ -159,7 +208,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
-## 3. Create Page Activity
+## 4. Create Page Activity
 
 Creates a new page activity in a Moodle course.
 
@@ -202,7 +251,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
-## 4. Create File Resource
+## 5. Create File Resource
 
 Creates a new file resource in a Moodle course.
 
@@ -256,6 +305,10 @@ The API user needs these capabilities for each function:
 - `local/activity_utils:createassignment` (granted to editing teachers and managers by default)
 - `mod/assign:addinstance` (standard Moodle capability)
 
+### Delete Assignment
+- `local/activity_utils:deleteassignment` (granted to editing teachers and managers by default)
+- `moodle/course:manageactivities` (standard Moodle capability)
+
 ### Create Section
 - `local/activity_utils:createsection` (granted to editing teachers and managers by default)
 - `moodle/course:update` (standard Moodle capability)
@@ -284,7 +337,7 @@ The API user needs these capabilities for each function:
 ## Future Enhancements
 
 This plugin is designed to be extensible. Future versions may include:
-- CRUD operations for all activities (Update, Delete)
+- CRUD operations for all activities (Update operations)
 - Support for additional activity types (Quiz, Forum, etc.)
 - Bulk operations
 - More granular configuration options
@@ -292,6 +345,10 @@ This plugin is designed to be extensible. Future versions may include:
 ---
 
 ## Version History
+
+### v2.1 (2024-11-29)
+- Added delete assignment functionality (`local_activity_utils_delete_assignment`)
+- Added `deleteassignment` capability
 
 ### v2.0 (2024-11-29)
 - Renamed plugin from `local_createassign` to `local_activity_utils`

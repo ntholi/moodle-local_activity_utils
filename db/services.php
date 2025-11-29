@@ -10,6 +10,14 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:createassignment',
     ),
+    'local_activity_utils_delete_assignment' => array(
+        'classname' => 'local_activity_utils\external\delete_assignment',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing assignment',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deleteassignment',
+    ),
     'local_activity_utils_create_section' => array(
         'classname' => 'local_activity_utils\external\create_section',
         'methodname' => 'execute',
