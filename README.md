@@ -75,6 +75,7 @@ Creates a new assignment in a Moodle course.
 | `allowsubmissionsfromdate` | integer | No | Allow submissions from date (Unix timestamp) |
 | `duedate` | integer | No | Due date (Unix timestamp) |
 | `section` | integer | No | Course section number (default: 0) |
+| `idnumber` | string | No | ID number for gradebook and external system reference (default: '') |
 | `introfiles` | string | No | Additional files as JSON array (see File Upload Format below) |
 
 **Example Request:**
@@ -88,7 +89,8 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "intro=<p>Complete the exercises below</p>" \
   -d "activity=<p>Read chapter 5 and answer the questions</p>" \
   -d "allowsubmissionsfromdate=1732704000" \
-  -d "duedate=1735689600"
+  -d "duedate=1735689600" \
+  -d "idnumber=ASSIGN001"
 ```
 
 **File Upload Format for introfiles:**

@@ -17,6 +17,7 @@ class create_assignment extends external_api {
             'allowsubmissionsfromdate' => new external_value(PARAM_INT, 'Allow submissions from date timestamp', VALUE_DEFAULT, 0),
             'duedate' => new external_value(PARAM_INT, 'Due date timestamp', VALUE_DEFAULT, 0),
             'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
+            'idnumber' => new external_value(PARAM_RAW, 'ID number for gradebook and external system reference', VALUE_DEFAULT, ''),
             'introfiles' => new external_value(PARAM_RAW, 'Additional files as JSON array', VALUE_DEFAULT, '[]'),
         ]);
     }
@@ -29,6 +30,7 @@ class create_assignment extends external_api {
         int $allowsubmissionsfromdate = 0,
         int $duedate = 0,
         int $section = 0,
+        string $idnumber = '',
         string $introfiles = '[]'
     ): array {
         global $CFG, $DB, $USER;
@@ -45,6 +47,7 @@ class create_assignment extends external_api {
             'allowsubmissionsfromdate' => $allowsubmissionsfromdate,
             'duedate' => $duedate,
             'section' => $section,
+            'idnumber' => $idnumber,
             'introfiles' => $introfiles,
         ]);
 
@@ -99,7 +102,7 @@ class create_assignment extends external_api {
         $cm->module = $moduleid;
         $cm->instance = $assignid;
         $cm->section = $params['section'];
-        $cm->idnumber = '';
+        $cm->idnumber = $params['idnumber'];
         $cm->added = time();
         $cm->score = 0;
         $cm->indent = 0;
