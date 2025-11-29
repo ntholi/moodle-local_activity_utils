@@ -18,7 +18,7 @@ class create_assignment extends external_api {
             'duedate' => new external_value(PARAM_INT, 'Due date timestamp', VALUE_DEFAULT, 0),
             'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for gradebook and external system reference', VALUE_DEFAULT, ''),
-            'grade' => new external_value(PARAM_INT, 'Maximum grade (can be negative to indicate use of a scale)', VALUE_DEFAULT, 100),
+            'grademax' => new external_value(PARAM_INT, 'Maximum grade (can be negative to indicate use of a scale)', VALUE_DEFAULT, 100),
             'introfiles' => new external_value(PARAM_RAW, 'Additional files as JSON array', VALUE_DEFAULT, '[]'),
         ]);
     }
@@ -32,7 +32,7 @@ class create_assignment extends external_api {
         int $duedate = 0,
         int $section = 0,
         string $idnumber = '',
-        int $grade = 100,
+        int $grademax = 100,
         string $introfiles = '[]'
     ): array {
         global $CFG, $DB, $USER;
@@ -50,7 +50,7 @@ class create_assignment extends external_api {
             'duedate' => $duedate,
             'section' => $section,
             'idnumber' => $idnumber,
-            'grade' => $grade,
+            'grademax' => $grademax,
             'introfiles' => $introfiles,
         ]);
 
@@ -75,7 +75,7 @@ class create_assignment extends external_api {
         $assign->cutoffdate = 0;
         $assign->gradingduedate = 0;
         $assign->allowsubmissionsfromdate = 0;
-        $assign->grade = $params['grade'];
+        $assign->grade = $params['grademax'];
         $assign->timemodified = time();
         $assign->timecreated = time();
         $assign->teamsubmission = 0;
@@ -147,7 +147,7 @@ class create_assignment extends external_api {
         grade_update('mod/assign', $params['courseid'], 'mod', 'assign', $assignid, 0, null, [
             'itemname' => $params['name'],
             'gradetype' => GRADE_TYPE_VALUE,
-            'grademax' => $params['grade'],
+            'grademax' => $params['grademax'],
             'grademin' => 0
         ]);
 
