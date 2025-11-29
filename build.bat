@@ -1,11 +1,11 @@
 @echo off
-REM Build script for local_createassign Moodle plugin
+REM Build script for local_activity_utils Moodle plugin
 REM This creates an installable ZIP package
 
 setlocal
 
 REM Set variables
-set PLUGIN_NAME=local_createassign
+set PLUGIN_NAME=local_activity_utils
 set BUILD_DIR=build
 set PACKAGE_DIR=%BUILD_DIR%\%PLUGIN_NAME%
 set OUTPUT_FILE=%BUILD_DIR%\%PLUGIN_NAME%.zip

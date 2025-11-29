@@ -1,13 +1,13 @@
 <?php
-namespace local_createassign\external;
+namespace local_activity_utils\external;
 
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-class create_assessment extends external_api {
-    
+class create_assignment extends external_api {
+
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course ID'),
@@ -32,11 +32,11 @@ class create_assessment extends external_api {
         string $introfiles = '[]'
     ): array {
         global $CFG, $DB, $USER;
-        
+
         require_once($CFG->dirroot . '/course/lib.php');
         require_once($CFG->dirroot . '/mod/assign/lib.php');
         require_once($CFG->dirroot . '/lib/gradelib.php');
-        
+
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
             'name' => $name,
@@ -47,14 +47,14 @@ class create_assessment extends external_api {
             'section' => $section,
             'introfiles' => $introfiles,
         ]);
-        
+
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
         $context = \context_course::instance($course->id);
-        
+
         self::validate_context($context);
-        require_capability('local/createassign:createassessment', $context);
+        require_capability('local/activity_utils:createassignment', $context);
         require_capability('mod/assign:addinstance', $context);
-        
+
         $assign = new \stdClass();
         $assign->course = $params['courseid'];
         $assign->name = $params['name'];
@@ -89,11 +89,11 @@ class create_assessment extends external_api {
         $assign->timelimit = 0;
         $assign->submissionattachments = 0;
         $assign->allowsubmissionsfromdate = $params['allowsubmissionsfromdate'];
-        
+
         $assignid = $DB->insert_record('assign', $assign);
 
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'assign'], MUST_EXIST);
-        
+
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
@@ -118,14 +118,14 @@ class create_assessment extends external_api {
         $cm->downloadcontent = 1;
         $cm->lang = '';
         $cm->completiongradeitemnumber = null;
-        
+
         $cmid = $DB->insert_record('course_modules', $cm);
-        
+
         $sectionid = $DB->get_field('course_sections', 'id', [
             'course' => $params['courseid'],
             'section' => $params['section']
         ]);
-        
+
         if ($sectionid) {
             $section = $DB->get_record('course_sections', ['id' => $sectionid]);
             if (!empty($section->sequence)) {
@@ -135,12 +135,12 @@ class create_assessment extends external_api {
             }
             $DB->set_field('course_sections', 'sequence', $sequence, ['id' => $sectionid]);
         }
-        
+
         rebuild_course_cache($params['courseid'], true);
 
         grade_update('mod/assign', $params['courseid'], 'mod', 'assign', $assignid, 0, null, ['itemname' => $params['name']]);
 
-        
+
         if (!empty($params['introfiles']) && $params['introfiles'] !== '[]') {
             $files = json_decode($params['introfiles'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($files) && !empty($files)) {
@@ -149,13 +149,13 @@ class create_assessment extends external_api {
 
                 foreach ($files as $file) {
                     if (!empty($file['filename']) && isset($file['content'])) {
-                        
+
                         $filename = clean_param($file['filename'], PARAM_FILE);
                         if (empty($filename)) {
                             continue;
                         }
 
-                        
+
                         $filepath = '/';
                         $existingfile = $fs->get_file(
                             $modulecontext->id,
@@ -166,7 +166,7 @@ class create_assessment extends external_api {
                             $filename
                         );
                         if ($existingfile) {
-                            
+
                             $existingfile->delete();
                         }
 
@@ -182,10 +182,10 @@ class create_assessment extends external_api {
                             'timemodified' => time(),
                         ];
 
-                        
+
                         $filecontent = base64_decode($file['content'], true);
                         if ($filecontent === false) {
-                            
+
                             $filecontent = $file['content'];
                         }
 
@@ -194,7 +194,7 @@ class create_assessment extends external_api {
                 }
             }
         }
-        
+
         return [
             'id' => $assignid,
             'coursemoduleid' => $cmid,

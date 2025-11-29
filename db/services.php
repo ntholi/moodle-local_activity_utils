@@ -2,13 +2,37 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
-    'local_createassign_create_assessment' => array(
-        'classname' => 'local_createassign\external\create_assessment',
+    'local_activity_utils_create_assignment' => array(
+        'classname' => 'local_activity_utils\external\create_assignment',
         'methodname' => 'execute',
-        'description' => 'Create a new assignment/assessment',
+        'description' => 'Create a new assignment',
         'type' => 'write',
         'ajax' => true,
-        'capabilities' => 'local/createassign:createassessment',
+        'capabilities' => 'local/activity_utils:createassignment',
+    ),
+    'local_activity_utils_create_section' => array(
+        'classname' => 'local_activity_utils\external\create_section',
+        'methodname' => 'execute',
+        'description' => 'Create a new course section',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createsection',
+    ),
+    'local_activity_utils_create_page' => array(
+        'classname' => 'local_activity_utils\external\create_page',
+        'methodname' => 'execute',
+        'description' => 'Create a new page activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createpage',
+    ),
+    'local_activity_utils_create_file' => array(
+        'classname' => 'local_activity_utils\external\create_file',
+        'methodname' => 'execute',
+        'description' => 'Create a new file resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createfile',
     ),
 );
 

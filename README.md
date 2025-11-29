@@ -1,14 +1,19 @@
-# Create Assign - Moodle Plugin
+# Activity Utils - Moodle Plugin
 
-A Moodle plugin that extends Moodle functionality to allow the [Registry Portal](https://github.com/ntholi/registry-web) to create assignments using a REST API.
+A Moodle plugin that extends Moodle functionality to allow external applications (such as the [Registry Portal](https://github.com/ntholi/registry-web)) to programmatically create course sections, assignments, and various activities/resources using a REST API.
 
-This plugin provides a simple web service endpoint for programmatically creating assignments in Moodle courses.
+This plugin provides web service endpoints for:
+- Creating course sections
+- Creating assignments
+- Creating page activities
+- Creating file resources
 
 ## Installation
 
 1. Copy this folder to your Moodle installation's `local/` directory
-2. Log in as admin and go to Site Administration > Notifications
-3. Complete the installation
+2. Rename the folder to `activity_utils`
+3. Log in as admin and go to Site Administration > Notifications
+4. Complete the installation
 
 ## Setup
 
@@ -20,11 +25,15 @@ This plugin provides a simple web service endpoint for programmatically creating
 - Site Administration > Plugins > Web services > Manage protocols
 - Enable "REST protocol"
 
-**3. Add the Service Function**
+**3. Add the Service Functions**
 - Site Administration > Plugins > Web services > External services
 - Create a new service or edit an existing one
 - Click "Add functions"
-- Add: `local_createassign_create_assessment`
+- Add the following functions:
+  - `local_activity_utils_create_assignment`
+  - `local_activity_utils_create_section`
+  - `local_activity_utils_create_page`
+  - `local_activity_utils_create_file`
 
 **4. Create an API Token**
 - Site Administration > Plugins > Web services > Manage tokens
@@ -33,17 +42,32 @@ This plugin provides a simple web service endpoint for programmatically creating
 
 ## API Usage
 
-**Endpoint:**
+### Base Endpoint
 ```
 POST https://yourmoodle.com/webservice/rest/server.php
 ```
 
-**Parameters:**
+### Common Parameters
+All API calls require these base parameters:
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `wstoken` | string | Yes | Your web service token |
-| `wsfunction` | string | Yes | Must be `local_createassign_create_assessment` |
+| `wsfunction` | string | Yes | The web service function name (see below) |
 | `moodlewsrestformat` | string | Yes | Response format (`json`) |
+
+---
+
+## 1. Create Assignment
+
+Creates a new assignment in a Moodle course.
+
+**Function:** `local_activity_utils_create_assignment`
+
+**Required Capability:** `local/activity_utils:createassignment` and `mod/assign:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
 | `courseid` | integer | Yes | The course ID where the assignment will be created |
 | `name` | string | Yes | Assignment name/title |
 | `intro` | string | No | Assignment description (supports HTML) |
@@ -51,13 +75,13 @@ POST https://yourmoodle.com/webservice/rest/server.php
 | `allowsubmissionsfromdate` | integer | No | Allow submissions from date (Unix timestamp) |
 | `duedate` | integer | No | Due date (Unix timestamp) |
 | `section` | integer | No | Course section number (default: 0) |
-| `introfiles` | string | No | Additional files as JSON array - files appear in the assignment's "Additional files" section (see File Upload Format below) |
+| `introfiles` | string | No | Additional files as JSON array (see File Upload Format below) |
 
 **Example Request:**
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=YOUR_TOKEN_HERE" \
-  -d "wsfunction=local_createassign_create_assessment" \
+  -d "wsfunction=local_activity_utils_create_assignment" \
   -d "moodlewsrestformat=json" \
   -d "courseid=2" \
   -d "name=Weekly Assignment" \
@@ -67,29 +91,16 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "duedate=1735689600"
 ```
 
-**File Upload Format:**
-
-To attach additional files to the assignment (equivalent to the "Additional files" section in Moodle's UI), use the `introfiles` parameter with a JSON array:
-
+**File Upload Format for introfiles:**
 ```json
 [
   {
     "filename": "assignment_guide.pdf",
     "content": "JVBERi0xLjQK...",
     "base64": true
-  },
-  {
-    "filename": "template.docx",
-    "content": "UEsDBBQABgAI...",
-    "base64": true
   }
 ]
 ```
-
-Each file object should contain:
-- `filename`: Name of the file
-- `content`: Base64-encoded file content
-- `base64`: Set to `true` to indicate content is base64-encoded
 
 **Response:**
 ```json
@@ -102,11 +113,158 @@ Each file object should contain:
 }
 ```
 
+---
+
+## 2. Create Section
+
+Creates a new section in a Moodle course.
+
+**Function:** `local_activity_utils_create_section`
+
+**Required Capability:** `local/activity_utils:createsection` and `moodle/course:update`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | integer | Yes | The course ID |
+| `name` | string | No | Section name/title |
+| `summary` | string | No | Section summary/description (supports HTML) |
+| `sectionnum` | integer | No | Section number/position (auto-generated if not provided) |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_section" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "name=Week 1: Introduction" \
+  -d "summary=<p>This week we cover the basics</p>"
+```
+
+**Response:**
+```json
+{
+  "id": 15,
+  "sectionnum": 1,
+  "name": "Week 1: Introduction",
+  "success": true,
+  "message": "Section created successfully"
+}
+```
+
+---
+
+## 3. Create Page Activity
+
+Creates a new page activity in a Moodle course.
+
+**Function:** `local_activity_utils_create_page`
+
+**Required Capability:** `local/activity_utils:createpage` and `mod/page:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | integer | Yes | The course ID |
+| `name` | string | Yes | Page name/title |
+| `intro` | string | No | Page introduction/description (supports HTML) |
+| `content` | string | No | Page content (supports HTML) |
+| `section` | integer | No | Course section number (default: 0) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden (default: 1) |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_page" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "name=Course Syllabus" \
+  -d "intro=<p>View the course syllabus below</p>" \
+  -d "content=<h1>Course Syllabus</h1><p>Week 1: ...</p>"
+```
+
+**Response:**
+```json
+{
+  "id": 28,
+  "coursemoduleid": 145,
+  "name": "Course Syllabus",
+  "success": true,
+  "message": "Page created successfully"
+}
+```
+
+---
+
+## 4. Create File Resource
+
+Creates a new file resource in a Moodle course.
+
+**Function:** `local_activity_utils_create_file`
+
+**Required Capability:** `local/activity_utils:createfile` and `mod/resource:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | integer | Yes | The course ID |
+| `name` | string | Yes | File resource name/title |
+| `intro` | string | No | File resource introduction/description (supports HTML) |
+| `filename` | string | Yes | File name (e.g., "document.pdf") |
+| `filecontent` | string | Yes | File content (base64 encoded) |
+| `section` | integer | No | Course section number (default: 0) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden (default: 1) |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_file" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "name=Course Textbook" \
+  -d "intro=<p>Download the course textbook</p>" \
+  -d "filename=textbook.pdf" \
+  -d "filecontent=JVBERi0xLjQKJeLjz9MKMSAwIG9iago8..."
+```
+
+**Response:**
+```json
+{
+  "id": 32,
+  "coursemoduleid": 150,
+  "name": "Course Textbook",
+  "filename": "textbook.pdf",
+  "success": true,
+  "message": "File resource created successfully"
+}
+```
+
+---
+
 ## Permissions
 
-The API user needs these capabilities:
-- `local/createassign:createassessment` (granted to editing teachers and managers by default)
+The API user needs these capabilities for each function:
+
+### Create Assignment
+- `local/activity_utils:createassignment` (granted to editing teachers and managers by default)
 - `mod/assign:addinstance` (standard Moodle capability)
+
+### Create Section
+- `local/activity_utils:createsection` (granted to editing teachers and managers by default)
+- `moodle/course:update` (standard Moodle capability)
+
+### Create Page
+- `local/activity_utils:createpage` (granted to editing teachers and managers by default)
+- `mod/page:addinstance` (standard Moodle capability)
+
+### Create File
+- `local/activity_utils:createfile` (granted to editing teachers and managers by default)
+- `mod/resource:addinstance` (standard Moodle capability)
+
+---
 
 ## Troubleshooting
 
@@ -114,3 +272,40 @@ The API user needs these capabilities:
 - Verify your token has the correct permissions
 - Check that the user has the required capabilities in the course
 - Confirm the course ID and section number are valid
+- For file uploads, ensure content is properly base64 encoded
+- Check Moodle error logs for detailed error messages
+
+---
+
+## Future Enhancements
+
+This plugin is designed to be extensible. Future versions may include:
+- CRUD operations for all activities (Update, Delete)
+- Support for additional activity types (Quiz, Forum, etc.)
+- Bulk operations
+- More granular configuration options
+
+---
+
+## Version History
+
+### v2.0 (2024-11-29)
+- Renamed plugin from `local_createassign` to `local_activity_utils`
+- Renamed "assessment" to "assignment" throughout
+- Added support for creating course sections
+- Added support for creating Page activities
+- Added support for creating File resources
+- Updated all capabilities and web service function names
+
+### v1.0
+- Initial release with assignment creation functionality
+
+---
+
+## License
+
+This plugin is developed for the Limkokwing University Registry Portal integration.
+
+## Support
+
+For issues or questions, please contact the development team or check the Moodle documentation.

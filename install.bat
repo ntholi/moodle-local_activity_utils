@@ -2,21 +2,21 @@
 setlocal enabledelayedexpansion
 
 :: ============================================================
-:: Moodle Plugin Installer - local_createassign
+:: Moodle Plugin Installer - local_activity_utils
 :: ============================================================
-:: This script automatically installs the createassign plugin
+:: This script automatically installs the activity_utils plugin
 :: into your Moodle installation.
 :: ============================================================
 
 echo.
 echo ============================================================
-echo   Moodle Plugin Installer - local_createassign
+echo   Moodle Plugin Installer - local_activity_utils
 echo ============================================================
 echo.
 
 :: Set the Moodle installation path
 set "MOODLE_PATH=C:\Users\nthol\Documents\Projects\LMS\moodle\MoodleWindowsInstaller-latest\server\moodle"
-set "PLUGIN_NAME=createassign"
+set "PLUGIN_NAME=activity_utils"
 set "PLUGIN_TYPE=local"
 set "DEST_PATH=%MOODLE_PATH%\%PLUGIN_TYPE%\%PLUGIN_NAME%"
 
@@ -74,9 +74,30 @@ if errorlevel 1 (
     exit /b 1
 )
 
-copy /y "classes\external\create_assessment.php" "%DEST_PATH%\classes\external\create_assessment.php" >nul
+copy /y "classes\external\create_assignment.php" "%DEST_PATH%\classes\external\create_assignment.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_assessment.php
+    echo [ERROR] Failed to copy create_assignment.php
+    pause
+    exit /b 1
+)
+
+copy /y "classes\external\create_section.php" "%DEST_PATH%\classes\external\create_section.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy create_section.php
+    pause
+    exit /b 1
+)
+
+copy /y "classes\external\create_page.php" "%DEST_PATH%\classes\external\create_page.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy create_page.php
+    pause
+    exit /b 1
+)
+
+copy /y "classes\external\create_file.php" "%DEST_PATH%\classes\external\create_file.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy create_file.php
     pause
     exit /b 1
 )
@@ -95,7 +116,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-copy /y "lang\en\local_createassign.php" "%DEST_PATH%\lang\en\local_createassign.php" >nul
+copy /y "lang\en\local_activity_utils.php" "%DEST_PATH%\lang\en\local_activity_utils.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy language file
     pause
