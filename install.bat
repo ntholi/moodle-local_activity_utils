@@ -102,6 +102,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "classes\external\delete_assignment.php" "%DEST_PATH%\classes\external\delete_assignment.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy delete_assignment.php
+    pause
+    exit /b 1
+)
+
 copy /y "db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\access.php
