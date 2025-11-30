@@ -56,11 +56,7 @@ class delete_assignment extends external_api {
 
         $assignname = $assign->name;
 
-        if (class_exists('\core_courseformat\formatactions')) {
-            \core_courseformat\formatactions::cm($course->id)->delete($cm->id);
-        } else {
-            course_delete_module($cm->id);
-        }
+        course_delete_module($cm->id);
 
         return [
             'success' => true,
