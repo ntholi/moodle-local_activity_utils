@@ -166,7 +166,6 @@ class create_assignment extends external_api {
                             continue;
                         }
 
-
                         $filepath = '/';
                         $existingfile = $fs->get_file(
                             $modulecontext->id,
@@ -177,7 +176,6 @@ class create_assignment extends external_api {
                             $filename
                         );
                         if ($existingfile) {
-
                             $existingfile->delete();
                         }
 
@@ -193,10 +191,8 @@ class create_assignment extends external_api {
                             'timemodified' => time(),
                         ];
 
-
                         $filecontent = base64_decode($file['content'], true);
                         if ($filecontent === false) {
-
                             $filecontent = $file['content'];
                         }
 

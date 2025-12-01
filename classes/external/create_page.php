@@ -48,7 +48,6 @@ class create_page extends external_api {
         require_capability('local/activity_utils:createpage', $context);
         require_capability('mod/page:addinstance', $context);
 
-        // Create page instance record
         $page = new \stdClass();
         $page->course = $params['courseid'];
         $page->name = $params['name'];
@@ -66,10 +65,8 @@ class create_page extends external_api {
 
         $pageid = $DB->insert_record('page', $page);
 
-        // Get module ID for 'page'
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'page'], MUST_EXIST);
 
-        // Create course module record
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
@@ -97,7 +94,6 @@ class create_page extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add to section sequence
         $sectionid = $DB->get_field('course_sections', 'id', [
             'course' => $params['courseid'],
             'section' => $params['section']
@@ -113,7 +109,6 @@ class create_page extends external_api {
             $DB->set_field('course_sections', 'sequence', $sequence, ['id' => $sectionid]);
         }
 
-        // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
 
         return [

@@ -44,26 +44,22 @@ class create_subsection extends external_api {
         require_capability('local/activity_utils:createsubsection', $context);
         require_capability('moodle/course:update', $context);
 
-        // Verify the subsection module exists (Moodle 4.0+)
         $subsectionmodule = $DB->get_record('modules', ['name' => 'subsection']);
         if (!$subsectionmodule) {
             throw new \moodle_exception('subsectionmodulenotfound', 'local_activity_utils');
         }
 
-        // Verify parent section exists
         $parentsectionrecord = $DB->get_record('course_sections', [
             'course' => $params['courseid'],
             'section' => $params['parentsection']
         ], '*', MUST_EXIST);
 
-        // Get the next available section number
         $maxsection = $DB->get_field_sql(
             'SELECT MAX(section) FROM {course_sections} WHERE course = ?',
             [$params['courseid']]
         );
         $newsectionnum = $maxsection + 1;
 
-        // Create the subsection module instance first
         $subsection = new \stdClass();
         $subsection->course = $params['courseid'];
         $subsection->name = $params['name'];
@@ -71,7 +67,6 @@ class create_subsection extends external_api {
 
         $subsectionid = $DB->insert_record('subsection', $subsection);
 
-        // Create course module record for the subsection
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $subsectionmodule->id;
@@ -99,7 +94,6 @@ class create_subsection extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add course module to parent section sequence
         if (!empty($parentsectionrecord->sequence)) {
             $sequence = $parentsectionrecord->sequence . ',' . $cmid;
         } else {
@@ -107,7 +101,6 @@ class create_subsection extends external_api {
         }
         $DB->set_field('course_sections', 'sequence', $sequence, ['id' => $parentsectionrecord->id]);
 
-        // Create the new section record that will be the subsection
         $sectiondata = new \stdClass();
         $sectiondata->course = $params['courseid'];
         $sectiondata->section = $newsectionnum;
@@ -121,7 +114,6 @@ class create_subsection extends external_api {
 
         $sectionid = $DB->insert_record('course_sections', $sectiondata);
 
-        // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
 
         return [

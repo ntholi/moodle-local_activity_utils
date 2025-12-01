@@ -41,7 +41,6 @@ class create_section extends external_api {
         require_capability('local/activity_utils:createsection', $context);
         require_capability('moodle/course:update', $context);
 
-        // If section number not specified, get the next available section number
         if ($params['sectionnum'] === null) {
             $maxsection = $DB->get_field_sql(
                 'SELECT MAX(section) FROM {course_sections} WHERE course = ?',
@@ -50,23 +49,19 @@ class create_section extends external_api {
             $params['sectionnum'] = $maxsection + 1;
         }
 
-        // Ensure the section exists (creates if it doesn't)
         course_create_sections_if_missing($course, $params['sectionnum']);
 
-        // Get the section record
         $section = $DB->get_record('course_sections', [
             'course' => $params['courseid'],
             'section' => $params['sectionnum']
         ], '*', MUST_EXIST);
 
-        // Update section with name and summary
         $section->name = $params['name'];
         $section->summary = $params['summary'];
         $section->summaryformat = FORMAT_HTML;
 
         $DB->update_record('course_sections', $section);
 
-        // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
 
         return [

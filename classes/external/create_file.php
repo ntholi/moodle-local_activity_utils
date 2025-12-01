@@ -51,13 +51,11 @@ class create_file extends external_api {
         require_capability('local/activity_utils:createfile', $context);
         require_capability('mod/resource:addinstance', $context);
 
-        // Sanitize filename
         $filename = clean_param($params['filename'], PARAM_FILE);
         if (empty($filename)) {
             throw new \moodle_exception('invalidfilename', 'local_activity_utils');
         }
 
-        // Create resource instance record
         $resource = new \stdClass();
         $resource->course = $params['courseid'];
         $resource->name = $params['name'];
@@ -75,10 +73,8 @@ class create_file extends external_api {
 
         $resourceid = $DB->insert_record('resource', $resource);
 
-        // Get module ID for 'resource'
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'resource'], MUST_EXIST);
 
-        // Create course module record
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
@@ -106,18 +102,14 @@ class create_file extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Handle file upload
         $fs = get_file_storage();
         $modulecontext = \context_module::instance($cmid);
 
-        // Decode base64 content
         $content = base64_decode($params['filecontent'], true);
         if ($content === false) {
-            // If not base64, use raw content
             $content = $params['filecontent'];
         }
 
-        // Prepare file record
         $filerecord = [
             'contextid' => $modulecontext->id,
             'component' => 'mod_resource',
@@ -130,10 +122,8 @@ class create_file extends external_api {
             'timemodified' => time(),
         ];
 
-        // Create the file
         $fs->create_file_from_string($filerecord, $content);
 
-        // Add to section sequence
         $sectionid = $DB->get_field('course_sections', 'id', [
             'course' => $params['courseid'],
             'section' => $params['section']
@@ -149,7 +139,6 @@ class create_file extends external_api {
             $DB->set_field('course_sections', 'sequence', $sequence, ['id' => $sectionid]);
         }
 
-        // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
 
         return [
