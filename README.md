@@ -2,9 +2,11 @@
 
 A Moodle plugin that extends Moodle functionality to allow external applications (such as the [Registry Portal](https://github.com/ntholi/registry-web)) to programmatically create course sections, assignments, and various activities/resources using a REST API.
 
+**Requirements:** Moodle 4.2 or higher
+
 This plugin provides web service endpoints for:
 - Creating course sections
-- Creating subsections (Moodle 4.0+)
+- Creating subsections
 - Creating assignments
 - Deleting assignments
 - Creating page activities
@@ -218,7 +220,7 @@ Creates a new subsection within a parent section in a Moodle course. Subsections
 
 **Required Capability:** `local/activity_utils:createsubsection` and `moodle/course:update`
 
-**Requirements:** Moodle 4.0 or later with subsection module support enabled.
+
 
 **Parameters:**
 | Parameter | Type | Required | Description |
@@ -280,15 +282,6 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 The subsection and its content will now be properly visible to students as part of the normal course structure.
-
-**Error Responses:**
-```json
-{
-  "exception": "moodle_exception",
-  "errorcode": "subsectionmodulenotfound",
-  "message": "Subsection module not found. This feature requires Moodle 4.0 or later with subsection support."
-}
-```
 
 ---
 
@@ -411,66 +404,9 @@ The API user needs these capabilities for each function:
 
 ---
 
-## Compatibility & Migration
+## Activity Placement in Subsections
 
-### Moodle Version Support
-
-- **Minimum Moodle**: 4.1 (3.9+)
-- **Recommended**: Moodle 4.2 or later
-- **Subsection features**: Require Moodle 4.0+ with `mod_subsection` module enabled
-
-### v2.4 Breaking Changes & Migration
-
-#### Issue Fixed
-In v2.3, subsections were created without proper delegation metadata (`component` and `itemid` fields). This caused:
-- Activities placed in subsections appeared as top-level sections instead of nested content
-- Visibility inheritance didn't work correctly
-- Subsection structure violated Moodle 4.x delegation standards
-
-#### What Changed
-v2.4 now correctly sets delegation metadata on subsection course sections:
-```php
-$section->component = 'mod_subsection';
-$section->itemid = $subsection_module_instance_id;
-```
-
-#### Migration Path
-**Existing Subsections (v2.3 or earlier):**
-
-If you created subsections using v2.3 or earlier, they will continue to function but **without proper delegation**:
-- They will appear as regular sections, not nested subsections
-- Activities in them won't inherit subsection visibility rules
-- The subsection course module will be "orphaned"
-
-**Recommendation:** After upgrading to v2.4, manually recreate subsections using the API. This is a one-time operation.
-
-**SQL Migration Script (if needed):**
-```sql
--- This script fixes existing subsections by adding delegation metadata
--- WARNING: Back up your database before running this!
--- Run in Moodle database context
-
-UPDATE {course_sections} cs
-SET 
-    cs.component = 'mod_subsection',
-    cs.itemid = cm.instance,
-    cs.timemodified = ?
-FROM {course_modules} cm
-WHERE 
-    cm.module = (SELECT id FROM {modules} WHERE name = 'subsection')
-    AND cm.instance = cs.id  -- This only works if itemid matches instance
-    AND cs.component IS NULL;
-```
-
-**Better approach - Recreate via API:**
-1. Export subsection definitions from your course
-2. Delete existing subsections
-3. Recreate using `create_subsection` endpoint
-4. Re-add activities using the new subsection section numbers
-
-### Activity Placement in Subsections
-
-#### How It Works (v2.4+)
+#### How It Works
 When creating an activity in a subsection:
 
 ```bash
@@ -494,7 +430,7 @@ The `section` parameter accepts the **section number** (sectionnum), and the plu
 
 ### Visibility Behavior
 
-#### Visibility Rules (v2.4+)
+#### Visibility Rules
 Activities created in subsections follow these visibility rules:
 
 | Subsection Visible | Activity Visible (requested) | Final Activity Visibility |
@@ -525,94 +461,7 @@ $page = create_page::execute(
 );
 
 // Result: Page is HIDDEN because parent subsection is hidden
-// (unless/until the subsection is made visible in the course editor)
 ```
-
-### Database Schema Notes
-
-#### course_sections Table
-Subsections use these fields for delegation:
-- `component` (VARCHAR): Must be `'mod_subsection'` for subsections
-- `itemid` (INT): Must match `course_modules.instance` of the subsection module
-- `visible` (TINYINT): Controls visibility of the subsection and its content
-- `section` (INT): Unique section number per course
-
-#### course_modules Table
-The subsection activity module (instance) is placed in the parent section:
-- `cm->section` = parent section ID (the course_sections.id)
-- `cm->module` = subsection module ID
-- `cm->instance` = ID of the subsection row
-
-### Known Limitations
-
-1. **Subsections in subsections (nested)**: Supported but limited by Moodle's delegation depth
-2. **Section numbers**: Once assigned, section numbers cannot be reordered via API (use course edit interface)
-3. **Deleting subsections**: Use Moodle's course editor; API doesn't provide delete subsection function
-4. **Moving subsections**: Not supported via this API; use course editor
-
-### Troubleshooting Subsection Issues
-
-**Problem**: Activities appear in wrong section or as top-level
-- **Cause**: Using section number instead of section ID, or section not properly delegated
-- **Solution**: Verify subsection was created with v2.4+; check `course_sections.component` field is `'mod_subsection'`
-
-**Problem**: Activities in subsection are hidden but should be visible
-- **Cause**: Parent subsection is hidden
-- **Solution**: Make parent subsection visible in course editor, or request activities without visibility flag
-
-**Problem**: "Subsection module not found" error
-- **Cause**: Moodle version doesn't support subsections (< 4.0)
-- **Solution**: Upgrade Moodle to 4.0 or later, or check if subsection plugin is enabled
-
-**Problem**: Course cache errors after creating subsections
-- **Cause**: Course cache not properly rebuilt
-- **Solution**: Force cache rebuild: `rebuild_course_cache($courseid, true)` (done automatically by API)
-
-## Future Enhancements
-
-This plugin is designed to be extensible. Future versions may include:
-- CRUD operations for all activities (Update operations)
-- Support for additional activity types (Quiz, Forum, etc.)
-- Bulk operations
-- More granular configuration options
-
----
-
-## Version History
-
-### v2.4 (2024-12-02)
-- **FIXED: Subsection delegation and activity placement bug**
-  - Fixed critical issue where activities placed in subsections were appearing as top-level sections
-  - Subsections now properly set `component='mod_subsection'` and `itemid` metadata for correct Moodle 4.x delegation
-  - Activities (pages, assignments, files) created in subsections are now correctly nested and visible
-  - Added visibility inheritance: activities in hidden subsections are automatically hidden
-  - **Breaking change for stored subsection data**: Existing subsection sections without delegation metadata will appear as regular sections; see Migration section below
-- Added `helper` class for shared section handling logic
-- Updated all activity creation endpoints to use improved section handling
-
-### v2.3 (2024-12-01)
-- **Fixed subsection visibility issue**: Subsections and activities added to them are now properly visible to students and part of the normal course structure
-- Removed erroneous `component` and `itemid` fields from subsection course sections that were causing the "not part of course structure" warning
-
-### v2.2 (2024-12-01)
-- Added subsection creation functionality (`local_activity_utils_create_subsection`)
-- Added `createsubsection` capability
-- Subsections require Moodle 4.0+ with subsection module support
-
-### v2.1 (2024-11-29)
-- Added delete assignment functionality (`local_activity_utils_delete_assignment`)
-- Added `deleteassignment` capability
-
-### v2.0 (2024-11-29)
-- Renamed plugin from `local_createassign` to `local_activity_utils`
-- Renamed "assessment" to "assignment" throughout
-- Added support for creating course sections
-- Added support for creating Page activities
-- Added support for creating File resources
-- Updated all capabilities and web service function names
-
-### v1.0
-- Initial release with assignment creation functionality
 
 ---
 
