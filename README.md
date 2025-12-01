@@ -11,6 +11,8 @@ This plugin provides web service endpoints for:
 - Deleting assignments
 - Creating page activities
 - Creating file resources
+- Creating book resources with chapters
+- Adding chapters to existing books
 
 ## Installation
 
@@ -40,6 +42,8 @@ This plugin provides web service endpoints for:
   - `local_activity_utils_create_subsection`
   - `local_activity_utils_create_page`
   - `local_activity_utils_create_file`
+  - `local_activity_utils_create_book`
+  - `local_activity_utils_add_book_chapter`
 
 **4. Create an API Token**
 - Site Administration > Plugins > Web services > Manage tokens
@@ -374,6 +378,195 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
+## 7. Create Book Resource
+
+Creates a new book resource in a Moodle course with optional chapters. The Book module allows creating multi-page resources with chapters and subchapters for organizing lengthy content.
+
+**Function:** `local_activity_utils_create_book`
+
+**Required Capability:** `local/activity_utils:createbook` and `mod/book:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | integer | Yes | The course ID |
+| `name` | string | Yes | Book name/title |
+| `intro` | string | No | Book introduction/description (supports HTML) |
+| `section` | integer | No | Course section number (default: 0) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden (default: 1) |
+| `numbering` | integer | No | Chapter numbering style (default: 1) |
+| `navstyle` | integer | No | Navigation style (default: 1) |
+| `customtitles` | integer | No | Use custom titles: 0=no, 1=yes (default: 0) |
+| `chapters` | array | No | Array of chapter objects (see below) |
+
+**Numbering Styles:**
+| Value | Style |
+|-------|-------|
+| 0 | None |
+| 1 | Numbers (1, 1.1, 1.2, 2, ...) |
+| 2 | Bullets |
+| 3 | Indented |
+
+**Navigation Styles:**
+| Value | Style |
+|-------|-------|
+| 0 | Not displayed |
+| 1 | Images (arrows) |
+| 2 | Text |
+
+**Chapter Object Structure:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | Yes | Chapter title |
+| `content` | string | No | Chapter content (HTML) |
+| `subchapter` | integer | No | 0=main chapter, 1=subchapter (default: 0) |
+| `hidden` | integer | No | 0=visible, 1=hidden (default: 0) |
+| `tags` | string | No | Comma-separated tags for the chapter |
+
+**Example Request - Book with Chapters:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_book" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "name=Introduction to Programming" \
+  -d "intro=<p>A comprehensive guide to programming basics</p>" \
+  -d "section=1" \
+  -d "numbering=1" \
+  -d "navstyle=1" \
+  -d "chapters[0][title]=Getting Started" \
+  -d "chapters[0][content]=<p>Welcome to the programming course!</p>" \
+  -d "chapters[0][subchapter]=0" \
+  -d "chapters[1][title]=Installing Tools" \
+  -d "chapters[1][content]=<p>First, install the required software...</p>" \
+  -d "chapters[1][subchapter]=1" \
+  -d "chapters[1][tags]=setup,installation" \
+  -d "chapters[2][title]=Your First Program" \
+  -d "chapters[2][content]=<p>Let us write our first program...</p>" \
+  -d "chapters[2][subchapter]=1"
+```
+
+**Example Request - Empty Book:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_book" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "name=Course Handbook" \
+  -d "intro=<p>Student handbook for this course</p>"
+```
+
+**Response:**
+```json
+{
+  "id": 45,
+  "coursemoduleid": 165,
+  "name": "Introduction to Programming",
+  "chaptercount": 3,
+  "chapters": [
+    {
+      "id": 101,
+      "pagenum": 1,
+      "title": "Getting Started",
+      "subchapter": 0
+    },
+    {
+      "id": 102,
+      "pagenum": 2,
+      "title": "Installing Tools",
+      "subchapter": 1
+    },
+    {
+      "id": 103,
+      "pagenum": 3,
+      "title": "Your First Program",
+      "subchapter": 1
+    }
+  ],
+  "success": true,
+  "message": "Book created successfully with 3 chapter(s)"
+}
+```
+
+---
+
+## 8. Add Book Chapter
+
+Adds a new chapter to an existing book resource. Useful for programmatically building book content over time.
+
+**Function:** `local_activity_utils_add_book_chapter`
+
+**Required Capability:** `local/activity_utils:createbook` and `mod/book:edit`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `bookid` | integer | Yes | The book instance ID (not course module ID) |
+| `title` | string | Yes | Chapter title |
+| `content` | string | No | Chapter content (supports HTML) |
+| `subchapter` | integer | No | 0=main chapter, 1=subchapter (default: 0) |
+| `hidden` | integer | No | 0=visible, 1=hidden (default: 0) |
+| `pagenum` | integer | No | Position to insert chapter (0=append at end, default: 0) |
+| `tags` | string | No | Comma-separated tags for the chapter |
+
+**Example Request - Append Chapter:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_add_book_chapter" \
+  -d "moodlewsrestformat=json" \
+  -d "bookid=45" \
+  -d "title=Advanced Topics" \
+  -d "content=<h2>Advanced Programming Concepts</h2><p>In this chapter, we explore advanced topics...</p>" \
+  -d "subchapter=0" \
+  -d "tags=advanced,programming"
+```
+
+**Example Request - Insert at Position:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_add_book_chapter" \
+  -d "moodlewsrestformat=json" \
+  -d "bookid=45" \
+  -d "title=Prerequisites" \
+  -d "content=<p>Before starting, ensure you have...</p>" \
+  -d "pagenum=1" \
+  -d "subchapter=0"
+```
+
+**Response:**
+```json
+{
+  "id": 104,
+  "bookid": 45,
+  "pagenum": 4,
+  "title": "Advanced Topics",
+  "subchapter": 0,
+  "success": true,
+  "message": "Chapter added successfully"
+}
+```
+
+**Book Structure Example:**
+
+When creating a book with chapters, you can build a hierarchical structure using the `subchapter` parameter:
+
+```
+1. Main Chapter (subchapter=0)
+   1.1 Subchapter (subchapter=1)
+   1.2 Subchapter (subchapter=1)
+2. Main Chapter (subchapter=0)
+   2.1 Subchapter (subchapter=1)
+3. Main Chapter (subchapter=0)
+```
+
+Subchapters are always grouped under the preceding main chapter in the table of contents.
+
+---
+
 ## Permissions
 
 The API user needs these capabilities for each function:
@@ -401,6 +594,14 @@ The API user needs these capabilities for each function:
 ### Create File
 - `local/activity_utils:createfile` (granted to editing teachers and managers by default)
 - `mod/resource:addinstance` (standard Moodle capability)
+
+### Create Book
+- `local/activity_utils:createbook` (granted to editing teachers and managers by default)
+- `mod/book:addinstance` (standard Moodle capability)
+
+### Add Book Chapter
+- `local/activity_utils:createbook` (granted to editing teachers and managers by default)
+- `mod/book:edit` (standard Moodle capability)
 
 ---
 
