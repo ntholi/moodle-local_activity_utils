@@ -411,16 +411,162 @@ The API user needs these capabilities for each function:
 
 ---
 
-## Troubleshooting
+## Compatibility & Migration
 
-- Ensure web services are enabled in Moodle
-- Verify your token has the correct permissions
-- Check that the user has the required capabilities in the course
-- Confirm the course ID and section number are valid
-- For file uploads, ensure content is properly base64 encoded
-- Check Moodle error logs for detailed error messages
+### Moodle Version Support
 
----
+- **Minimum Moodle**: 4.1 (3.9+)
+- **Recommended**: Moodle 4.2 or later
+- **Subsection features**: Require Moodle 4.0+ with `mod_subsection` module enabled
+
+### v2.4 Breaking Changes & Migration
+
+#### Issue Fixed
+In v2.3, subsections were created without proper delegation metadata (`component` and `itemid` fields). This caused:
+- Activities placed in subsections appeared as top-level sections instead of nested content
+- Visibility inheritance didn't work correctly
+- Subsection structure violated Moodle 4.x delegation standards
+
+#### What Changed
+v2.4 now correctly sets delegation metadata on subsection course sections:
+```php
+$section->component = 'mod_subsection';
+$section->itemid = $subsection_module_instance_id;
+```
+
+#### Migration Path
+**Existing Subsections (v2.3 or earlier):**
+
+If you created subsections using v2.3 or earlier, they will continue to function but **without proper delegation**:
+- They will appear as regular sections, not nested subsections
+- Activities in them won't inherit subsection visibility rules
+- The subsection course module will be "orphaned"
+
+**Recommendation:** After upgrading to v2.4, manually recreate subsections using the API. This is a one-time operation.
+
+**SQL Migration Script (if needed):**
+```sql
+-- This script fixes existing subsections by adding delegation metadata
+-- WARNING: Back up your database before running this!
+-- Run in Moodle database context
+
+UPDATE {course_sections} cs
+SET 
+    cs.component = 'mod_subsection',
+    cs.itemid = cm.instance,
+    cs.timemodified = ?
+FROM {course_modules} cm
+WHERE 
+    cm.module = (SELECT id FROM {modules} WHERE name = 'subsection')
+    AND cm.instance = cs.id  -- This only works if itemid matches instance
+    AND cs.component IS NULL;
+```
+
+**Better approach - Recreate via API:**
+1. Export subsection definitions from your course
+2. Delete existing subsections
+3. Recreate using `create_subsection` endpoint
+4. Re-add activities using the new subsection section numbers
+
+### Activity Placement in Subsections
+
+#### How It Works (v2.4+)
+When creating an activity in a subsection:
+
+```bash
+# Step 1: Create subsection
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wsfunction=local_activity_utils_create_subsection" \
+  -d "courseid=2" \
+  -d "parentsection=1" \
+  -d "name=Week 1.1" \
+  # Returns: {"sectionnum": 5, "id": 20, ...}
+
+# Step 2: Create activity in subsection using returned sectionnum
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wsfunction=local_activity_utils_create_page" \
+  -d "courseid=2" \
+  -d "section=5"  # Use the sectionnum from subsection response
+  -d "name=Getting Started"
+```
+
+The `section` parameter accepts the **section number** (sectionnum), and the plugin automatically resolves it to the correct delegated section ID.
+
+### Visibility Behavior
+
+#### Visibility Rules (v2.4+)
+Activities created in subsections follow these visibility rules:
+
+| Subsection Visible | Activity Visible (requested) | Final Activity Visibility |
+|---|---|---|
+| Yes | Yes | **Visible** |
+| Yes | No | **Hidden** |
+| No | Yes | **Hidden** (inherits from parent) |
+| No | No | **Hidden** |
+
+Activities are automatically hidden if the parent subsection is hidden, even if you request them to be visible. This prevents "orphaned" visible content in hidden sections.
+
+#### Example
+```php
+// Create hidden subsection
+$subsection = create_subsection::execute(
+    courseid: 2,
+    parentsection: 1,
+    name: 'Hidden Section',
+    visible: 0
+);
+
+// Request visible page in hidden subsection
+$page = create_page::execute(
+    courseid: 2,
+    section: $subsection['sectionnum'],
+    name: 'My Page',
+    visible: 1  // Request visibility
+);
+
+// Result: Page is HIDDEN because parent subsection is hidden
+// (unless/until the subsection is made visible in the course editor)
+```
+
+### Database Schema Notes
+
+#### course_sections Table
+Subsections use these fields for delegation:
+- `component` (VARCHAR): Must be `'mod_subsection'` for subsections
+- `itemid` (INT): Must match `course_modules.instance` of the subsection module
+- `visible` (TINYINT): Controls visibility of the subsection and its content
+- `section` (INT): Unique section number per course
+
+#### course_modules Table
+The subsection activity module (instance) is placed in the parent section:
+- `cm->section` = parent section ID (the course_sections.id)
+- `cm->module` = subsection module ID
+- `cm->instance` = ID of the subsection row
+
+### Known Limitations
+
+1. **Subsections in subsections (nested)**: Supported but limited by Moodle's delegation depth
+2. **Section numbers**: Once assigned, section numbers cannot be reordered via API (use course edit interface)
+3. **Deleting subsections**: Use Moodle's course editor; API doesn't provide delete subsection function
+4. **Moving subsections**: Not supported via this API; use course editor
+
+### Troubleshooting Subsection Issues
+
+**Problem**: Activities appear in wrong section or as top-level
+- **Cause**: Using section number instead of section ID, or section not properly delegated
+- **Solution**: Verify subsection was created with v2.4+; check `course_sections.component` field is `'mod_subsection'`
+
+**Problem**: Activities in subsection are hidden but should be visible
+- **Cause**: Parent subsection is hidden
+- **Solution**: Make parent subsection visible in course editor, or request activities without visibility flag
+
+**Problem**: "Subsection module not found" error
+- **Cause**: Moodle version doesn't support subsections (< 4.0)
+- **Solution**: Upgrade Moodle to 4.0 or later, or check if subsection plugin is enabled
+
+**Problem**: Course cache errors after creating subsections
+- **Cause**: Course cache not properly rebuilt
+- **Solution**: Force cache rebuild: `rebuild_course_cache($courseid, true)` (done automatically by API)
 
 ## Future Enhancements
 
@@ -433,6 +579,16 @@ This plugin is designed to be extensible. Future versions may include:
 ---
 
 ## Version History
+
+### v2.4 (2024-12-02)
+- **FIXED: Subsection delegation and activity placement bug**
+  - Fixed critical issue where activities placed in subsections were appearing as top-level sections
+  - Subsections now properly set `component='mod_subsection'` and `itemid` metadata for correct Moodle 4.x delegation
+  - Activities (pages, assignments, files) created in subsections are now correctly nested and visible
+  - Added visibility inheritance: activities in hidden subsections are automatically hidden
+  - **Breaking change for stored subsection data**: Existing subsection sections without delegation metadata will appear as regular sections; see Migration section below
+- Added `helper` class for shared section handling logic
+- Updated all activity creation endpoints to use improved section handling
 
 ### v2.3 (2024-12-01)
 - **Fixed subsection visibility issue**: Subsections and activities added to them are now properly visible to students and part of the normal course structure

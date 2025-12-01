@@ -5,6 +5,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_activity_utils\helper;
 
 class create_page extends external_api {
 
@@ -94,20 +95,8 @@ class create_page extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        $sectionid = $DB->get_field('course_sections', 'id', [
-            'course' => $params['courseid'],
-            'section' => $params['section']
-        ]);
-
-        if ($sectionid) {
-            $section = $DB->get_record('course_sections', ['id' => $sectionid]);
-            if (!empty($section->sequence)) {
-                $sequence = $section->sequence . ',' . $cmid;
-            } else {
-                $sequence = $cmid;
-            }
-            $DB->set_field('course_sections', 'sequence', $sequence, ['id' => $sectionid]);
-        }
+        // Add module to section sequence, handling both regular and delegated (subsection) sections
+        helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
         rebuild_course_cache($params['courseid'], true);
 

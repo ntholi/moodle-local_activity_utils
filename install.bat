@@ -14,6 +14,9 @@ echo   Moodle Plugin Installer - local_activity_utils
 echo ============================================================
 echo.
 
+:: Get the directory where this script is located
+set "SCRIPT_DIR=%~dp0"
+
 :: Set the Moodle installation path
 set "MOODLE_PATH=C:\Users\nthol\Documents\Projects\LMS\moodle\MoodleWindowsInstaller-latest\server\moodle"
 set "PLUGIN_NAME=activity_utils"
@@ -63,83 +66,98 @@ echo [INFO] Creating subdirectories...
 mkdir "%DEST_PATH%\classes\external"
 mkdir "%DEST_PATH%\db"
 mkdir "%DEST_PATH%\lang\en"
+mkdir "%DEST_PATH%\tests"
 
 :: Copy plugin files
 echo [INFO] Copying plugin files...
 
-copy /y "version.php" "%DEST_PATH%\version.php" >nul
+copy /y "%SCRIPT_DIR%version.php" "%DEST_PATH%\version.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy version.php
     pause
     exit /b 1
 )
 
-copy /y "classes\external\create_assignment.php" "%DEST_PATH%\classes\external\create_assignment.php" >nul
+copy /y "%SCRIPT_DIR%classes\helper.php" "%DEST_PATH%\classes\helper.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy classes\helper.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\create_assignment.php" "%DEST_PATH%\classes\external\create_assignment.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy create_assignment.php
     pause
     exit /b 1
 )
 
-copy /y "classes\external\create_section.php" "%DEST_PATH%\classes\external\create_section.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\create_section.php" "%DEST_PATH%\classes\external\create_section.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy create_section.php
     pause
     exit /b 1
 )
 
-copy /y "classes\external\create_page.php" "%DEST_PATH%\classes\external\create_page.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\create_page.php" "%DEST_PATH%\classes\external\create_page.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy create_page.php
     pause
     exit /b 1
 )
 
-copy /y "classes\external\create_file.php" "%DEST_PATH%\classes\external\create_file.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\create_file.php" "%DEST_PATH%\classes\external\create_file.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy create_file.php
     pause
     exit /b 1
 )
 
-copy /y "classes\external\delete_assignment.php" "%DEST_PATH%\classes\external\delete_assignment.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\delete_assignment.php" "%DEST_PATH%\classes\external\delete_assignment.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy delete_assignment.php
     pause
     exit /b 1
 )
 
-copy /y "classes\external\create_subsection.php" "%DEST_PATH%\classes\external\create_subsection.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\create_subsection.php" "%DEST_PATH%\classes\external\create_subsection.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy create_subsection.php
     pause
     exit /b 1
 )
 
-copy /y "db\access.php" "%DEST_PATH%\db\access.php" >nul
+copy /y "%SCRIPT_DIR%db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\access.php
     pause
     exit /b 1
 )
 
-copy /y "db\services.php" "%DEST_PATH%\db\services.php" >nul
+copy /y "%SCRIPT_DIR%db\services.php" "%DEST_PATH%\db\services.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\services.php
     pause
     exit /b 1
 )
 
-copy /y "lang\en\local_activity_utils.php" "%DEST_PATH%\lang\en\local_activity_utils.php" >nul
+copy /y "%SCRIPT_DIR%lang\en\local_activity_utils.php" "%DEST_PATH%\lang\en\local_activity_utils.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy language file
     pause
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%tests\subsection_and_activities_test.php" "%DEST_PATH%\tests\subsection_and_activities_test.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy test file
+    pause
+    exit /b 1
+)
+
 :: Copy README if exists
-if exist "README.md" (
-    copy /y "README.md" "%DEST_PATH%\README.md" >nul
+if exist "%SCRIPT_DIR%README.md" (
+    copy /y "%SCRIPT_DIR%README.md" "%DEST_PATH%\README.md" >nul
 )
 
 echo.

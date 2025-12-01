@@ -109,6 +109,9 @@ class create_subsection extends external_api {
         $sectiondata->summaryformat = FORMAT_HTML;
         $sectiondata->visible = $params['visible'];
         $sectiondata->timemodified = time();
+        // Mark this section as delegated to the subsection module for proper nesting
+        $sectiondata->component = 'mod_subsection';
+        $sectiondata->itemid = $subsectionid;
 
         $sectionid = $DB->insert_record('course_sections', $sectiondata);
 
