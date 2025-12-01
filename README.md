@@ -4,6 +4,7 @@ A Moodle plugin that extends Moodle functionality to allow external applications
 
 This plugin provides web service endpoints for:
 - Creating course sections
+- Creating subsections (Moodle 4.0+)
 - Creating assignments
 - Deleting assignments
 - Creating page activities
@@ -34,6 +35,7 @@ This plugin provides web service endpoints for:
   - `local_activity_utils_create_assignment`
   - `local_activity_utils_delete_assignment`
   - `local_activity_utils_create_section`
+  - `local_activity_utils_create_subsection`
   - `local_activity_utils_create_page`
   - `local_activity_utils_create_file`
 
@@ -208,7 +210,62 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
-## 4. Create Page Activity
+## 4. Create Subsection
+
+Creates a new subsection within a parent section in a Moodle course. Subsections are a feature introduced in Moodle 4.0+ that allow nested sections for better course organization.
+
+**Function:** `local_activity_utils_create_subsection`
+
+**Required Capability:** `local/activity_utils:createsubsection` and `moodle/course:update`
+
+**Requirements:** Moodle 4.0 or later with subsection module support enabled.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | integer | Yes | The course ID |
+| `parentsection` | integer | Yes | Parent section number where the subsection will be nested |
+| `name` | string | Yes | Subsection name/title |
+| `summary` | string | No | Subsection summary/description (supports HTML) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden (default: 1) |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_subsection" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "parentsection=1" \
+  -d "name=Week 1.1: Getting Started" \
+  -d "summary=<p>Introduction to the course materials</p>"
+```
+
+**Response:**
+```json
+{
+  "id": 20,
+  "sectionnum": 5,
+  "coursemoduleid": 156,
+  "parentsection": 1,
+  "name": "Week 1.1: Getting Started",
+  "success": true,
+  "message": "Subsection created successfully"
+}
+```
+
+**Error Responses:**
+```json
+{
+  "exception": "moodle_exception",
+  "errorcode": "subsectionmodulenotfound",
+  "message": "Subsection module not found. This feature requires Moodle 4.0 or later with subsection support."
+}
+```
+
+---
+
+## 5. Create Page Activity
 
 Creates a new page activity in a Moodle course.
 
@@ -251,7 +308,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
-## 5. Create File Resource
+## 6. Create File Resource
 
 Creates a new file resource in a Moodle course.
 
@@ -313,6 +370,10 @@ The API user needs these capabilities for each function:
 - `local/activity_utils:createsection` (granted to editing teachers and managers by default)
 - `moodle/course:update` (standard Moodle capability)
 
+### Create Subsection
+- `local/activity_utils:createsubsection` (granted to editing teachers and managers by default)
+- `moodle/course:update` (standard Moodle capability)
+
 ### Create Page
 - `local/activity_utils:createpage` (granted to editing teachers and managers by default)
 - `mod/page:addinstance` (standard Moodle capability)
@@ -345,6 +406,11 @@ This plugin is designed to be extensible. Future versions may include:
 ---
 
 ## Version History
+
+### v2.2 (2024-12-01)
+- Added subsection creation functionality (`local_activity_utils_create_subsection`)
+- Added `createsubsection` capability
+- Subsections require Moodle 4.0+ with subsection module support
 
 ### v2.1 (2024-11-29)
 - Added delete assignment functionality (`local_activity_utils_delete_assignment`)

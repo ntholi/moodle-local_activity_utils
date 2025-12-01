@@ -109,6 +109,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "classes\external\create_subsection.php" "%DEST_PATH%\classes\external\create_subsection.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy create_subsection.php
+    pause
+    exit /b 1
+)
+
 copy /y "db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\access.php

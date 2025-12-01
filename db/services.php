@@ -42,5 +42,13 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:createfile',
     ),
+    'local_activity_utils_create_subsection' => array(
+        'classname' => 'local_activity_utils\external\create_subsection',
+        'methodname' => 'execute',
+        'description' => 'Create a new subsection within a course section',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createsubsection',
+    ),
 );
 
