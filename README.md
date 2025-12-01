@@ -254,6 +254,33 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 }
 ```
 
+**Adding Activities to Subsections:**
+
+After creating a subsection, you can add activities (pages, assignments, files, etc.) to it by using the `sectionnum` value returned in the response. This allows you to create a hierarchical course structure:
+
+```bash
+# First, create a subsection
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_subsection" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "parentsection=1" \
+  -d "name=Week 1.1: Getting Started"
+
+# Then, add a page to that subsection using the returned sectionnum (e.g., 5)
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_create_page" \
+  -d "moodlewsrestformat=json" \
+  -d "courseid=2" \
+  -d "section=5" \
+  -d "name=Getting Started Guide" \
+  -d "content=<p>Follow these steps to get started...</p>"
+```
+
+The subsection and its content will now be properly visible to students as part of the normal course structure.
+
 **Error Responses:**
 ```json
 {
@@ -406,6 +433,10 @@ This plugin is designed to be extensible. Future versions may include:
 ---
 
 ## Version History
+
+### v2.3 (2024-12-01)
+- **Fixed subsection visibility issue**: Subsections and activities added to them are now properly visible to students and part of the normal course structure
+- Removed erroneous `component` and `itemid` fields from subsection course sections that were causing the "not part of course structure" warning
 
 ### v2.2 (2024-12-01)
 - Added subsection creation functionality (`local_activity_utils_create_subsection`)
