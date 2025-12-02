@@ -66,5 +66,13 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:createbook',
     ),
+    'local_activity_utils_get_book' => array(
+        'classname' => 'local_activity_utils\external\get_book',
+        'methodname' => 'execute',
+        'description' => 'Get complete book details with all chapters and content',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:readbook',
+    ),
 );
 

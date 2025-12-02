@@ -44,6 +44,7 @@ This plugin provides web service endpoints for:
   - `local_activity_utils_create_file`
   - `local_activity_utils_create_book`
   - `local_activity_utils_add_book_chapter`
+  - `local_activity_utils_get_book`
 
 **4. Create an API Token**
 - Site Administration > Plugins > Web services > Manage tokens
@@ -567,6 +568,105 @@ Subchapters are always grouped under the preceding main chapter in the table of 
 
 ---
 
+## 9. Get Book
+
+Retrieves complete book details including all chapters, subchapters, and their content in a single call.
+
+**Function:** `local_activity_utils_get_book`
+
+**Required Capability:** `local/activity_utils:readbook` and `mod/book:read`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `bookid` | integer | Yes | The book instance ID |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_get_book" \
+  -d "moodlewsrestformat=json" \
+  -d "bookid=45"
+```
+
+**Response:**
+```json
+{
+  "id": 45,
+  "coursemoduleid": 165,
+  "courseid": 2,
+  "coursename": "Introduction to Computer Science",
+  "name": "Introduction to Programming",
+  "intro": "<p>A comprehensive guide to programming basics</p>",
+  "introformat": 1,
+  "numbering": 1,
+  "navstyle": 1,
+  "customtitles": 0,
+  "revision": 5,
+  "timecreated": 1701360000,
+  "timemodified": 1701446400,
+  "chapters": [
+    {
+      "id": 101,
+      "pagenum": 1,
+      "subchapter": 0,
+      "title": "Getting Started",
+      "content": "<p>Welcome to the programming course!</p>",
+      "contentformat": 1,
+      "hidden": 0,
+      "timecreated": 1701360000,
+      "timemodified": 1701360000,
+      "importsrc": "",
+      "tags": []
+    },
+    {
+      "id": 102,
+      "pagenum": 2,
+      "subchapter": 1,
+      "title": "Installing Tools",
+      "content": "<p>First, install the required software...</p>",
+      "contentformat": 1,
+      "hidden": 0,
+      "timecreated": 1701360000,
+      "timemodified": 1701360000,
+      "importsrc": "",
+      "tags": ["setup", "installation"]
+    },
+    {
+      "id": 103,
+      "pagenum": 3,
+      "subchapter": 1,
+      "title": "Your First Program",
+      "content": "<p>Let's write our first program...</p>",
+      "contentformat": 1,
+      "hidden": 0,
+      "timecreated": 1701360000,
+      "timemodified": 1701360000,
+      "importsrc": "",
+      "tags": []
+    }
+  ],
+  "success": true,
+  "message": "Book retrieved successfully with 3 chapter(s)"
+}
+```
+
+**Chapter Hierarchy:**
+- Chapters are returned in order by `pagenum`
+- `subchapter=0` indicates a main chapter
+- `subchapter=1` indicates a subchapter (nested under the previous main chapter)
+- Hidden chapters are only included if the user has edit permissions
+- Each chapter includes full HTML content, tags, and metadata
+
+**Use Cases:**
+- Display complete book content in custom interfaces
+- Export entire book with all chapters for backup or migration
+- Build table of contents with chapter hierarchy
+- Analyze book structure and content
+
+---
+
 ## Permissions
 
 The API user needs these capabilities for each function:
@@ -602,6 +702,10 @@ The API user needs these capabilities for each function:
 ### Add Book Chapter
 - `local/activity_utils:createbook` (granted to editing teachers and managers by default)
 - `mod/book:edit` (standard Moodle capability)
+
+### Get Book
+- `local/activity_utils:readbook` (granted to students, teachers, editing teachers, and managers by default)
+- `mod/book:read` (standard Moodle capability)
 
 ---
 

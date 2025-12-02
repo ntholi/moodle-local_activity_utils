@@ -141,6 +141,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\get_book.php" "%DEST_PATH%\classes\external\get_book.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy get_book.php
+    pause
+    exit /b 1
+)
+
 copy /y "%SCRIPT_DIR%db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\access.php
