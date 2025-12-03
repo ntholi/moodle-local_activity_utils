@@ -2,7 +2,7 @@
 
 A Moodle local plugin that provides REST API endpoints for programmatically managing course content. Enables external applications to create, update, and manage course sections, assignments, pages, files, and books.
 
-**Version:** 2.7
+**Version:** 2.8
 **Requirements:** Moodle 4.2+
 **Developed for:** Limkokwing University Registry Portal
 
@@ -16,12 +16,13 @@ A Moodle local plugin that provides REST API endpoints for programmatically mana
 - **Books:** Create multi-chapter books with hierarchical structure
 
 ### API Endpoints
-16 web service functions organized by resource type:
+21 web service functions organized by resource type:
 - Assignments (3): create, update, delete
 - Sections (4): create section/subsection, update section/subsection
 - Pages (2): create, update
 - Files (2): create, update
 - Books (5): create, update, add chapter, update chapter, get book
+- Rubrics (5): create, get, update, delete, copy
 
 ## Installation
 
@@ -60,6 +61,11 @@ local_activity_utils_update_book
 local_activity_utils_add_book_chapter
 local_activity_utils_update_book_chapter
 local_activity_utils_get_book
+local_activity_utils_create_rubric
+local_activity_utils_get_rubric
+local_activity_utils_update_rubric
+local_activity_utils_delete_rubric
+local_activity_utils_copy_rubric
 ```
 
 ### 4. Generate API Token
@@ -378,6 +384,177 @@ Retrieves complete book details including all chapters and content.
 
 ---
 
+### Rubrics
+
+Rubric endpoints provide simplified management of assignment rubrics. The official Moodle API has `core_grading_save_definitions` which is complex to use. These endpoints offer a cleaner interface for common rubric operations, plus functions not available in the core API (delete, copy).
+
+#### Create Rubric
+**Function:** `local_activity_utils_create_rubric`
+
+Creates a rubric for an assignment.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cmid` | int | Yes | Course module ID of the assignment |
+| `name` | string | Yes | Rubric name |
+| `description` | string | No | Rubric description |
+| `criteria` | array | Yes | Array of criteria objects |
+| `options` | object | No | Rubric display options |
+
+**Criterion Object:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `description` | string | Yes | Criterion description |
+| `sortorder` | int | No | Display order (auto-assigned if omitted) |
+| `levels` | array | Yes | Array of level objects |
+
+**Level Object:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `score` | float | Yes | Points for this level |
+| `definition` | string | Yes | Level description |
+
+**Options Object (all optional, defaults shown):**
+| Field | Default | Description |
+|-------|---------|-------------|
+| `sortlevelsasc` | 1 | Sort levels ascending by score |
+| `lockzeropoints` | 1 | Lock zero points option |
+| `showdescriptionstudent` | 1 | Show criterion descriptions to students |
+| `showdescriptionteacher` | 1 | Show criterion descriptions to teachers |
+| `showscoreteacher` | 1 | Show scores to teachers |
+| `showscorestudent` | 1 | Show scores to students |
+| `enableremarks` | 1 | Enable remarks per criterion |
+| `showremarksstudent` | 1 | Show remarks to students |
+
+**Response:**
+```json
+{
+  "definitionid": 15,
+  "success": true,
+  "message": "Rubric created successfully"
+}
+```
+
+#### Get Rubric
+**Function:** `local_activity_utils_get_rubric`
+
+Retrieves the rubric definition for an assignment.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cmid` | int | Yes | Course module ID of the assignment |
+
+**Response:**
+```json
+{
+  "definitionid": 15,
+  "name": "Essay Rubric",
+  "description": "Rubric for grading essays",
+  "status": 20,
+  "criteria": [
+    {
+      "id": 1,
+      "description": "Content Quality",
+      "sortorder": 1,
+      "levels": [
+        {"id": 1, "score": 0, "definition": "Poor - Does not meet requirements"},
+        {"id": 2, "score": 5, "definition": "Adequate - Meets basic requirements"},
+        {"id": 3, "score": 10, "definition": "Excellent - Exceeds expectations"}
+      ]
+    },
+    {
+      "id": 2,
+      "description": "Grammar and Style",
+      "sortorder": 2,
+      "levels": [
+        {"id": 4, "score": 0, "definition": "Many errors"},
+        {"id": 5, "score": 2.5, "definition": "Some errors"},
+        {"id": 6, "score": 5, "definition": "Error-free"}
+      ]
+    }
+  ],
+  "options": {
+    "sortlevelsasc": 1,
+    "showscorestudent": 1,
+    "enableremarks": 1
+  },
+  "maxscore": 15,
+  "success": true,
+  "message": "Rubric retrieved successfully"
+}
+```
+
+#### Update Rubric
+**Function:** `local_activity_utils_update_rubric`
+
+Updates an existing rubric. Can update name, description, options, or completely replace criteria.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cmid` | int | Yes | Course module ID of the assignment |
+| `name` | string | No | New rubric name |
+| `description` | string | No | New rubric description |
+| `criteria` | array | No | New criteria (replaces all existing) |
+| `options` | object | No | Options to update (merged with existing) |
+
+**Note:** When providing `criteria`, include `id` for existing criteria/levels to preserve them, or omit `id` to create new ones. All criteria not included will be deleted.
+
+**Response:**
+```json
+{
+  "definitionid": 15,
+  "success": true,
+  "message": "Rubric updated successfully"
+}
+```
+
+#### Delete Rubric
+**Function:** `local_activity_utils_delete_rubric`
+
+Deletes a rubric from an assignment and reverts to simple grading. **Not available in core Moodle API.**
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cmid` | int | Yes | Course module ID of the assignment |
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Rubric deleted successfully"
+}
+```
+
+**Warning:** This also deletes all existing rubric grades for the assignment.
+
+#### Copy Rubric
+**Function:** `local_activity_utils_copy_rubric`
+
+Copies a rubric from one assignment to another. **Not available in core Moodle API.**
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `sourcecmid` | int | Yes | Source assignment course module ID |
+| `targetcmid` | int | Yes | Target assignment course module ID |
+
+**Response:**
+```json
+{
+  "definitionid": 20,
+  "success": true,
+  "message": "Rubric copied successfully"
+}
+```
+
+**Note:** The target assignment must not already have a rubric defined.
+
+---
+
 ## Examples
 
 ### Create a Section with Subsection and Page
@@ -427,6 +604,39 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "chapters[1][subchapter]=1"
 ```
 
+### Create Rubric for Assignment
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN" \
+  -d "wsfunction=local_activity_utils_create_rubric" \
+  -d "moodlewsrestformat=json" \
+  -d "cmid=123" \
+  -d "name=Essay Rubric" \
+  -d "description=Rubric for grading essays" \
+  -d "criteria[0][description]=Content Quality" \
+  -d "criteria[0][levels][0][score]=0" \
+  -d "criteria[0][levels][0][definition]=Poor" \
+  -d "criteria[0][levels][1][score]=5" \
+  -d "criteria[0][levels][1][definition]=Adequate" \
+  -d "criteria[0][levels][2][score]=10" \
+  -d "criteria[0][levels][2][definition]=Excellent" \
+  -d "criteria[1][description]=Grammar" \
+  -d "criteria[1][levels][0][score]=0" \
+  -d "criteria[1][levels][0][definition]=Many errors" \
+  -d "criteria[1][levels][1][score]=5" \
+  -d "criteria[1][levels][1][definition]=Error-free"
+```
+
+### Copy Rubric to Another Assignment
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN" \
+  -d "wsfunction=local_activity_utils_copy_rubric" \
+  -d "moodlewsrestformat=json" \
+  -d "sourcecmid=123" \
+  -d "targetcmid=456"
+```
+
 ---
 
 ## Permissions
@@ -448,6 +658,7 @@ Plugin capabilities are granted to **editing teachers** and **managers** by defa
 - `local/activity_utils:createbook`
 - `local/activity_utils:updatebook`
 - `local/activity_utils:readbook` (granted to students, teachers, editing teachers, managers)
+- `local/activity_utils:managerubric`
 
 ### Standard Moodle Capabilities
 Functions also require relevant Moodle capabilities:
@@ -456,6 +667,7 @@ Functions also require relevant Moodle capabilities:
 - `mod/resource:addinstance` (files)
 - `mod/book:addinstance`, `mod/book:edit`, `mod/book:read` (books)
 - `moodle/course:update`, `moodle/course:manageactivities` (sections)
+- `moodle/grade:managegradingforms` (rubrics)
 
 ---
 

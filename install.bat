@@ -69,6 +69,7 @@ mkdir "%DEST_PATH%\classes\external\assignment"
 mkdir "%DEST_PATH%\classes\external\book"
 mkdir "%DEST_PATH%\classes\external\file"
 mkdir "%DEST_PATH%\classes\external\page"
+mkdir "%DEST_PATH%\classes\external\rubric"
 mkdir "%DEST_PATH%\classes\external\section"
 mkdir "%DEST_PATH%\db"
 mkdir "%DEST_PATH%\lang\en"
@@ -204,6 +205,42 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\section\update_subsection.php" "%DEST_PATH%\classes\external\section\update_subsection.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy section\update_subsection.php
+    pause
+    exit /b 1
+)
+
+:: Copy rubric files
+copy /y "%SCRIPT_DIR%classes\external\rubric\create_rubric.php" "%DEST_PATH%\classes\external\rubric\create_rubric.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\create_rubric.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\rubric\get_rubric.php" "%DEST_PATH%\classes\external\rubric\get_rubric.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\get_rubric.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\rubric\update_rubric.php" "%DEST_PATH%\classes\external\rubric\update_rubric.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\update_rubric.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\rubric\delete_rubric.php" "%DEST_PATH%\classes\external\rubric\delete_rubric.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\delete_rubric.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\rubric\copy_rubric.php" "%DEST_PATH%\classes\external\rubric\copy_rubric.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\copy_rubric.php
     pause
     exit /b 1
 )

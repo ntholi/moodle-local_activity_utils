@@ -139,5 +139,47 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatesubsection',
     ),
+
+    // Rubric functions
+    'local_activity_utils_create_rubric' => array(
+        'classname' => 'local_activity_utils\external\rubric\create_rubric',
+        'methodname' => 'execute',
+        'description' => 'Create a rubric for an assignment',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managerubric',
+    ),
+    'local_activity_utils_get_rubric' => array(
+        'classname' => 'local_activity_utils\external\rubric\get_rubric',
+        'methodname' => 'execute',
+        'description' => 'Get rubric definition for an assignment',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managerubric',
+    ),
+    'local_activity_utils_update_rubric' => array(
+        'classname' => 'local_activity_utils\external\rubric\update_rubric',
+        'methodname' => 'execute',
+        'description' => 'Update an existing rubric',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managerubric',
+    ),
+    'local_activity_utils_delete_rubric' => array(
+        'classname' => 'local_activity_utils\external\rubric\delete_rubric',
+        'methodname' => 'execute',
+        'description' => 'Delete a rubric from an assignment',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managerubric',
+    ),
+    'local_activity_utils_copy_rubric' => array(
+        'classname' => 'local_activity_utils\external\rubric\copy_rubric',
+        'methodname' => 'execute',
+        'description' => 'Copy a rubric from one assignment to another',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managerubric',
+    ),
 );
 

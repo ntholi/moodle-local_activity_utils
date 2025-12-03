@@ -1,0 +1,211 @@
+<?php
+namespace local_activity_utils\external\rubric;
+
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core_external\external_value;
+
+/**
+ * Update an existing rubric for an assignment.
+ */
+class update_rubric extends external_api {
+
+    public static function execute_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'Course module ID of the assignment'),
+            'name' => new external_value(PARAM_TEXT, 'Rubric name', VALUE_DEFAULT, ''),
+            'description' => new external_value(PARAM_RAW, 'Rubric description', VALUE_DEFAULT, null),
+            'criteria' => new external_multiple_structure(
+                new external_single_structure([
+                    'id' => new external_value(PARAM_INT, 'Criterion ID (0 for new criterion)', VALUE_DEFAULT, 0),
+                    'description' => new external_value(PARAM_RAW, 'Criterion description'),
+                    'sortorder' => new external_value(PARAM_INT, 'Sort order', VALUE_DEFAULT, 0),
+                    'levels' => new external_multiple_structure(
+                        new external_single_structure([
+                            'id' => new external_value(PARAM_INT, 'Level ID (0 for new level)', VALUE_DEFAULT, 0),
+                            'score' => new external_value(PARAM_FLOAT, 'Score for this level'),
+                            'definition' => new external_value(PARAM_RAW, 'Level definition/description'),
+                        ]),
+                        'Rubric levels for this criterion'
+                    ),
+                ]),
+                'Rubric criteria with levels (provide all criteria to replace)',
+                VALUE_DEFAULT,
+                []
+            ),
+            'options' => new external_single_structure([
+                'sortlevelsasc' => new external_value(PARAM_INT, 'Sort levels ascending', VALUE_DEFAULT, null),
+                'lockzeropoints' => new external_value(PARAM_INT, 'Lock zero points', VALUE_DEFAULT, null),
+                'showdescriptionstudent' => new external_value(PARAM_INT, 'Show description to student', VALUE_DEFAULT, null),
+                'showdescriptionteacher' => new external_value(PARAM_INT, 'Show description to teacher', VALUE_DEFAULT, null),
+                'showscoreteacher' => new external_value(PARAM_INT, 'Show score to teacher', VALUE_DEFAULT, null),
+                'showscorestudent' => new external_value(PARAM_INT, 'Show score to student', VALUE_DEFAULT, null),
+                'enableremarks' => new external_value(PARAM_INT, 'Enable remarks', VALUE_DEFAULT, null),
+                'showremarksstudent' => new external_value(PARAM_INT, 'Show remarks to student', VALUE_DEFAULT, null),
+            ], 'Rubric options', VALUE_DEFAULT, []),
+        ]);
+    }
+
+    public static function execute(
+        int $cmid,
+        string $name = '',
+        ?string $description = null,
+        array $criteria = [],
+        array $options = []
+    ): array {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/grade/grading/lib.php');
+        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
+
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'cmid' => $cmid,
+            'name' => $name,
+            'description' => $description,
+            'criteria' => $criteria,
+            'options' => $options,
+        ]);
+
+        // Get the course module and verify it's an assignment.
+        $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+
+        self::validate_context($context);
+        require_capability('local/activity_utils:managerubric', $context);
+        require_capability('moodle/grade:managegradingforms', $context);
+
+        // Get grading manager.
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+
+        // Check if rubric is active.
+        if ($gradingmanager->get_active_method() !== 'rubric') {
+            return [
+                'definitionid' => 0,
+                'success' => false,
+                'message' => 'No rubric is set for this assignment. Use create_rubric first.',
+            ];
+        }
+
+        // Get the controller.
+        $controller = $gradingmanager->get_controller('rubric');
+
+        if (!$controller->is_form_defined()) {
+            return [
+                'definitionid' => 0,
+                'success' => false,
+                'message' => 'No rubric definition exists. Use create_rubric first.',
+            ];
+        }
+
+        $definition = $controller->get_definition();
+
+        // Build the updated rubric data.
+        $rubricdata = [
+            'name' => !empty($params['name']) ? $params['name'] : $definition->name,
+            'description_editor' => [
+                'text' => $params['description'] !== null ? $params['description'] : ($definition->description ?? ''),
+                'format' => FORMAT_HTML,
+            ],
+            'status' => \gradingform_controller::DEFINITION_STATUS_READY,
+        ];
+
+        // Handle criteria update.
+        if (!empty($params['criteria'])) {
+            $rubriccriteria = [];
+            $sortorder = 1;
+
+            foreach ($params['criteria'] as $criterion) {
+                $criteriondata = [
+                    'description' => $criterion['description'],
+                    'descriptionformat' => FORMAT_HTML,
+                    'sortorder' => $criterion['sortorder'] ?: $sortorder,
+                    'levels' => [],
+                ];
+
+                // If criterion has ID, include it.
+                if (!empty($criterion['id'])) {
+                    $criteriondata['id'] = $criterion['id'];
+                }
+
+                foreach ($criterion['levels'] as $level) {
+                    $leveldata = [
+                        'score' => $level['score'],
+                        'definition' => $level['definition'],
+                        'definitionformat' => FORMAT_HTML,
+                    ];
+
+                    // If level has ID, include it.
+                    if (!empty($level['id'])) {
+                        $leveldata['id'] = $level['id'];
+                    }
+
+                    $criteriondata['levels'][] = $leveldata;
+                }
+
+                $rubriccriteria[] = $criteriondata;
+                $sortorder++;
+            }
+
+            $rubricdata['rubric']['criteria'] = $rubriccriteria;
+        } else {
+            // Keep existing criteria.
+            $existingcriteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
+            $rubriccriteria = [];
+
+            foreach ($existingcriteria as $criterion) {
+                $levels = $DB->get_records('gradingform_rubric_levels', ['criterionid' => $criterion->id], 'score ASC');
+                $levelsdata = [];
+
+                foreach ($levels as $level) {
+                    $levelsdata[] = [
+                        'id' => $level->id,
+                        'score' => $level->score,
+                        'definition' => $level->definition,
+                        'definitionformat' => FORMAT_HTML,
+                    ];
+                }
+
+                $rubriccriteria[] = [
+                    'id' => $criterion->id,
+                    'description' => $criterion->description,
+                    'descriptionformat' => FORMAT_HTML,
+                    'sortorder' => $criterion->sortorder,
+                    'levels' => $levelsdata,
+                ];
+            }
+
+            $rubricdata['rubric']['criteria'] = $rubriccriteria;
+        }
+
+        // Handle options update.
+        $existingoptions = json_decode($definition->options ?? '{}', true) ?: [];
+        $newoptions = [];
+
+        foreach ($params['options'] as $key => $value) {
+            if ($value !== null) {
+                $newoptions[$key] = $value;
+            }
+        }
+
+        $rubricdata['rubric']['options'] = array_merge($existingoptions, $newoptions);
+
+        // Update the definition.
+        $controller->update_definition($rubricdata);
+
+        return [
+            'definitionid' => (int)$definition->id,
+            'success' => true,
+            'message' => 'Rubric updated successfully',
+        ];
+    }
+
+    public static function execute_returns(): external_single_structure {
+        return new external_single_structure([
+            'definitionid' => new external_value(PARAM_INT, 'Rubric definition ID'),
+            'success' => new external_value(PARAM_BOOL, 'Success status'),
+            'message' => new external_value(PARAM_TEXT, 'Response message'),
+        ]);
+    }
+}

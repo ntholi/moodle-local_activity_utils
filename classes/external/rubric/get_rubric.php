@@ -1,0 +1,174 @@
+<?php
+namespace local_activity_utils\external\rubric;
+
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core_external\external_value;
+
+/**
+ * Get rubric definition for an assignment.
+ *
+ * This provides a simplified API compared to core_grading_get_definitions.
+ */
+class get_rubric extends external_api {
+
+    public static function execute_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'Course module ID of the assignment'),
+        ]);
+    }
+
+    public static function execute(int $cmid): array {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/grade/grading/lib.php');
+
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'cmid' => $cmid,
+        ]);
+
+        // Get the course module and verify it's an assignment.
+        $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+
+        self::validate_context($context);
+        require_capability('local/activity_utils:managerubric', $context);
+
+        // Get grading manager.
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+
+        // Check if rubric is active.
+        $activemethod = $gradingmanager->get_active_method();
+        if ($activemethod !== 'rubric') {
+            return [
+                'definitionid' => 0,
+                'name' => '',
+                'description' => '',
+                'status' => 0,
+                'criteria' => [],
+                'options' => self::get_default_options(),
+                'maxscore' => 0,
+                'success' => false,
+                'message' => $activemethod ? 'Assignment uses ' . $activemethod . ' grading, not rubric' : 'No advanced grading method is set for this assignment',
+            ];
+        }
+
+        // Get the rubric controller.
+        $controller = $gradingmanager->get_controller('rubric');
+
+        if (!$controller->is_form_defined()) {
+            return [
+                'definitionid' => 0,
+                'name' => '',
+                'description' => '',
+                'status' => 0,
+                'criteria' => [],
+                'options' => self::get_default_options(),
+                'maxscore' => 0,
+                'success' => false,
+                'message' => 'Rubric is set as grading method but no rubric is defined',
+            ];
+        }
+
+        $definition = $controller->get_definition();
+
+        // Get criteria and levels.
+        $criteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
+
+        $criteriaresult = [];
+        $maxscore = 0;
+
+        foreach ($criteria as $criterion) {
+            $levels = $DB->get_records('gradingform_rubric_levels', ['criterionid' => $criterion->id], 'score ASC');
+
+            $levelsresult = [];
+            $criterionmaxscore = 0;
+            foreach ($levels as $level) {
+                $levelsresult[] = [
+                    'id' => (int)$level->id,
+                    'score' => (float)$level->score,
+                    'definition' => $level->definition,
+                ];
+                if ($level->score > $criterionmaxscore) {
+                    $criterionmaxscore = $level->score;
+                }
+            }
+
+            $criteriaresult[] = [
+                'id' => (int)$criterion->id,
+                'description' => $criterion->description,
+                'sortorder' => (int)$criterion->sortorder,
+                'levels' => $levelsresult,
+            ];
+
+            $maxscore += $criterionmaxscore;
+        }
+
+        // Get options.
+        $options = json_decode($definition->options ?? '{}', true) ?: [];
+        $optionsresult = array_merge(self::get_default_options(), $options);
+
+        return [
+            'definitionid' => (int)$definition->id,
+            'name' => $definition->name,
+            'description' => $definition->description ?? '',
+            'status' => (int)$definition->status,
+            'criteria' => $criteriaresult,
+            'options' => $optionsresult,
+            'maxscore' => (float)$maxscore,
+            'success' => true,
+            'message' => 'Rubric retrieved successfully',
+        ];
+    }
+
+    private static function get_default_options(): array {
+        return [
+            'sortlevelsasc' => 1,
+            'lockzeropoints' => 1,
+            'showdescriptionstudent' => 1,
+            'showdescriptionteacher' => 1,
+            'showscoreteacher' => 1,
+            'showscorestudent' => 1,
+            'enableremarks' => 1,
+            'showremarksstudent' => 1,
+        ];
+    }
+
+    public static function execute_returns(): external_single_structure {
+        return new external_single_structure([
+            'definitionid' => new external_value(PARAM_INT, 'Rubric definition ID'),
+            'name' => new external_value(PARAM_TEXT, 'Rubric name'),
+            'description' => new external_value(PARAM_RAW, 'Rubric description'),
+            'status' => new external_value(PARAM_INT, 'Status (10=draft, 20=ready)'),
+            'criteria' => new external_multiple_structure(
+                new external_single_structure([
+                    'id' => new external_value(PARAM_INT, 'Criterion ID'),
+                    'description' => new external_value(PARAM_RAW, 'Criterion description'),
+                    'sortorder' => new external_value(PARAM_INT, 'Sort order'),
+                    'levels' => new external_multiple_structure(
+                        new external_single_structure([
+                            'id' => new external_value(PARAM_INT, 'Level ID'),
+                            'score' => new external_value(PARAM_FLOAT, 'Score'),
+                            'definition' => new external_value(PARAM_RAW, 'Level definition'),
+                        ])
+                    ),
+                ])
+            ),
+            'options' => new external_single_structure([
+                'sortlevelsasc' => new external_value(PARAM_INT, 'Sort levels ascending'),
+                'lockzeropoints' => new external_value(PARAM_INT, 'Lock zero points'),
+                'showdescriptionstudent' => new external_value(PARAM_INT, 'Show description to student'),
+                'showdescriptionteacher' => new external_value(PARAM_INT, 'Show description to teacher'),
+                'showscoreteacher' => new external_value(PARAM_INT, 'Show score to teacher'),
+                'showscorestudent' => new external_value(PARAM_INT, 'Show score to student'),
+                'enableremarks' => new external_value(PARAM_INT, 'Enable remarks'),
+                'showremarksstudent' => new external_value(PARAM_INT, 'Show remarks to student'),
+            ]),
+            'maxscore' => new external_value(PARAM_FLOAT, 'Maximum possible score'),
+            'success' => new external_value(PARAM_BOOL, 'Success status'),
+            'message' => new external_value(PARAM_TEXT, 'Response message'),
+        ]);
+    }
+}
