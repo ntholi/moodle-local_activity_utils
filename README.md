@@ -13,6 +13,13 @@ This plugin provides web service endpoints for:
 - Creating file resources
 - Creating book resources with chapters
 - Adding chapters to existing books
+- Updating assignments
+- Updating page activities
+- Updating file resources
+- Updating book resources
+- Updating book chapters
+- Updating course sections
+- Updating subsections
 
 ## Installation
 
@@ -45,6 +52,13 @@ This plugin provides web service endpoints for:
   - `local_activity_utils_create_book`
   - `local_activity_utils_add_book_chapter`
   - `local_activity_utils_get_book`
+  - `local_activity_utils_update_assignment`
+  - `local_activity_utils_update_page`
+  - `local_activity_utils_update_file`
+  - `local_activity_utils_update_book`
+  - `local_activity_utils_update_book_chapter`
+  - `local_activity_utils_update_section`
+  - `local_activity_utils_update_subsection`
 
 **4. Create an API Token**
 - Site Administration > Plugins > Web services > Manage tokens
@@ -667,6 +681,315 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 ---
 
+## 10. Update Assignment
+
+Updates an existing assignment in a Moodle course. Only provided fields are updated.
+
+**Function:** `local_activity_utils_update_assignment`
+
+**Required Capability:** `local/activity_utils:updateassignment` and `mod/assign:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `assignmentid` | integer | Yes | The assignment ID to update |
+| `name` | string | No | New assignment name/title |
+| `intro` | string | No | New assignment description (supports HTML) |
+| `activity` | string | No | New activity instructions (supports HTML) |
+| `allowsubmissionsfromdate` | integer | No | New allow submissions from date (Unix timestamp) |
+| `duedate` | integer | No | New due date (Unix timestamp) |
+| `cutoffdate` | integer | No | New cut-off date (Unix timestamp) |
+| `idnumber` | string | No | New ID number for gradebook |
+| `grademax` | integer | No | New maximum grade |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_assignment" \
+  -d "moodlewsrestformat=json" \
+  -d "assignmentid=45" \
+  -d "name=Updated Assignment Title" \
+  -d "duedate=1735776000"
+```
+
+**Response:**
+```json
+{
+  "id": 45,
+  "coursemoduleid": 123,
+  "name": "Updated Assignment Title",
+  "success": true,
+  "message": "Assignment updated successfully"
+}
+```
+
+---
+
+## 11. Update Page
+
+Updates an existing page activity in a Moodle course.
+
+**Function:** `local_activity_utils_update_page`
+
+**Required Capability:** `local/activity_utils:updatepage` and `mod/page:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pageid` | integer | Yes | The page ID to update |
+| `name` | string | No | New page name/title |
+| `intro` | string | No | New page introduction (supports HTML) |
+| `content` | string | No | New page content (supports HTML) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_page" \
+  -d "moodlewsrestformat=json" \
+  -d "pageid=28" \
+  -d "name=Updated Syllabus" \
+  -d "content=<h1>Updated Course Syllabus</h1><p>New content here...</p>"
+```
+
+**Response:**
+```json
+{
+  "id": 28,
+  "coursemoduleid": 145,
+  "name": "Updated Syllabus",
+  "success": true,
+  "message": "Page updated successfully"
+}
+```
+
+---
+
+## 12. Update File Resource
+
+Updates an existing file resource in a Moodle course. Can update metadata, replace file content, or rename the file.
+
+**Function:** `local_activity_utils_update_file`
+
+**Required Capability:** `local/activity_utils:updatefile` and `mod/resource:addinstance`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `resourceid` | integer | Yes | The resource ID to update |
+| `name` | string | No | New file resource name/title |
+| `intro` | string | No | New introduction/description (supports HTML) |
+| `filename` | string | No | New file name (requires filecontent for full replacement) |
+| `filecontent` | string | No | New file content (base64 encoded) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden |
+
+**Example Request - Update metadata:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_file" \
+  -d "moodlewsrestformat=json" \
+  -d "resourceid=32" \
+  -d "name=Updated Course Textbook" \
+  -d "intro=<p>Download the updated textbook</p>"
+```
+
+**Example Request - Replace file:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_file" \
+  -d "moodlewsrestformat=json" \
+  -d "resourceid=32" \
+  -d "filename=textbook_v2.pdf" \
+  -d "filecontent=JVBERi0xLjQKJeLjz9MKMSAwIG9iago8..."
+```
+
+**Response:**
+```json
+{
+  "id": 32,
+  "coursemoduleid": 150,
+  "name": "Updated Course Textbook",
+  "filename": "textbook_v2.pdf",
+  "success": true,
+  "message": "File resource updated successfully"
+}
+```
+
+---
+
+## 13. Update Book
+
+Updates an existing book resource in a Moodle course.
+
+**Function:** `local_activity_utils_update_book`
+
+**Required Capability:** `local/activity_utils:updatebook` and `mod/book:edit`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `bookid` | integer | Yes | The book ID to update |
+| `name` | string | No | New book name/title |
+| `intro` | string | No | New book introduction (supports HTML) |
+| `numbering` | integer | No | Chapter numbering style (0=none, 1=numbers, 2=bullets, 3=indented) |
+| `navstyle` | integer | No | Navigation style (0=none, 1=images, 2=text) |
+| `customtitles` | integer | No | Use custom titles: 0=no, 1=yes |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_book" \
+  -d "moodlewsrestformat=json" \
+  -d "bookid=45" \
+  -d "name=Updated Programming Guide" \
+  -d "numbering=2"
+```
+
+**Response:**
+```json
+{
+  "id": 45,
+  "coursemoduleid": 165,
+  "name": "Updated Programming Guide",
+  "success": true,
+  "message": "Book updated successfully"
+}
+```
+
+---
+
+## 14. Update Book Chapter
+
+Updates an existing chapter in a book resource.
+
+**Function:** `local_activity_utils_update_book_chapter`
+
+**Required Capability:** `local/activity_utils:updatebook` and `mod/book:edit`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `chapterid` | integer | Yes | The chapter ID to update |
+| `title` | string | No | New chapter title |
+| `content` | string | No | New chapter content (supports HTML) |
+| `subchapter` | integer | No | Is subchapter: 0=main chapter, 1=subchapter |
+| `hidden` | integer | No | Hidden: 0=visible, 1=hidden |
+| `tags` | string | No | Comma-separated tags (empty string to clear all tags) |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_book_chapter" \
+  -d "moodlewsrestformat=json" \
+  -d "chapterid=101" \
+  -d "title=Updated Chapter Title" \
+  -d "content=<p>Updated chapter content...</p>" \
+  -d "tags=programming,basics,updated"
+```
+
+**Response:**
+```json
+{
+  "id": 101,
+  "bookid": 45,
+  "pagenum": 1,
+  "title": "Updated Chapter Title",
+  "subchapter": 0,
+  "success": true,
+  "message": "Chapter updated successfully"
+}
+```
+
+---
+
+## 15. Update Section
+
+Updates an existing course section.
+
+**Function:** `local_activity_utils_update_section`
+
+**Required Capability:** `local/activity_utils:updatesection` and `moodle/course:update`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sectionid` | integer | Yes | The section ID to update |
+| `name` | string | No | New section name |
+| `summary` | string | No | New section summary (supports HTML) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_section" \
+  -d "moodlewsrestformat=json" \
+  -d "sectionid=15" \
+  -d "name=Week 1: Updated Introduction" \
+  -d "summary=<p>Updated section description</p>"
+```
+
+**Response:**
+```json
+{
+  "id": 15,
+  "sectionnum": 1,
+  "name": "Week 1: Updated Introduction",
+  "success": true,
+  "message": "Section updated successfully"
+}
+```
+
+---
+
+## 16. Update Subsection
+
+Updates an existing subsection (delegated section).
+
+**Function:** `local_activity_utils_update_subsection`
+
+**Required Capability:** `local/activity_utils:updatesubsection` and `moodle/course:update`
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sectionid` | integer | Yes | The subsection section ID to update |
+| `name` | string | No | New subsection name |
+| `summary` | string | No | New subsection summary (supports HTML) |
+| `visible` | integer | No | Visibility: 1=visible, 0=hidden |
+
+**Example Request:**
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=YOUR_TOKEN_HERE" \
+  -d "wsfunction=local_activity_utils_update_subsection" \
+  -d "moodlewsrestformat=json" \
+  -d "sectionid=20" \
+  -d "name=Week 1.1: Updated Getting Started" \
+  -d "visible=0"
+```
+
+**Response:**
+```json
+{
+  "id": 20,
+  "sectionnum": 5,
+  "name": "Week 1.1: Updated Getting Started",
+  "success": true,
+  "message": "Subsection updated successfully"
+}
+```
+
+---
+
 ## Permissions
 
 The API user needs these capabilities for each function:
@@ -706,6 +1029,34 @@ The API user needs these capabilities for each function:
 ### Get Book
 - `local/activity_utils:readbook` (granted to students, teachers, editing teachers, and managers by default)
 - `mod/book:read` (standard Moodle capability)
+
+### Update Assignment
+- `local/activity_utils:updateassignment` (granted to editing teachers and managers by default)
+- `mod/assign:addinstance` (standard Moodle capability)
+
+### Update Page
+- `local/activity_utils:updatepage` (granted to editing teachers and managers by default)
+- `mod/page:addinstance` (standard Moodle capability)
+
+### Update File
+- `local/activity_utils:updatefile` (granted to editing teachers and managers by default)
+- `mod/resource:addinstance` (standard Moodle capability)
+
+### Update Book
+- `local/activity_utils:updatebook` (granted to editing teachers and managers by default)
+- `mod/book:edit` (standard Moodle capability)
+
+### Update Book Chapter
+- `local/activity_utils:updatebook` (granted to editing teachers and managers by default)
+- `mod/book:edit` (standard Moodle capability)
+
+### Update Section
+- `local/activity_utils:updatesection` (granted to editing teachers and managers by default)
+- `moodle/course:update` (standard Moodle capability)
+
+### Update Subsection
+- `local/activity_utils:updatesubsection` (granted to editing teachers and managers by default)
+- `moodle/course:update` (standard Moodle capability)
 
 ---
 

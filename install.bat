@@ -148,6 +148,55 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\update_assignment.php" "%DEST_PATH%\classes\external\update_assignment.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_assignment.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\update_page.php" "%DEST_PATH%\classes\external\update_page.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_page.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\update_book.php" "%DEST_PATH%\classes\external\update_book.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_book.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\update_book_chapter.php" "%DEST_PATH%\classes\external\update_book_chapter.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_book_chapter.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\update_file.php" "%DEST_PATH%\classes\external\update_file.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_file.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\update_section.php" "%DEST_PATH%\classes\external\update_section.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_section.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\update_subsection.php" "%DEST_PATH%\classes\external\update_subsection.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy update_subsection.php
+    pause
+    exit /b 1
+)
+
 copy /y "%SCRIPT_DIR%db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\access.php
