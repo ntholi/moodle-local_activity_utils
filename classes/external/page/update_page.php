@@ -1,5 +1,5 @@
 <?php
-namespace local_activity_utils\external;
+namespace local_activity_utils\external\page;
 
 use core_external\external_api;
 use core_external\external_function_parameters;

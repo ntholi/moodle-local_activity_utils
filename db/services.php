@@ -2,8 +2,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
+    // Assignment functions
     'local_activity_utils_create_assignment' => array(
-        'classname' => 'local_activity_utils\external\create_assignment',
+        'classname' => 'local_activity_utils\external\assignment\create_assignment',
         'methodname' => 'execute',
         'description' => 'Create a new assignment',
         'type' => 'write',
@@ -11,47 +12,25 @@ $functions = array(
         'capabilities' => 'local/activity_utils:createassignment',
     ),
     'local_activity_utils_delete_assignment' => array(
-        'classname' => 'local_activity_utils\external\delete_assignment',
+        'classname' => 'local_activity_utils\external\assignment\delete_assignment',
         'methodname' => 'execute',
         'description' => 'Delete an existing assignment',
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:deleteassignment',
     ),
-    'local_activity_utils_create_section' => array(
-        'classname' => 'local_activity_utils\external\create_section',
+    'local_activity_utils_update_assignment' => array(
+        'classname' => 'local_activity_utils\external\assignment\update_assignment',
         'methodname' => 'execute',
-        'description' => 'Create a new course section',
+        'description' => 'Update an existing assignment',
         'type' => 'write',
         'ajax' => true,
-        'capabilities' => 'local/activity_utils:createsection',
+        'capabilities' => 'local/activity_utils:updateassignment',
     ),
-    'local_activity_utils_create_page' => array(
-        'classname' => 'local_activity_utils\external\create_page',
-        'methodname' => 'execute',
-        'description' => 'Create a new page activity',
-        'type' => 'write',
-        'ajax' => true,
-        'capabilities' => 'local/activity_utils:createpage',
-    ),
-    'local_activity_utils_create_file' => array(
-        'classname' => 'local_activity_utils\external\create_file',
-        'methodname' => 'execute',
-        'description' => 'Create a new file resource',
-        'type' => 'write',
-        'ajax' => true,
-        'capabilities' => 'local/activity_utils:createfile',
-    ),
-    'local_activity_utils_create_subsection' => array(
-        'classname' => 'local_activity_utils\external\create_subsection',
-        'methodname' => 'execute',
-        'description' => 'Create a new subsection within a course section',
-        'type' => 'write',
-        'ajax' => true,
-        'capabilities' => 'local/activity_utils:createsubsection',
-    ),
+
+    // Book functions
     'local_activity_utils_create_book' => array(
-        'classname' => 'local_activity_utils\external\create_book',
+        'classname' => 'local_activity_utils\external\book\create_book',
         'methodname' => 'execute',
         'description' => 'Create a new book resource with optional chapters',
         'type' => 'write',
@@ -59,7 +38,7 @@ $functions = array(
         'capabilities' => 'local/activity_utils:createbook',
     ),
     'local_activity_utils_add_book_chapter' => array(
-        'classname' => 'local_activity_utils\external\add_book_chapter',
+        'classname' => 'local_activity_utils\external\book\add_book_chapter',
         'methodname' => 'execute',
         'description' => 'Add a chapter to an existing book',
         'type' => 'write',
@@ -67,31 +46,15 @@ $functions = array(
         'capabilities' => 'local/activity_utils:createbook',
     ),
     'local_activity_utils_get_book' => array(
-        'classname' => 'local_activity_utils\external\get_book',
+        'classname' => 'local_activity_utils\external\book\get_book',
         'methodname' => 'execute',
         'description' => 'Get complete book details with all chapters and content',
         'type' => 'read',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:readbook',
     ),
-    'local_activity_utils_update_assignment' => array(
-        'classname' => 'local_activity_utils\external\update_assignment',
-        'methodname' => 'execute',
-        'description' => 'Update an existing assignment',
-        'type' => 'write',
-        'ajax' => true,
-        'capabilities' => 'local/activity_utils:updateassignment',
-    ),
-    'local_activity_utils_update_page' => array(
-        'classname' => 'local_activity_utils\external\update_page',
-        'methodname' => 'execute',
-        'description' => 'Update an existing page activity',
-        'type' => 'write',
-        'ajax' => true,
-        'capabilities' => 'local/activity_utils:updatepage',
-    ),
     'local_activity_utils_update_book' => array(
-        'classname' => 'local_activity_utils\external\update_book',
+        'classname' => 'local_activity_utils\external\book\update_book',
         'methodname' => 'execute',
         'description' => 'Update an existing book resource',
         'type' => 'write',
@@ -99,31 +62,77 @@ $functions = array(
         'capabilities' => 'local/activity_utils:updatebook',
     ),
     'local_activity_utils_update_book_chapter' => array(
-        'classname' => 'local_activity_utils\external\update_book_chapter',
+        'classname' => 'local_activity_utils\external\book\update_book_chapter',
         'methodname' => 'execute',
         'description' => 'Update an existing book chapter',
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatebook',
     ),
+
+    // File functions
+    'local_activity_utils_create_file' => array(
+        'classname' => 'local_activity_utils\external\file\create_file',
+        'methodname' => 'execute',
+        'description' => 'Create a new file resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createfile',
+    ),
     'local_activity_utils_update_file' => array(
-        'classname' => 'local_activity_utils\external\update_file',
+        'classname' => 'local_activity_utils\external\file\update_file',
         'methodname' => 'execute',
         'description' => 'Update an existing file resource',
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatefile',
     ),
+
+    // Page functions
+    'local_activity_utils_create_page' => array(
+        'classname' => 'local_activity_utils\external\page\create_page',
+        'methodname' => 'execute',
+        'description' => 'Create a new page activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createpage',
+    ),
+    'local_activity_utils_update_page' => array(
+        'classname' => 'local_activity_utils\external\page\update_page',
+        'methodname' => 'execute',
+        'description' => 'Update an existing page activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:updatepage',
+    ),
+
+    // Section functions
+    'local_activity_utils_create_section' => array(
+        'classname' => 'local_activity_utils\external\section\create_section',
+        'methodname' => 'execute',
+        'description' => 'Create a new course section',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createsection',
+    ),
     'local_activity_utils_update_section' => array(
-        'classname' => 'local_activity_utils\external\update_section',
+        'classname' => 'local_activity_utils\external\section\update_section',
         'methodname' => 'execute',
         'description' => 'Update an existing course section',
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatesection',
     ),
+    'local_activity_utils_create_subsection' => array(
+        'classname' => 'local_activity_utils\external\section\create_subsection',
+        'methodname' => 'execute',
+        'description' => 'Create a new subsection within a course section',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createsubsection',
+    ),
     'local_activity_utils_update_subsection' => array(
-        'classname' => 'local_activity_utils\external\update_subsection',
+        'classname' => 'local_activity_utils\external\section\update_subsection',
         'methodname' => 'execute',
         'description' => 'Update an existing subsection',
         'type' => 'write',

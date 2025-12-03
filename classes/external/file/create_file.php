@@ -1,5 +1,5 @@
 <?php
-namespace local_activity_utils\external;
+namespace local_activity_utils\external\file;
 
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -7,14 +7,15 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use local_activity_utils\helper;
 
-class create_page extends external_api {
+class create_file extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course ID'),
-            'name' => new external_value(PARAM_TEXT, 'Page name'),
-            'intro' => new external_value(PARAM_RAW, 'Page introduction/description', VALUE_DEFAULT, ''),
-            'content' => new external_value(PARAM_RAW, 'Page content (HTML)', VALUE_DEFAULT, ''),
+            'name' => new external_value(PARAM_TEXT, 'File resource name'),
+            'intro' => new external_value(PARAM_RAW, 'File resource introduction/description', VALUE_DEFAULT, ''),
+            'filename' => new external_value(PARAM_TEXT, 'File name'),
+            'filecontent' => new external_value(PARAM_RAW, 'File content (base64 encoded)'),
             'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
             'visible' => new external_value(PARAM_INT, 'Visibility (1=visible, 0=hidden)', VALUE_DEFAULT, 1),
         ]);
@@ -24,20 +25,22 @@ class create_page extends external_api {
         int $courseid,
         string $name,
         string $intro = '',
-        string $content = '',
+        string $filename = '',
+        string $filecontent = '',
         int $section = 0,
         int $visible = 1
     ): array {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER;
 
         require_once($CFG->dirroot . '/course/lib.php');
-        require_once($CFG->dirroot . '/mod/page/lib.php');
+        require_once($CFG->dirroot . '/mod/resource/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
             'name' => $name,
             'intro' => $intro,
-            'content' => $content,
+            'filename' => $filename,
+            'filecontent' => $filecontent,
             'section' => $section,
             'visible' => $visible,
         ]);
@@ -46,32 +49,37 @@ class create_page extends external_api {
         $context = \context_course::instance($course->id);
 
         self::validate_context($context);
-        require_capability('local/activity_utils:createpage', $context);
-        require_capability('mod/page:addinstance', $context);
+        require_capability('local/activity_utils:createfile', $context);
+        require_capability('mod/resource:addinstance', $context);
 
-        $page = new \stdClass();
-        $page->course = $params['courseid'];
-        $page->name = $params['name'];
-        $page->intro = $params['intro'];
-        $page->introformat = FORMAT_HTML;
-        $page->content = $params['content'];
-        $page->contentformat = FORMAT_HTML;
-        $page->legacyfiles = 0;
-        $page->legacyfileslast = null;
-        $page->display = 5; // Display page content on a separate page
-        $page->displayoptions = 'a:2:{s:12:"printheading";s:1:"1";s:10:"printintro";s:1:"0";}';
-        $page->revision = 1;
-        $page->timemodified = time();
-        $page->timecreated = time();
+        $filename = clean_param($params['filename'], PARAM_FILE);
+        if (empty($filename)) {
+            throw new \moodle_exception('invalidfilename', 'local_activity_utils');
+        }
 
-        $pageid = $DB->insert_record('page', $page);
+        $resource = new \stdClass();
+        $resource->course = $params['courseid'];
+        $resource->name = $params['name'];
+        $resource->intro = $params['intro'];
+        $resource->introformat = FORMAT_HTML;
+        $resource->tobemigrated = 0;
+        $resource->legacyfiles = 0;
+        $resource->legacyfileslast = null;
+        $resource->display = 0; // Automatic
+        $resource->displayoptions = 'a:2:{s:12:"printheading";s:1:"1";s:10:"printintro";s:1:"0";}';
+        $resource->filterfiles = 0;
+        $resource->revision = 1;
+        $resource->timemodified = time();
+        $resource->timecreated = time();
 
-        $moduleid = $DB->get_field('modules', 'id', ['name' => 'page'], MUST_EXIST);
+        $resourceid = $DB->insert_record('resource', $resource);
+
+        $moduleid = $DB->get_field('modules', 'id', ['name' => 'resource'], MUST_EXIST);
 
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
-        $cm->instance = $pageid;
+        $cm->instance = $resourceid;
         $cm->section = $params['section'];
         $cm->idnumber = '';
         $cm->added = time();
@@ -95,25 +103,49 @@ class create_page extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
+        $fs = get_file_storage();
+        $modulecontext = \context_module::instance($cmid);
+
+        $content = base64_decode($params['filecontent'], true);
+        if ($content === false) {
+            $content = $params['filecontent'];
+        }
+
+        $filerecord = [
+            'contextid' => $modulecontext->id,
+            'component' => 'mod_resource',
+            'filearea' => 'content',
+            'itemid' => 0,
+            'filepath' => '/',
+            'filename' => $filename,
+            'userid' => $USER->id,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ];
+
+        $fs->create_file_from_string($filerecord, $content);
+
         // Add module to section sequence, handling both regular and delegated (subsection) sections
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
         rebuild_course_cache($params['courseid'], true);
 
         return [
-            'id' => $pageid,
+            'id' => $resourceid,
             'coursemoduleid' => $cmid,
             'name' => $params['name'],
+            'filename' => $filename,
             'success' => true,
-            'message' => 'Page created successfully'
+            'message' => 'File resource created successfully'
         ];
     }
 
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'id' => new external_value(PARAM_INT, 'Page ID'),
+            'id' => new external_value(PARAM_INT, 'Resource ID'),
             'coursemoduleid' => new external_value(PARAM_INT, 'Course module ID'),
-            'name' => new external_value(PARAM_TEXT, 'Page name'),
+            'name' => new external_value(PARAM_TEXT, 'Resource name'),
+            'filename' => new external_value(PARAM_TEXT, 'File name'),
             'success' => new external_value(PARAM_BOOL, 'Success status'),
             'message' => new external_value(PARAM_TEXT, 'Response message'),
         ]);
