@@ -63,7 +63,13 @@ if errorlevel 1 (
 
 :: Create subdirectories
 echo [INFO] Creating subdirectories...
+mkdir "%DEST_PATH%\classes"
 mkdir "%DEST_PATH%\classes\external"
+mkdir "%DEST_PATH%\classes\external\assignment"
+mkdir "%DEST_PATH%\classes\external\book"
+mkdir "%DEST_PATH%\classes\external\file"
+mkdir "%DEST_PATH%\classes\external\page"
+mkdir "%DEST_PATH%\classes\external\section"
 mkdir "%DEST_PATH%\db"
 mkdir "%DEST_PATH%\lang\en"
 mkdir "%DEST_PATH%\tests"
@@ -85,118 +91,124 @@ if errorlevel 1 (
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\create_assignment.php" "%DEST_PATH%\classes\external\create_assignment.php" >nul
+:: Copy assignment files
+copy /y "%SCRIPT_DIR%classes\external\assignment\create_assignment.php" "%DEST_PATH%\classes\external\assignment\create_assignment.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_assignment.php
+    echo [ERROR] Failed to copy assignment\create_assignment.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\create_section.php" "%DEST_PATH%\classes\external\create_section.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\assignment\delete_assignment.php" "%DEST_PATH%\classes\external\assignment\delete_assignment.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_section.php
+    echo [ERROR] Failed to copy assignment\delete_assignment.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\create_page.php" "%DEST_PATH%\classes\external\create_page.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\assignment\update_assignment.php" "%DEST_PATH%\classes\external\assignment\update_assignment.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_page.php
+    echo [ERROR] Failed to copy assignment\update_assignment.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\create_file.php" "%DEST_PATH%\classes\external\create_file.php" >nul
+:: Copy book files
+copy /y "%SCRIPT_DIR%classes\external\book\create_book.php" "%DEST_PATH%\classes\external\book\create_book.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_file.php
+    echo [ERROR] Failed to copy book\create_book.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\delete_assignment.php" "%DEST_PATH%\classes\external\delete_assignment.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\book\add_book_chapter.php" "%DEST_PATH%\classes\external\book\add_book_chapter.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy delete_assignment.php
+    echo [ERROR] Failed to copy book\add_book_chapter.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\create_subsection.php" "%DEST_PATH%\classes\external\create_subsection.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\book\get_book.php" "%DEST_PATH%\classes\external\book\get_book.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_subsection.php
+    echo [ERROR] Failed to copy book\get_book.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\create_book.php" "%DEST_PATH%\classes\external\create_book.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\book\update_book.php" "%DEST_PATH%\classes\external\book\update_book.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy create_book.php
+    echo [ERROR] Failed to copy book\update_book.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\add_book_chapter.php" "%DEST_PATH%\classes\external\add_book_chapter.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\book\update_book_chapter.php" "%DEST_PATH%\classes\external\book\update_book_chapter.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy add_book_chapter.php
+    echo [ERROR] Failed to copy book\update_book_chapter.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\get_book.php" "%DEST_PATH%\classes\external\get_book.php" >nul
+:: Copy file files
+copy /y "%SCRIPT_DIR%classes\external\file\create_file.php" "%DEST_PATH%\classes\external\file\create_file.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy get_book.php
+    echo [ERROR] Failed to copy file\create_file.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_assignment.php" "%DEST_PATH%\classes\external\update_assignment.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\file\update_file.php" "%DEST_PATH%\classes\external\file\update_file.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_assignment.php
+    echo [ERROR] Failed to copy file\update_file.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_page.php" "%DEST_PATH%\classes\external\update_page.php" >nul
+:: Copy page files
+copy /y "%SCRIPT_DIR%classes\external\page\create_page.php" "%DEST_PATH%\classes\external\page\create_page.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_page.php
+    echo [ERROR] Failed to copy page\create_page.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_book.php" "%DEST_PATH%\classes\external\update_book.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\page\update_page.php" "%DEST_PATH%\classes\external\page\update_page.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_book.php
+    echo [ERROR] Failed to copy page\update_page.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_book_chapter.php" "%DEST_PATH%\classes\external\update_book_chapter.php" >nul
+:: Copy section files
+copy /y "%SCRIPT_DIR%classes\external\section\create_section.php" "%DEST_PATH%\classes\external\section\create_section.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_book_chapter.php
+    echo [ERROR] Failed to copy section\create_section.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_file.php" "%DEST_PATH%\classes\external\update_file.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\section\update_section.php" "%DEST_PATH%\classes\external\section\update_section.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_file.php
+    echo [ERROR] Failed to copy section\update_section.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_section.php" "%DEST_PATH%\classes\external\update_section.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\section\create_subsection.php" "%DEST_PATH%\classes\external\section\create_subsection.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_section.php
+    echo [ERROR] Failed to copy section\create_subsection.php
     pause
     exit /b 1
 )
 
-copy /y "%SCRIPT_DIR%classes\external\update_subsection.php" "%DEST_PATH%\classes\external\update_subsection.php" >nul
+copy /y "%SCRIPT_DIR%classes\external\section\update_subsection.php" "%DEST_PATH%\classes\external\section\update_subsection.php" >nul
 if errorlevel 1 (
-    echo [ERROR] Failed to copy update_subsection.php
+    echo [ERROR] Failed to copy section\update_subsection.php
     pause
     exit /b 1
 )
 
+:: Copy db files
 copy /y "%SCRIPT_DIR%db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy db\access.php
@@ -211,6 +223,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Copy language file
 copy /y "%SCRIPT_DIR%lang\en\local_activity_utils.php" "%DEST_PATH%\lang\en\local_activity_utils.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy language file
@@ -218,6 +231,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Copy test file
 copy /y "%SCRIPT_DIR%tests\subsection_and_activities_test.php" "%DEST_PATH%\tests\subsection_and_activities_test.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy test file
