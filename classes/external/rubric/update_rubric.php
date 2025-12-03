@@ -101,20 +101,21 @@ class update_rubric extends external_api {
 
         $definition = $controller->get_definition();
 
-        // Build the updated rubric data.
-        $rubricdata = [
-            'name' => !empty($params['name']) ? $params['name'] : $definition->name,
-            'description_editor' => [
-                'text' => $params['description'] !== null ? $params['description'] : ($definition->description ?? ''),
-                'format' => FORMAT_HTML,
-            ],
-            'status' => \gradingform_controller::DEFINITION_STATUS_READY,
+        // Build the updated rubric data as stdClass (required by update_definition).
+        $rubricdata = new \stdClass();
+        $rubricdata->name = !empty($params['name']) ? $params['name'] : $definition->name;
+        $rubricdata->description_editor = [
+            'text' => $params['description'] !== null ? $params['description'] : ($definition->description ?? ''),
+            'format' => FORMAT_HTML,
         ];
+        $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
         // Handle criteria update.
+        // Moodle expects criteria and levels to be keyed by ID (existing) or 'NEWIDn' (new items).
         if (!empty($params['criteria'])) {
             $rubriccriteria = [];
             $sortorder = 1;
+            $newcriterionindex = 1;
 
             foreach ($params['criteria'] as $criterion) {
                 $criteriondata = [
@@ -124,11 +125,15 @@ class update_rubric extends external_api {
                     'levels' => [],
                 ];
 
-                // If criterion has ID, include it.
+                // Determine criterion key: use existing ID or generate NEWIDn.
                 if (!empty($criterion['id'])) {
-                    $criteriondata['id'] = $criterion['id'];
+                    $criterionkey = $criterion['id'];
+                } else {
+                    $criterionkey = 'NEWID' . $newcriterionindex;
+                    $newcriterionindex++;
                 }
 
+                $newlevelindex = 1;
                 foreach ($criterion['levels'] as $level) {
                     $leveldata = [
                         'score' => $level['score'],
@@ -136,21 +141,24 @@ class update_rubric extends external_api {
                         'definitionformat' => FORMAT_HTML,
                     ];
 
-                    // If level has ID, include it.
+                    // Determine level key: use existing ID or generate NEWIDn.
                     if (!empty($level['id'])) {
-                        $leveldata['id'] = $level['id'];
+                        $levelkey = $level['id'];
+                    } else {
+                        $levelkey = 'NEWID' . $newlevelindex;
+                        $newlevelindex++;
                     }
 
-                    $criteriondata['levels'][] = $leveldata;
+                    $criteriondata['levels'][$levelkey] = $leveldata;
                 }
 
-                $rubriccriteria[] = $criteriondata;
+                $rubriccriteria[$criterionkey] = $criteriondata;
                 $sortorder++;
             }
 
-            $rubricdata['rubric']['criteria'] = $rubriccriteria;
+            $rubricdata->rubric['criteria'] = $rubriccriteria;
         } else {
-            // Keep existing criteria.
+            // Keep existing criteria - use numeric IDs as keys (existing items).
             $existingcriteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
             $rubriccriteria = [];
 
@@ -159,16 +167,14 @@ class update_rubric extends external_api {
                 $levelsdata = [];
 
                 foreach ($levels as $level) {
-                    $levelsdata[] = [
-                        'id' => $level->id,
+                    $levelsdata[$level->id] = [
                         'score' => $level->score,
                         'definition' => $level->definition,
                         'definitionformat' => FORMAT_HTML,
                     ];
                 }
 
-                $rubriccriteria[] = [
-                    'id' => $criterion->id,
+                $rubriccriteria[$criterion->id] = [
                     'description' => $criterion->description,
                     'descriptionformat' => FORMAT_HTML,
                     'sortorder' => $criterion->sortorder,
@@ -176,7 +182,7 @@ class update_rubric extends external_api {
                 ];
             }
 
-            $rubricdata['rubric']['criteria'] = $rubriccriteria;
+            $rubricdata->rubric['criteria'] = $rubriccriteria;
         }
 
         // Handle options update.
@@ -189,7 +195,7 @@ class update_rubric extends external_api {
             }
         }
 
-        $rubricdata['rubric']['options'] = array_merge($existingoptions, $newoptions);
+        $rubricdata->rubric['options'] = array_merge($existingoptions, $newoptions);
 
         // Update the definition.
         $controller->update_definition($rubricdata);

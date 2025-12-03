@@ -98,9 +98,12 @@ class create_rubric extends external_api {
         $definitionid = $controller->get_definition() ? $controller->get_definition()->id : null;
 
         // Build the rubric definition data.
+        // Moodle expects criteria and levels to be keyed by 'NEWIDn' for new items.
         $rubriccriteria = [];
         $sortorder = 1;
+        $criterionindex = 1;
         foreach ($params['criteria'] as $criterion) {
+            $criterionkey = 'NEWID' . $criterionindex;
             $criteriondata = [
                 'description' => $criterion['description'],
                 'descriptionformat' => FORMAT_HTML,
@@ -108,16 +111,20 @@ class create_rubric extends external_api {
                 'levels' => [],
             ];
 
+            $levelindex = 1;
             foreach ($criterion['levels'] as $level) {
-                $criteriondata['levels'][] = [
+                $levelkey = 'NEWID' . $levelindex;
+                $criteriondata['levels'][$levelkey] = [
                     'score' => $level['score'],
                     'definition' => $level['definition'],
                     'definitionformat' => FORMAT_HTML,
                 ];
+                $levelindex++;
             }
 
-            $rubriccriteria[] = $criteriondata;
+            $rubriccriteria[$criterionkey] = $criteriondata;
             $sortorder++;
+            $criterionindex++;
         }
 
         // Set default options.
@@ -133,19 +140,18 @@ class create_rubric extends external_api {
         ];
         $rubricoptions = array_merge($defaultoptions, $params['options']);
 
-        // Prepare the form data.
-        $rubricdata = [
-            'name' => $params['name'],
-            'description_editor' => [
-                'text' => $params['description'],
-                'format' => FORMAT_HTML,
-            ],
-            'rubric' => [
-                'criteria' => $rubriccriteria,
-                'options' => $rubricoptions,
-            ],
-            'status' => \gradingform_controller::DEFINITION_STATUS_READY,
+        // Prepare the form data as stdClass (required by update_definition).
+        $rubricdata = new \stdClass();
+        $rubricdata->name = $params['name'];
+        $rubricdata->description_editor = [
+            'text' => $params['description'],
+            'format' => FORMAT_HTML,
         ];
+        $rubricdata->rubric = [
+            'criteria' => $rubriccriteria,
+            'options' => $rubricoptions,
+        ];
+        $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
         // Update the definition.
         $controller->update_definition($rubricdata);
