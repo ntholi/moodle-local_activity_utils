@@ -1,0 +1,274 @@
+<?php
+namespace local_activity_utils\external\bigbluebuttonbn;
+
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_value;
+use local_activity_utils\helper;
+use mod_bigbluebuttonbn\plugin;
+use mod_bigbluebuttonbn\local\helpers\mod_helper;
+use mod_bigbluebuttonbn\meeting;
+
+/**
+ * External function for creating a BigBlueButton activity.
+ *
+ * @package    local_activity_utils
+ * @copyright  2024 Activity Utils
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class create_bigbluebuttonbn extends external_api {
+
+    public static function execute_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'courseid' => new external_value(PARAM_INT, 'Course ID'),
+            'name' => new external_value(PARAM_TEXT, 'Activity name'),
+            'intro' => new external_value(PARAM_RAW, 'Activity description (HTML)', VALUE_DEFAULT, ''),
+            'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
+            'visible' => new external_value(PARAM_INT, 'Visibility (1=visible, 0=hidden)', VALUE_DEFAULT, 1),
+            
+            // Instance type
+            'type' => new external_value(PARAM_INT, 'Instance type: 0=room with recordings, 1=room only, 2=recordings only', VALUE_DEFAULT, 0),
+            
+            // Room settings
+            'welcome' => new external_value(PARAM_RAW, 'Welcome message displayed in the room', VALUE_DEFAULT, ''),
+            'voicebridge' => new external_value(PARAM_INT, 'Voice bridge number (4 digits)', VALUE_DEFAULT, 0),
+            'wait' => new external_value(PARAM_INT, 'Wait for moderator before joining (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'userlimit' => new external_value(PARAM_INT, 'Maximum number of participants (0=unlimited)', VALUE_DEFAULT, 0),
+            'record' => new external_value(PARAM_INT, 'Enable recording (1=yes, 0=no)', VALUE_DEFAULT, 1),
+            'muteonstart' => new external_value(PARAM_INT, 'Mute participants on start (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            
+            // Lock settings
+            'disablecam' => new external_value(PARAM_INT, 'Disable webcams (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'disablemic' => new external_value(PARAM_INT, 'Disable microphones (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'disableprivatechat' => new external_value(PARAM_INT, 'Disable private chat (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'disablepublicchat' => new external_value(PARAM_INT, 'Disable public chat (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'disablenote' => new external_value(PARAM_INT, 'Disable shared notes (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'hideuserlist' => new external_value(PARAM_INT, 'Hide user list (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            
+            // Schedule settings
+            'openingtime' => new external_value(PARAM_INT, 'Opening time (Unix timestamp, 0=no restriction)', VALUE_DEFAULT, 0),
+            'closingtime' => new external_value(PARAM_INT, 'Closing time (Unix timestamp, 0=no restriction)', VALUE_DEFAULT, 0),
+            
+            // Guest access
+            'guestallowed' => new external_value(PARAM_INT, 'Allow guest access (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'mustapproveuser' => new external_value(PARAM_INT, 'Moderator must approve guests (1=yes, 0=no)', VALUE_DEFAULT, 1),
+            
+            // Recording settings
+            'recordings_deleted' => new external_value(PARAM_INT, 'Show deleted recordings (1=yes, 0=no)', VALUE_DEFAULT, 1),
+            'recordings_imported' => new external_value(PARAM_INT, 'Show imported recordings (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            'recordings_preview' => new external_value(PARAM_INT, 'Show recording preview (1=yes, 0=no)', VALUE_DEFAULT, 0),
+            
+            // Presentation
+            'showpresentation' => new external_value(PARAM_INT, 'Show presentation on activity page (1=yes, 0=no)', VALUE_DEFAULT, 1),
+            
+            // Completion settings
+            'completionattendance' => new external_value(PARAM_INT, 'Required attendance time in minutes for completion', VALUE_DEFAULT, 0),
+            'completionengagementchats' => new external_value(PARAM_INT, 'Required number of chat messages for completion', VALUE_DEFAULT, 0),
+            'completionengagementtalks' => new external_value(PARAM_INT, 'Required number of talk time for completion', VALUE_DEFAULT, 0),
+            'completionengagementraisehand' => new external_value(PARAM_INT, 'Required number of raise hand for completion', VALUE_DEFAULT, 0),
+            'completionengagementpollvotes' => new external_value(PARAM_INT, 'Required number of poll votes for completion', VALUE_DEFAULT, 0),
+            'completionengagementemojis' => new external_value(PARAM_INT, 'Required number of emojis for completion', VALUE_DEFAULT, 0),
+        ]);
+    }
+
+    public static function execute(
+        int $courseid,
+        string $name,
+        string $intro = '',
+        int $section = 0,
+        int $visible = 1,
+        int $type = 0,
+        string $welcome = '',
+        int $voicebridge = 0,
+        int $wait = 0,
+        int $userlimit = 0,
+        int $record = 1,
+        int $muteonstart = 0,
+        int $disablecam = 0,
+        int $disablemic = 0,
+        int $disableprivatechat = 0,
+        int $disablepublicchat = 0,
+        int $disablenote = 0,
+        int $hideuserlist = 0,
+        int $openingtime = 0,
+        int $closingtime = 0,
+        int $guestallowed = 0,
+        int $mustapproveuser = 1,
+        int $recordings_deleted = 1,
+        int $recordings_imported = 0,
+        int $recordings_preview = 0,
+        int $showpresentation = 1,
+        int $completionattendance = 0,
+        int $completionengagementchats = 0,
+        int $completionengagementtalks = 0,
+        int $completionengagementraisehand = 0,
+        int $completionengagementpollvotes = 0,
+        int $completionengagementemojis = 0
+    ): array {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/course/lib.php');
+        require_once($CFG->dirroot . '/mod/bigbluebuttonbn/lib.php');
+
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'courseid' => $courseid,
+            'name' => $name,
+            'intro' => $intro,
+            'section' => $section,
+            'visible' => $visible,
+            'type' => $type,
+            'welcome' => $welcome,
+            'voicebridge' => $voicebridge,
+            'wait' => $wait,
+            'userlimit' => $userlimit,
+            'record' => $record,
+            'muteonstart' => $muteonstart,
+            'disablecam' => $disablecam,
+            'disablemic' => $disablemic,
+            'disableprivatechat' => $disableprivatechat,
+            'disablepublicchat' => $disablepublicchat,
+            'disablenote' => $disablenote,
+            'hideuserlist' => $hideuserlist,
+            'openingtime' => $openingtime,
+            'closingtime' => $closingtime,
+            'guestallowed' => $guestallowed,
+            'mustapproveuser' => $mustapproveuser,
+            'recordings_deleted' => $recordings_deleted,
+            'recordings_imported' => $recordings_imported,
+            'recordings_preview' => $recordings_preview,
+            'showpresentation' => $showpresentation,
+            'completionattendance' => $completionattendance,
+            'completionengagementchats' => $completionengagementchats,
+            'completionengagementtalks' => $completionengagementtalks,
+            'completionengagementraisehand' => $completionengagementraisehand,
+            'completionengagementpollvotes' => $completionengagementpollvotes,
+            'completionengagementemojis' => $completionengagementemojis,
+        ]);
+
+        // Validate course exists
+        $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
+        $context = \context_course::instance($course->id);
+
+        self::validate_context($context);
+        require_capability('local/activity_utils:createbigbluebuttonbn', $context);
+        require_capability('mod/bigbluebuttonbn:addinstance', $context);
+
+        // Generate unique meeting credentials
+        $meetingid = meeting::get_unique_meetingid_seed();
+        $moderatorpass = plugin::random_password(12);
+        $viewerpass = plugin::random_password(12, $moderatorpass);
+        
+        // Generate guest credentials
+        $guestlinkuid = '';
+        $guestpassword = '';
+        if ($params['guestallowed']) {
+            [$guestlinkuid, $guestpassword] = plugin::generate_guest_meeting_credentials();
+        }
+
+        // Create the BigBlueButton instance record
+        $bigbluebuttonbn = new \stdClass();
+        $bigbluebuttonbn->course = $params['courseid'];
+        $bigbluebuttonbn->name = $params['name'];
+        $bigbluebuttonbn->intro = $params['intro'];
+        $bigbluebuttonbn->introformat = FORMAT_HTML;
+        $bigbluebuttonbn->type = $params['type'];
+        $bigbluebuttonbn->meetingid = $meetingid;
+        $bigbluebuttonbn->moderatorpass = $moderatorpass;
+        $bigbluebuttonbn->viewerpass = $viewerpass;
+        $bigbluebuttonbn->welcome = $params['welcome'];
+        $bigbluebuttonbn->voicebridge = $params['voicebridge'];
+        $bigbluebuttonbn->wait = $params['wait'];
+        $bigbluebuttonbn->userlimit = $params['userlimit'];
+        $bigbluebuttonbn->record = $params['record'];
+        $bigbluebuttonbn->muteonstart = $params['muteonstart'];
+        $bigbluebuttonbn->disablecam = $params['disablecam'];
+        $bigbluebuttonbn->disablemic = $params['disablemic'];
+        $bigbluebuttonbn->disableprivatechat = $params['disableprivatechat'];
+        $bigbluebuttonbn->disablepublicchat = $params['disablepublicchat'];
+        $bigbluebuttonbn->disablenote = $params['disablenote'];
+        $bigbluebuttonbn->hideuserlist = $params['hideuserlist'];
+        $bigbluebuttonbn->openingtime = $params['openingtime'];
+        $bigbluebuttonbn->closingtime = $params['closingtime'];
+        $bigbluebuttonbn->guestallowed = $params['guestallowed'];
+        $bigbluebuttonbn->mustapproveuser = $params['mustapproveuser'];
+        $bigbluebuttonbn->guestlinkuid = $guestlinkuid;
+        $bigbluebuttonbn->guestpassword = $guestpassword;
+        $bigbluebuttonbn->recordings_deleted = $params['recordings_deleted'];
+        $bigbluebuttonbn->recordings_imported = $params['recordings_imported'];
+        $bigbluebuttonbn->recordings_preview = $params['recordings_preview'];
+        $bigbluebuttonbn->showpresentation = $params['showpresentation'];
+        $bigbluebuttonbn->presentation = null;
+        $bigbluebuttonbn->participants = '[]';
+        $bigbluebuttonbn->timecreated = time();
+        $bigbluebuttonbn->timemodified = 0;
+        
+        // Completion settings
+        $bigbluebuttonbn->completionattendance = $params['completionattendance'];
+        $bigbluebuttonbn->completionengagementchats = $params['completionengagementchats'];
+        $bigbluebuttonbn->completionengagementtalks = $params['completionengagementtalks'];
+        $bigbluebuttonbn->completionengagementraisehand = $params['completionengagementraisehand'];
+        $bigbluebuttonbn->completionengagementpollvotes = $params['completionengagementpollvotes'];
+        $bigbluebuttonbn->completionengagementemojis = $params['completionengagementemojis'];
+
+        // Insert the BigBlueButton instance
+        $bigbluebuttonbnid = $DB->insert_record('bigbluebuttonbn', $bigbluebuttonbn);
+
+        // Get the module ID for bigbluebuttonbn
+        $moduleid = $DB->get_field('modules', 'id', ['name' => 'bigbluebuttonbn'], MUST_EXIST);
+
+        // Create the course module record
+        $cm = new \stdClass();
+        $cm->course = $params['courseid'];
+        $cm->module = $moduleid;
+        $cm->instance = $bigbluebuttonbnid;
+        $cm->section = $params['section'];
+        $cm->idnumber = '';
+        $cm->added = time();
+        $cm->score = 0;
+        $cm->indent = 0;
+        $cm->visible = $params['visible'];
+        $cm->visibleoncoursepage = 1;
+        $cm->visibleold = $params['visible'];
+        $cm->groupmode = 0;
+        $cm->groupingid = 0;
+        $cm->completion = 0;
+        $cm->completionview = 0;
+        $cm->completionexpected = 0;
+        $cm->completionpassgrade = 0;
+        $cm->showdescription = 0;
+        $cm->availability = null;
+        $cm->deletioninprogress = 0;
+        $cm->downloadcontent = 1;
+        $cm->lang = '';
+        $cm->completiongradeitemnumber = null;
+
+        $cmid = $DB->insert_record('course_modules', $cm);
+
+        // Add module to section sequence
+        helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
+
+        // Rebuild course cache
+        rebuild_course_cache($params['courseid'], true);
+
+        return [
+            'id' => $bigbluebuttonbnid,
+            'coursemoduleid' => $cmid,
+            'meetingid' => $meetingid,
+            'name' => $params['name'],
+            'success' => true,
+            'message' => 'BigBlueButton activity created successfully'
+        ];
+    }
+
+    public static function execute_returns(): external_single_structure {
+        return new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'BigBlueButton instance ID'),
+            'coursemoduleid' => new external_value(PARAM_INT, 'Course module ID'),
+            'meetingid' => new external_value(PARAM_TEXT, 'Meeting ID'),
+            'name' => new external_value(PARAM_TEXT, 'Activity name'),
+            'success' => new external_value(PARAM_BOOL, 'Success status'),
+            'message' => new external_value(PARAM_TEXT, 'Response message'),
+        ]);
+    }
+}

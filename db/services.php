@@ -181,5 +181,23 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:managerubric',
     ),
+
+    // BigBlueButton functions
+    'local_activity_utils_create_bigbluebuttonbn' => array(
+        'classname' => 'local_activity_utils\external\bigbluebuttonbn\create_bigbluebuttonbn',
+        'methodname' => 'execute',
+        'description' => 'Create a new BigBlueButton activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createbigbluebuttonbn',
+    ),
+    'local_activity_utils_update_bigbluebuttonbn' => array(
+        'classname' => 'local_activity_utils\external\bigbluebuttonbn\update_bigbluebuttonbn',
+        'methodname' => 'execute',
+        'description' => 'Update an existing BigBlueButton activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:updatebigbluebuttonbn',
+    ),
 );
 

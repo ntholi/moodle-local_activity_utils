@@ -66,6 +66,7 @@ echo [INFO] Creating subdirectories...
 mkdir "%DEST_PATH%\classes"
 mkdir "%DEST_PATH%\classes\external"
 mkdir "%DEST_PATH%\classes\external\assignment"
+mkdir "%DEST_PATH%\classes\external\bigbluebuttonbn"
 mkdir "%DEST_PATH%\classes\external\book"
 mkdir "%DEST_PATH%\classes\external\file"
 mkdir "%DEST_PATH%\classes\external\page"
@@ -110,6 +111,21 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\assignment\update_assignment.php" "%DEST_PATH%\classes\external\assignment\update_assignment.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy assignment\update_assignment.php
+    pause
+    exit /b 1
+)
+
+:: Copy bigbluebuttonbn files
+copy /y "%SCRIPT_DIR%classes\external\bigbluebuttonbn\create_bigbluebuttonbn.php" "%DEST_PATH%\classes\external\bigbluebuttonbn\create_bigbluebuttonbn.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy bigbluebuttonbn\create_bigbluebuttonbn.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\bigbluebuttonbn\update_bigbluebuttonbn.php" "%DEST_PATH%\classes\external\bigbluebuttonbn\update_bigbluebuttonbn.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy bigbluebuttonbn\update_bigbluebuttonbn.php
     pause
     exit /b 1
 )

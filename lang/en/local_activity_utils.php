@@ -19,6 +19,8 @@ $string['activity_utils:updatefile'] = 'Update file resources via API';
 $string['activity_utils:updatesection'] = 'Update course sections via API';
 $string['activity_utils:updatesubsection'] = 'Update subsections via API';
 $string['activity_utils:managerubric'] = 'Manage rubrics via API';
+$string['activity_utils:createbigbluebuttonbn'] = 'Create BigBlueButton activities via API';
+$string['activity_utils:updatebigbluebuttonbn'] = 'Update BigBlueButton activities via API';
 
 $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
