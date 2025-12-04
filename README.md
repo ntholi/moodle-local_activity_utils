@@ -2,7 +2,7 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 2.9 | **Requirements:** Moodle 4.2+ | **Developed for:** Limkokwing University
+**Version:** 2.9 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
 
 ## Features
 
