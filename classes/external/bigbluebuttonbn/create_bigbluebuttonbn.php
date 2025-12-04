@@ -198,7 +198,7 @@ class create_bigbluebuttonbn extends external_api {
         $bigbluebuttonbn->recordings_imported = $params['recordings_imported'];
         $bigbluebuttonbn->recordings_preview = $params['recordings_preview'];
         $bigbluebuttonbn->showpresentation = $params['showpresentation'];
-        $bigbluebuttonbn->presentation = null;
+        $bigbluebuttonbn->presentation = '';
         $bigbluebuttonbn->participants = '[]';
         $bigbluebuttonbn->timecreated = time();
         $bigbluebuttonbn->timemodified = 0;
