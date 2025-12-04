@@ -69,6 +69,7 @@ mkdir "%DEST_PATH%\classes\external\assignment"
 mkdir "%DEST_PATH%\classes\external\bigbluebuttonbn"
 mkdir "%DEST_PATH%\classes\external\book"
 mkdir "%DEST_PATH%\classes\external\file"
+mkdir "%DEST_PATH%\classes\external\forum"
 mkdir "%DEST_PATH%\classes\external\page"
 mkdir "%DEST_PATH%\classes\external\rubric"
 mkdir "%DEST_PATH%\classes\external\section"
@@ -177,6 +178,14 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\file\update_file.php" "%DEST_PATH%\classes\external\file\update_file.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy file\update_file.php
+    pause
+    exit /b 1
+)
+
+:: Copy forum files
+copy /y "%SCRIPT_DIR%classes\external\forum\create_forum.php" "%DEST_PATH%\classes\external\forum\create_forum.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy forum\create_forum.php
     pause
     exit /b 1
 )

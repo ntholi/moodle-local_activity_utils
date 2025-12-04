@@ -199,5 +199,15 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatebigbluebuttonbn',
     ),
+
+    // Forum functions
+    'local_activity_utils_create_forum' => array(
+        'classname' => 'local_activity_utils\external\forum\create_forum',
+        'methodname' => 'execute',
+        'description' => 'Create a new forum activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createforum',
+    ),
 );
 

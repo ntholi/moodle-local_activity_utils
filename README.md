@@ -2,11 +2,11 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 2.9 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
+**Version:** 2.10 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
 
 ## Features
 
-23 web service functions:
+24 web service functions:
 - **Sections** (4): create/update sections and subsections
 - **Assignments** (3): create, update, delete
 - **Pages** (2): create, update
@@ -14,6 +14,7 @@ REST API endpoints for programmatic Moodle course content management.
 - **Books** (5): create, update, add/update chapters, get
 - **Rubrics** (5): create, get, update, delete, copy
 - **BigBlueButton** (2): create, update
+- **Forums** (1): create
 
 ## Quick Setup
 
@@ -284,6 +285,42 @@ Parameters: `bigbluebuttonbnid` (required), plus any field from create (all opti
 
 ---
 
+## Forums
+
+### Create Forum
+`local_activity_utils_create_forum`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | int | Yes | |
+| `name` | string | Yes | |
+| `intro` | string | No | Forum description (HTML) |
+| `type` | string | No | Forum type: general, news, social, eachuser, single, qanda, blog (default: general) |
+| `section` | int | No | Default: 0 |
+| `idnumber` | string | No | ID number |
+
+**Forum Types:**
+- `general` - Standard forum for general use
+- `news` - News forum (announcements)
+- `social` - Social forum for off-topic discussions
+- `eachuser` - Each person posts one discussion
+- `single` - A single simple discussion
+- `qanda` - Q&A forum (students see other responses after posting)
+- `blog` - Blog-like format
+
+**Response:**
+```json
+{
+  "id": 1,
+  "coursemoduleid": 123,
+  "name": "General Discussion",
+  "success": true,
+  "message": "Forum created successfully"
+}
+```
+
+---
+
 ## Examples
 
 ### Create Assignment
@@ -298,6 +335,13 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_bigbluebuttonbn&moodlewsrestformat=json" \
   -d "courseid=2&name=Live Class&type=0&record=1&wait=1&openingtime=1735689600"
+```
+
+### Create Forum
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_forum&moodlewsrestformat=json" \
+  -d "courseid=2&name=General Discussion&type=general&section=0"
 ```
 
 ### Create Rubric
@@ -334,6 +378,7 @@ All capabilities granted to **editing teachers** and **managers** by default.
 | `local/activity_utils:managerubric` | Manage rubrics |
 | `local/activity_utils:createbigbluebuttonbn` | Create BigBlueButton |
 | `local/activity_utils:updatebigbluebuttonbn` | Update BigBlueButton |
+| `local/activity_utils:createforum` | Create forums |
 
 ---
 
