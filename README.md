@@ -2,19 +2,19 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 2.10 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
+**Version:** 2.11 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
 
 ## Features
 
-24 web service functions:
-- **Sections** (4): create/update sections and subsections
+31 web service functions:
+- **Sections** (6): create, update, delete sections and subsections
 - **Assignments** (3): create, update, delete
-- **Pages** (2): create, update
-- **Files** (2): create, update
-- **Books** (5): create, update, add/update chapters, get
+- **Pages** (3): create, update, delete
+- **Files** (3): create, update, delete
+- **Books** (6): create, update, delete, add/update chapters, get
 - **Rubrics** (5): create, get, update, delete, copy
-- **BigBlueButton** (2): create, update
-- **Forums** (1): create
+- **BigBlueButton** (3): create, update, delete
+- **Forums** (2): create, delete
 
 ## Quick Setup
 
@@ -69,6 +69,21 @@ POST https://yourmoodle.com/webservice/rest/server.php
 
 Parameters: `sectionid` (required), `name`, `summary`, `visible`
 
+### Delete Section
+`local_activity_utils_delete_section`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | int | Yes | Course ID |
+| `sectionnum` | int | Yes | Section number to delete |
+
+**Note:** Cannot delete section 0 (general section). Deletes all content within the section.
+
+### Delete Subsection
+`local_activity_utils_delete_subsection`
+
+Parameters: `cmid` (course module ID)
+
 ---
 
 ## Assignments
@@ -120,6 +135,11 @@ Parameters: `cmid` (course module ID)
 
 Parameters: `pageid` (required), `name`, `intro`, `content`, `visible`
 
+### Delete Page
+`local_activity_utils_delete_page`
+
+Parameters: `cmid` (course module ID)
+
 ---
 
 ## Files
@@ -141,6 +161,11 @@ Parameters: `pageid` (required), `name`, `intro`, `content`, `visible`
 `local_activity_utils_update_file`
 
 Parameters: `resourceid` (required), `name`, `intro`, `filename`, `filecontent`, `visible`
+
+### Delete File
+`local_activity_utils_delete_file`
+
+Parameters: `cmid` (course module ID)
 
 ---
 
@@ -182,6 +207,11 @@ Parameters: `bookid` (required), `name`, `intro`, `numbering`, `navstyle`, `cust
 `local_activity_utils_update_book_chapter`
 
 Parameters: `chapterid` (required), `title`, `content`, `subchapter`, `hidden`, `tags`
+
+### Delete Book
+`local_activity_utils_delete_book`
+
+Parameters: `cmid` (course module ID)
 
 ---
 
@@ -283,6 +313,11 @@ Parameters: `sourcecmid`, `targetcmid`
 
 Parameters: `bigbluebuttonbnid` (required), plus any field from create (all optional)
 
+### Delete BigBlueButton
+`local_activity_utils_delete_bigbluebuttonbn`
+
+Parameters: `cmid` (course module ID)
+
 ---
 
 ## Forums
@@ -318,6 +353,11 @@ Parameters: `bigbluebuttonbnid` (required), plus any field from create (all opti
   "message": "Forum created successfully"
 }
 ```
+
+### Delete Forum
+`local_activity_utils_delete_forum`
+
+Parameters: `cmid` (course module ID)
 
 ---
 
@@ -366,19 +406,26 @@ All capabilities granted to **editing teachers** and **managers** by default.
 | `local/activity_utils:deleteassignment` | Delete assignments |
 | `local/activity_utils:createsection` | Create sections |
 | `local/activity_utils:updatesection` | Update sections |
+| `local/activity_utils:deletesection` | Delete sections |
 | `local/activity_utils:createsubsection` | Create subsections |
 | `local/activity_utils:updatesubsection` | Update subsections |
+| `local/activity_utils:deletesubsection` | Delete subsections |
 | `local/activity_utils:createpage` | Create pages |
 | `local/activity_utils:updatepage` | Update pages |
+| `local/activity_utils:deletepage` | Delete pages |
 | `local/activity_utils:createfile` | Create files |
 | `local/activity_utils:updatefile` | Update files |
+| `local/activity_utils:deletefile` | Delete files |
 | `local/activity_utils:createbook` | Create books |
 | `local/activity_utils:updatebook` | Update books |
+| `local/activity_utils:deletebook` | Delete books |
 | `local/activity_utils:readbook` | Read books (includes students) |
 | `local/activity_utils:managerubric` | Manage rubrics |
 | `local/activity_utils:createbigbluebuttonbn` | Create BigBlueButton |
 | `local/activity_utils:updatebigbluebuttonbn` | Update BigBlueButton |
+| `local/activity_utils:deletebigbluebuttonbn` | Delete BigBlueButton |
 | `local/activity_utils:createforum` | Create forums |
+| `local/activity_utils:deleteforum` | Delete forums |
 
 ---
 

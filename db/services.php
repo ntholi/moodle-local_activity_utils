@@ -69,6 +69,14 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatebook',
     ),
+    'local_activity_utils_delete_book' => array(
+        'classname' => 'local_activity_utils\external\book\delete_book',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing book resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletebook',
+    ),
 
     // File functions
     'local_activity_utils_create_file' => array(
@@ -86,6 +94,14 @@ $functions = array(
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatefile',
+    ),
+    'local_activity_utils_delete_file' => array(
+        'classname' => 'local_activity_utils\external\file\delete_file',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing file resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletefile',
     ),
 
     // Page functions
@@ -105,6 +121,14 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatepage',
     ),
+    'local_activity_utils_delete_page' => array(
+        'classname' => 'local_activity_utils\external\page\delete_page',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing page activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletepage',
+    ),
 
     // Section functions
     'local_activity_utils_create_section' => array(
@@ -123,6 +147,14 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatesection',
     ),
+    'local_activity_utils_delete_section' => array(
+        'classname' => 'local_activity_utils\external\section\delete_section',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing course section',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletesection',
+    ),
     'local_activity_utils_create_subsection' => array(
         'classname' => 'local_activity_utils\external\section\create_subsection',
         'methodname' => 'execute',
@@ -138,6 +170,14 @@ $functions = array(
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatesubsection',
+    ),
+    'local_activity_utils_delete_subsection' => array(
+        'classname' => 'local_activity_utils\external\section\delete_subsection',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing subsection',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletesubsection',
     ),
 
     // Rubric functions
@@ -199,6 +239,14 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:updatebigbluebuttonbn',
     ),
+    'local_activity_utils_delete_bigbluebuttonbn' => array(
+        'classname' => 'local_activity_utils\external\bigbluebuttonbn\delete_bigbluebuttonbn',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing BigBlueButton activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletebigbluebuttonbn',
+    ),
 
     // Forum functions
     'local_activity_utils_create_forum' => array(
@@ -208,6 +256,14 @@ $functions = array(
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'local/activity_utils:createforum',
+    ),
+    'local_activity_utils_delete_forum' => array(
+        'classname' => 'local_activity_utils\external\forum\delete_forum',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing forum activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deleteforum',
     ),
 );
 

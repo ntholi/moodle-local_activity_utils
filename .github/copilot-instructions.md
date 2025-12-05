@@ -35,7 +35,7 @@ Key conventions:
 
 ## Agent Rules (Important)
 
-- Always consider updating `install.bat` and `README.md` when changing the plugin's API, adding/removing endpoints, or modifying installation or build scripts. For example: when you add a new web service in `classes/external/`, update `db/services.php`, ensure `install.bat` copies the new files, and add the new function documentation to `README.md`.
+- Always update `install.bat` and `README.md` when changing the plugin's API. For example: when you add a new web service in `classes/external/`, update `db/services.php`, ensure `install.bat` copies the new files, and add the new function documentation to `README.md`.
 - Never leave commented-out code ("dead code") in commits. Remove unused code or extract it into a separate branch/PR, and document non-obvious decisions in the PR description or issue tracker instead.
 - When changing `install.bat`, verify the `MOODLE_PATH` and copied file list are still accurate (the script uses hard-coded paths and will overwrite existing plugins when run).
 

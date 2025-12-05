@@ -131,6 +131,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\bigbluebuttonbn\delete_bigbluebuttonbn.php" "%DEST_PATH%\classes\external\bigbluebuttonbn\delete_bigbluebuttonbn.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy bigbluebuttonbn\delete_bigbluebuttonbn.php
+    pause
+    exit /b 1
+)
+
 :: Copy book files
 copy /y "%SCRIPT_DIR%classes\external\book\create_book.php" "%DEST_PATH%\classes\external\book\create_book.php" >nul
 if errorlevel 1 (
@@ -167,6 +174,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\book\delete_book.php" "%DEST_PATH%\classes\external\book\delete_book.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy book\delete_book.php
+    pause
+    exit /b 1
+)
+
 :: Copy file files
 copy /y "%SCRIPT_DIR%classes\external\file\create_file.php" "%DEST_PATH%\classes\external\file\create_file.php" >nul
 if errorlevel 1 (
@@ -182,10 +196,24 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\file\delete_file.php" "%DEST_PATH%\classes\external\file\delete_file.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy file\delete_file.php
+    pause
+    exit /b 1
+)
+
 :: Copy forum files
 copy /y "%SCRIPT_DIR%classes\external\forum\create_forum.php" "%DEST_PATH%\classes\external\forum\create_forum.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy forum\create_forum.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\forum\delete_forum.php" "%DEST_PATH%\classes\external\forum\delete_forum.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy forum\delete_forum.php
     pause
     exit /b 1
 )
@@ -201,6 +229,13 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\page\update_page.php" "%DEST_PATH%\classes\external\page\update_page.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy page\update_page.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\page\delete_page.php" "%DEST_PATH%\classes\external\page\delete_page.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy page\delete_page.php
     pause
     exit /b 1
 )
@@ -230,6 +265,20 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\section\update_subsection.php" "%DEST_PATH%\classes\external\section\update_subsection.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy section\update_subsection.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\section\delete_section.php" "%DEST_PATH%\classes\external\section\delete_section.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy section\delete_section.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\section\delete_subsection.php" "%DEST_PATH%\classes\external\section\delete_subsection.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy section\delete_subsection.php
     pause
     exit /b 1
 )

@@ -22,6 +22,13 @@ $string['activity_utils:managerubric'] = 'Manage rubrics via API';
 $string['activity_utils:createbigbluebuttonbn'] = 'Create BigBlueButton activities via API';
 $string['activity_utils:updatebigbluebuttonbn'] = 'Update BigBlueButton activities via API';
 $string['activity_utils:createforum'] = 'Create forum activities via API';
+$string['activity_utils:deletebook'] = 'Delete book resources via API';
+$string['activity_utils:deletefile'] = 'Delete file resources via API';
+$string['activity_utils:deletepage'] = 'Delete page activities via API';
+$string['activity_utils:deletesection'] = 'Delete course sections via API';
+$string['activity_utils:deletesubsection'] = 'Delete subsections via API';
+$string['activity_utils:deletebigbluebuttonbn'] = 'Delete BigBlueButton activities via API';
+$string['activity_utils:deleteforum'] = 'Delete forum activities via API';
 
 $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
