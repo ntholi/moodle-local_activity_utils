@@ -73,6 +73,7 @@ mkdir "%DEST_PATH%\classes\external\forum"
 mkdir "%DEST_PATH%\classes\external\page"
 mkdir "%DEST_PATH%\classes\external\rubric"
 mkdir "%DEST_PATH%\classes\external\section"
+mkdir "%DEST_PATH%\classes\external\url"
 mkdir "%DEST_PATH%\db"
 mkdir "%DEST_PATH%\lang\en"
 mkdir "%DEST_PATH%\tests"
@@ -214,6 +215,28 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\forum\delete_forum.php" "%DEST_PATH%\classes\external\forum\delete_forum.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy forum\delete_forum.php
+    pause
+    exit /b 1
+)
+
+:: Copy url files
+copy /y "%SCRIPT_DIR%classes\external\url\create_url.php" "%DEST_PATH%\classes\external\url\create_url.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy url\create_url.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\url\update_url.php" "%DEST_PATH%\classes\external\url\update_url.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy url\update_url.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\url\delete_url.php" "%DEST_PATH%\classes\external\url\delete_url.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy url\delete_url.php
     pause
     exit /b 1
 )

@@ -2,15 +2,16 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 2.11 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
+**Version:** 2.12 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
 
 ## Features
 
-31 web service functions:
+34 web service functions:
 - **Sections** (6): create, update, delete sections and subsections
 - **Assignments** (3): create, update, delete
 - **Pages** (3): create, update, delete
 - **Files** (3): create, update, delete
+- **URLs** (3): create, update, delete
 - **Books** (6): create, update, delete, add/update chapters, get
 - **Rubrics** (5): create, get, update, delete, copy
 - **BigBlueButton** (3): create, update, delete
@@ -164,6 +165,33 @@ Parameters: `resourceid` (required), `name`, `intro`, `filename`, `filecontent`,
 
 ### Delete File
 `local_activity_utils_delete_file`
+
+Parameters: `cmid` (course module ID)
+
+---
+
+## URLs
+
+### Create URL
+`local_activity_utils_create_url`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | int | Yes | |
+| `name` | string | Yes | |
+| `externalurl` | string | Yes | The external URL |
+| `intro` | string | No | Description (HTML) |
+| `section` | int | No | Default: 0 |
+| `visible` | int | No | Default: 1 |
+| `display` | int | No | 0=auto, 1=embed, 2=frame, 5=open, 6=popup |
+
+### Update URL
+`local_activity_utils_update_url`
+
+Parameters: `urlid` (required), `name`, `externalurl`, `intro`, `display`, `visible`
+
+### Delete URL
+`local_activity_utils_delete_url`
 
 Parameters: `cmid` (course module ID)
 
@@ -416,6 +444,9 @@ All capabilities granted to **editing teachers** and **managers** by default.
 | `local/activity_utils:createfile` | Create files |
 | `local/activity_utils:updatefile` | Update files |
 | `local/activity_utils:deletefile` | Delete files |
+| `local/activity_utils:createurl` | Create URLs |
+| `local/activity_utils:updateurl` | Update URLs |
+| `local/activity_utils:deleteurl` | Delete URLs |
 | `local/activity_utils:createbook` | Create books |
 | `local/activity_utils:updatebook` | Update books |
 | `local/activity_utils:deletebook` | Delete books |

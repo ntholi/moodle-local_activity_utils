@@ -30,6 +30,10 @@ $string['activity_utils:deletesubsection'] = 'Delete subsections via API';
 $string['activity_utils:deletebigbluebuttonbn'] = 'Delete BigBlueButton activities via API';
 $string['activity_utils:deleteforum'] = 'Delete forum activities via API';
 
+$string['activity_utils:createurl'] = 'Create URL resources via API';
+$string['activity_utils:updateurl'] = 'Update URL resources via API';
+$string['activity_utils:deleteurl'] = 'Delete URL resources via API';
+
 $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
 $string['subsectionmodulenotfound'] = 'Subsection module not found. This feature requires Moodle 4.0 or later with subsection support.';

@@ -265,5 +265,31 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:deleteforum',
     ),
+
+    // URL functions
+    'local_activity_utils_create_url' => array(
+        'classname' => 'local_activity_utils\external\url\create_url',
+        'methodname' => 'execute',
+        'description' => 'Create a new URL resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createurl',
+    ),
+    'local_activity_utils_update_url' => array(
+        'classname' => 'local_activity_utils\external\url\update_url',
+        'methodname' => 'execute',
+        'description' => 'Update an existing URL resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:updateurl',
+    ),
+    'local_activity_utils_delete_url' => array(
+        'classname' => 'local_activity_utils\external\url\delete_url',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing URL resource',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deleteurl',
+    ),
 );
 
