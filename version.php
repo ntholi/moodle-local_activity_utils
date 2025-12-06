@@ -2,7 +2,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_activity_utils';
-$plugin->version = 2024120502;
+$plugin->version = 2024120600;
 $plugin->requires = 2022041900;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = 'v2.12';
+$plugin->release = 'v2.13';

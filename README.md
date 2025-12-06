@@ -2,18 +2,18 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 2.12 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
+**Version:** 2.13 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
 
 ## Features
 
-34 web service functions:
+36 web service functions:
 - **Sections** (6): create, update, delete sections and subsections
 - **Assignments** (3): create, update, delete
 - **Pages** (3): create, update, delete
 - **Files** (3): create, update, delete
 - **URLs** (3): create, update, delete
 - **Books** (6): create, update, delete, add/update chapters, get
-- **Rubrics** (5): create, get, update, delete, copy
+- **Rubrics** (7): create, get, update, delete, copy, fill (grade), get filling
 - **BigBlueButton** (3): create, update, delete
 - **Forums** (2): create, delete
 
@@ -281,6 +281,88 @@ Parameters: `cmid`
 `local_activity_utils_copy_rubric`
 
 Parameters: `sourcecmid`, `targetcmid`
+
+### Fill Rubric (Grade Student)
+`local_activity_utils_fill_rubric`
+
+Grade a student's assignment submission by selecting levels for each rubric criterion.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `cmid` | int | Yes | Course module ID of the assignment |
+| `userid` | int | Yes | User ID of the student being graded |
+| `fillings` | array | Yes | Array of rubric fillings |
+| `overallremark` | string | No | Overall feedback/remark |
+
+**Filling object:** `criterionid` (required), `levelid` (required), `remark` (optional feedback for the criterion)
+
+**Example:**
+```json
+{
+  "cmid": 123,
+  "userid": 456,
+  "fillings": [
+    {
+      "criterionid": 1,
+      "levelid": 3,
+      "remark": "Good work on this criterion"
+    },
+    {
+      "criterionid": 2,
+      "levelid": 5,
+      "remark": "Excellent performance"
+    }
+  ],
+  "overallremark": "Overall very good submission"
+}
+```
+
+**Response:**
+```json
+{
+  "instanceid": 789,
+  "grade": 85.5,
+  "success": true,
+  "message": "Rubric filled and grade saved successfully"
+}
+```
+
+### Get Rubric Filling
+`local_activity_utils_get_rubric_filling`
+
+Retrieve how a teacher graded a student using the rubric.
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `cmid` | int | Yes |
+| `userid` | int | Yes |
+
+**Response:**
+```json
+{
+  "instanceid": 789,
+  "grade": 85.5,
+  "grader": "John Teacher",
+  "graderid": 10,
+  "timecreated": 1701234567,
+  "timemodified": 1701234890,
+  "fillings": [
+    {
+      "criterionid": 1,
+      "criteriondescription": "Research Quality",
+      "levelid": 3,
+      "level": {
+        "id": 3,
+        "score": 8.0,
+        "definition": "Good research with minor gaps"
+      },
+      "remark": "Good work on this criterion"
+    }
+  ],
+  "success": true,
+  "message": "Rubric filling retrieved successfully"
+}
+```
 
 ---
 

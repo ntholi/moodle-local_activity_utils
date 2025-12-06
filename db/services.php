@@ -221,6 +221,22 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:managerubric',
     ),
+    'local_activity_utils_fill_rubric' => array(
+        'classname' => 'local_activity_utils\external\rubric\fill_rubric',
+        'methodname' => 'execute',
+        'description' => 'Fill a rubric to grade a student\'s assignment submission',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:graderubric',
+    ),
+    'local_activity_utils_get_rubric_filling' => array(
+        'classname' => 'local_activity_utils\external\rubric\get_rubric_filling',
+        'methodname' => 'execute',
+        'description' => 'Get rubric filling (grading) for a student\'s assignment',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:viewrubricfilling',
+    ),
 
     // BigBlueButton functions
     'local_activity_utils_create_bigbluebuttonbn' => array(

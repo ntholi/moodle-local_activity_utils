@@ -1,0 +1,208 @@
+<?php
+namespace local_activity_utils\external\rubric;
+
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core_external\external_value;
+
+/**
+ * Fill a rubric for a student's assignment submission (grade the student).
+ *
+ * This allows teachers to grade a student by selecting levels for each rubric criterion.
+ */
+class fill_rubric extends external_api {
+
+    public static function execute_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'Course module ID of the assignment'),
+            'userid' => new external_value(PARAM_INT, 'User ID of the student being graded'),
+            'fillings' => new external_multiple_structure(
+                new external_single_structure([
+                    'criterionid' => new external_value(PARAM_INT, 'Criterion ID'),
+                    'levelid' => new external_value(PARAM_INT, 'Level ID to select for this criterion', VALUE_DEFAULT, 0),
+                    'remark' => new external_value(PARAM_RAW, 'Remark/feedback for this criterion', VALUE_DEFAULT, ''),
+                ]),
+                'Rubric fillings (selected levels and remarks for each criterion)'
+            ),
+            'overallremark' => new external_value(PARAM_RAW, 'Overall feedback/remark for the grading', VALUE_DEFAULT, ''),
+        ]);
+    }
+
+    public static function execute(
+        int $cmid,
+        int $userid,
+        array $fillings,
+        string $overallremark = ''
+    ): array {
+        global $CFG, $DB, $USER;
+
+        require_once($CFG->dirroot . '/grade/grading/lib.php');
+        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
+        require_once($CFG->dirroot . '/mod/assign/locallib.php');
+
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'cmid' => $cmid,
+            'userid' => $userid,
+            'fillings' => $fillings,
+            'overallremark' => $overallremark,
+        ]);
+
+        // Get the course module and verify it's an assignment.
+        $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+
+        self::validate_context($context);
+        require_capability('local/activity_utils:graderubric', $context);
+        require_capability('mod/assign:grade', $context);
+
+        // Verify the user exists and is enrolled in the course.
+        $user = $DB->get_record('user', ['id' => $params['userid']], '*', MUST_EXIST);
+        if (!is_enrolled($context, $user)) {
+            return [
+                'instanceid' => 0,
+                'grade' => 0,
+                'success' => false,
+                'message' => 'User is not enrolled in this course',
+            ];
+        }
+
+        // Get grading manager and verify rubric is active.
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+        $activemethod = $gradingmanager->get_active_method();
+
+        if ($activemethod !== 'rubric') {
+            return [
+                'instanceid' => 0,
+                'grade' => 0,
+                'success' => false,
+                'message' => 'Assignment does not use rubric grading',
+            ];
+        }
+
+        // Get the rubric controller.
+        $controller = $gradingmanager->get_controller('rubric');
+
+        if (!$controller->is_form_defined()) {
+            return [
+                'instanceid' => 0,
+                'grade' => 0,
+                'success' => false,
+                'message' => 'Rubric is not defined for this assignment',
+            ];
+        }
+
+        // Get the assignment.
+        $assignment = new \assign($context, $cm, $cm->course);
+
+        // Get or create the submission.
+        $submission = $assignment->get_user_submission($params['userid'], false);
+
+        if (!$submission) {
+            return [
+                'instanceid' => 0,
+                'grade' => 0,
+                'success' => false,
+                'message' => 'No submission found for this user',
+            ];
+        }
+
+        // Get or create grading instance.
+        $grade = $assignment->get_user_grade($params['userid'], true);
+        $instance = $controller->get_or_create_instance($grade->id, $USER->id, $grade->id);
+
+        // Validate criteria IDs and level IDs.
+        $definition = $controller->get_definition();
+        $criteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], '', 'id');
+        
+        $validfillings = [];
+        foreach ($params['fillings'] as $filling) {
+            if (!isset($criteria[$filling['criterionid']])) {
+                return [
+                    'instanceid' => 0,
+                    'grade' => 0,
+                    'success' => false,
+                    'message' => 'Invalid criterion ID: ' . $filling['criterionid'],
+                ];
+            }
+
+            if ($filling['levelid'] > 0) {
+                // Verify the level belongs to this criterion.
+                $level = $DB->get_record('gradingform_rubric_levels', [
+                    'id' => $filling['levelid'],
+                    'criterionid' => $filling['criterionid']
+                ]);
+
+                if (!$level) {
+                    return [
+                        'instanceid' => 0,
+                        'grade' => 0,
+                        'success' => false,
+                        'message' => 'Invalid level ID: ' . $filling['levelid'] . ' for criterion: ' . $filling['criterionid'],
+                    ];
+                }
+            }
+
+            $validfillings[$filling['criterionid']] = [
+                'levelid' => $filling['levelid'],
+                'remark' => $filling['remark'] ?? '',
+            ];
+        }
+
+        // Update the grading instance.
+        $instancedata = [
+            'instanceid' => $instance->get_id(),
+            'advancedgrading' => [
+                'criteria' => []
+            ]
+        ];
+
+        // Build the criteria data for update.
+        foreach ($validfillings as $criterionid => $filling) {
+            $instancedata['advancedgrading']['criteria'][$criterionid] = [
+                'levelid' => $filling['levelid'],
+                'remark' => $filling['remark'],
+            ];
+        }
+
+        // Update the instance with the filling data.
+        $instance->update($instancedata);
+
+        // Calculate the grade.
+        $gradevalue = $instance->get_grade();
+
+        // Update the assignment grade.
+        $gradedata = new \stdClass();
+        $gradedata->userid = $params['userid'];
+        $gradedata->grade = $gradevalue;
+        $gradedata->attemptnumber = $submission->attemptnumber;
+
+        // Add overall remark as feedback comment if provided.
+        if (!empty($params['overallremark'])) {
+            $gradedata->assignfeedbackcomments_editor = [
+                'text' => $params['overallremark'],
+                'format' => FORMAT_HTML,
+            ];
+        }
+
+        // Save the grade.
+        $assignment->save_grade($params['userid'], $gradedata);
+
+        return [
+            'instanceid' => $instance->get_id(),
+            'grade' => (float)$gradevalue,
+            'success' => true,
+            'message' => 'Rubric filled and grade saved successfully',
+        ];
+    }
+
+    public static function execute_returns(): external_single_structure {
+        return new external_single_structure([
+            'instanceid' => new external_value(PARAM_INT, 'Grading instance ID'),
+            'grade' => new external_value(PARAM_FLOAT, 'Calculated grade from rubric'),
+            'success' => new external_value(PARAM_BOOL, 'Success status'),
+            'message' => new external_value(PARAM_TEXT, 'Response message'),
+        ]);
+    }
+}

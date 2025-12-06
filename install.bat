@@ -342,6 +342,20 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\rubric\fill_rubric.php" "%DEST_PATH%\classes\external\rubric\fill_rubric.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\fill_rubric.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\rubric\get_rubric_filling.php" "%DEST_PATH%\classes\external\rubric\get_rubric_filling.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy rubric\get_rubric_filling.php
+    pause
+    exit /b 1
+)
+
 :: Copy db files
 copy /y "%SCRIPT_DIR%db\access.php" "%DEST_PATH%\db\access.php" >nul
 if errorlevel 1 (
