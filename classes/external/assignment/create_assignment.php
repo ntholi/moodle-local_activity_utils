@@ -140,6 +140,32 @@ class create_assignment extends external_api {
             'grademin' => 0
         ]);
 
+        // Enable file submissions
+        $pluginconfig = new \stdClass();
+        $pluginconfig->assignment = $assignid;
+        $pluginconfig->plugin = 'file';
+        $pluginconfig->subtype = 'assignsubmission';
+        $pluginconfig->name = 'enabled';
+        $pluginconfig->value = '1';
+        $DB->insert_record('assign_plugin_config', $pluginconfig);
+
+        // Set maximum number of uploaded files (default: 20)
+        $pluginconfig = new \stdClass();
+        $pluginconfig->assignment = $assignid;
+        $pluginconfig->plugin = 'file';
+        $pluginconfig->subtype = 'assignsubmission';
+        $pluginconfig->name = 'maxfilesubmissions';
+        $pluginconfig->value = '20';
+        $DB->insert_record('assign_plugin_config', $pluginconfig);
+
+        // Set maximum file size (default: 0 = use course limit)
+        $pluginconfig = new \stdClass();
+        $pluginconfig->assignment = $assignid;
+        $pluginconfig->plugin = 'file';
+        $pluginconfig->subtype = 'assignsubmission';
+        $pluginconfig->name = 'maxsubmissionsizebytes';
+        $pluginconfig->value = '0';
+        $DB->insert_record('assign_plugin_config', $pluginconfig);
 
         if (!empty($params['introfiles']) && $params['introfiles'] !== '[]') {
             $files = json_decode($params['introfiles'], true);
