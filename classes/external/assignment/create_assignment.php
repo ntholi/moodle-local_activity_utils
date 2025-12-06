@@ -158,13 +158,13 @@ class create_assignment extends external_api {
         $pluginconfig->value = '20';
         $DB->insert_record('assign_plugin_config', $pluginconfig);
 
-        // Set maximum file size (default: 0 = use course limit)
+        // Set maximum file size to site upload limit
         $pluginconfig = new \stdClass();
         $pluginconfig->assignment = $assignid;
         $pluginconfig->plugin = 'file';
         $pluginconfig->subtype = 'assignsubmission';
         $pluginconfig->name = 'maxsubmissionsizebytes';
-        $pluginconfig->value = '0';
+        $pluginconfig->value = $CFG->maxbytes ?? '0';
         $DB->insert_record('assign_plugin_config', $pluginconfig);
 
         if (!empty($params['introfiles']) && $params['introfiles'] !== '[]') {
