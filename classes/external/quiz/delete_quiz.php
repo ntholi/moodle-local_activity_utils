@@ -10,35 +10,57 @@ class delete_quiz extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'quizid' => new external_value(PARAM_INT, 'Quiz ID to delete'),
+            'cmid' => new external_value(PARAM_INT, 'Course module ID of the quiz to delete'),
         ]);
     }
 
-    public static function execute(int $quizid): array {
+    public static function execute(int $cmid): array {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/course/lib.php');
 
-        $params = self::validate_parameters(self::execute_parameters(), ['quizid' => $quizid]);
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'cmid' => $cmid,
+        ]);
 
-        $quiz = $DB->get_record('quiz', ['id' => $params['quizid']], '*', MUST_EXIST);
-        $course = $DB->get_record('course', ['id' => $quiz->course], '*', MUST_EXIST);
-        $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id, false, MUST_EXIST);
+        $cm = $DB->get_record('course_modules', ['id' => $params['cmid']]);
+        if (!$cm) {
+            return [
+                'success' => false,
+                'message' => 'Course module not found'
+            ];
+        }
+
+        $module = $DB->get_record('modules', ['id' => $cm->module]);
+        if (!$module || $module->name !== 'quiz') {
+            return [
+                'success' => false,
+                'message' => 'The specified course module is not a quiz'
+            ];
+        }
+
+        $quiz = $DB->get_record('quiz', ['id' => $cm->instance]);
+        if (!$quiz) {
+            return [
+                'success' => false,
+                'message' => 'Quiz instance not found'
+            ];
+        }
+
+        $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
         self::validate_context($context);
         require_capability('local/activity_utils:deletequiz', $context);
-        require_capability('mod/quiz:deleteattempts', $context);
+        require_capability('moodle/course:manageactivities', $context);
 
         $quizname = $quiz->name;
 
         course_delete_module($cm->id);
 
-        rebuild_course_cache($course->id, true);
-
         return [
             'success' => true,
-            'message' => "Quiz '$quizname' deleted successfully"
+            'message' => 'Quiz "' . $quizname . '" deleted successfully'
         ];
     }
 
