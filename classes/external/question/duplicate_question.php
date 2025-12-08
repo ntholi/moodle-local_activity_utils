@@ -30,7 +30,7 @@ class duplicate_question extends external_api {
         ));
 
         $question = $DB->get_record('question', ['id' => $params['questionid']], '*', MUST_EXIST);
-        $category = $DB->get_record('question_categories', ['id' => $question->category'], '*', MUST_EXIST);
+        $category = $DB->get_record('question_categories', ['id' => $question->category], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
         self::validate_context($context);
