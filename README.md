@@ -656,11 +656,29 @@ Create questions in question banks for use in quizzes.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `contextid` | int | Yes | Context ID (course or system) |
+| `courseid` | int | Yes | Course ID (0 for system-wide) |
 | `name` | string | Yes | Category name |
 | `info` | string | No | Category description |
 | `parent` | int | No | Parent category ID (0=top level) |
 | `idnumber` | string | No | ID number |
+
+**Note:** Function determines context automatically from `courseid`. Will fail if category with same `contextid` and `idnumber` already exists.
+
+### Get or Create Question Category (Recommended)
+`local_activity_utils_get_or_create_question_category`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `courseid` | int | Yes | Course ID (0 for system-wide) |
+| `name` | string | Yes | Category name |
+| `info` | string | No | Category description |
+| `infoformat` | int | No | Description format (default: FORMAT_HTML) |
+| `parent` | int | No | Parent category ID (0=top level) |
+| `idnumber` | string | No | ID number (default: empty) |
+
+**Idempotent operation:** Returns existing category if one with matching `contextid` and `idnumber` exists, otherwise creates new category. Response includes `created` boolean field indicating whether category was newly created (true) or already existed (false).
+
+**Recommended for quiz creation workflows** to avoid duplicate category errors.
 
 ### Create Multiple Choice Question
 `local_activity_utils_create_question_multichoice`

@@ -399,6 +399,14 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:managequestioncategories',
     ),
+    'local_activity_utils_get_or_create_question_category' => array(
+        'classname' => 'local_activity_utils\external\question\get_or_create_question_category',
+        'methodname' => 'execute',
+        'description' => 'Get existing question category or create if not found (idempotent)',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managequestioncategories',
+    ),
 
     // Question creation functions
     'local_activity_utils_create_question_multichoice' => array(

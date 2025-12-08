@@ -300,6 +300,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\question\get_or_create_question_category.php" "%DEST_PATH%\classes\external\question\get_or_create_question_category.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\get_or_create_question_category.php
+    pause
+    exit /b 1
+)
+
 copy /y "%SCRIPT_DIR%classes\external\question\create_question_multichoice.php" "%DEST_PATH%\classes\external\question\create_question_multichoice.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy question\create_question_multichoice.php
