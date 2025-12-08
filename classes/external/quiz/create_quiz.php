@@ -62,7 +62,7 @@ class create_quiz extends external_api {
             'subnet' => new external_value(PARAM_TEXT, 'Subnet restriction', VALUE_DEFAULT, ''),
             'delay1' => new external_value(PARAM_INT, 'Delay between first and second attempt (seconds)', VALUE_DEFAULT, 0),
             'delay2' => new external_value(PARAM_INT, 'Delay between later attempts (seconds)', VALUE_DEFAULT, 0),
-            'browsersecurity' => new external_value(PARAM_ALPHA, 'Browser security: - (none), securewindow, safebrowser, securewindowwithjavascript', VALUE_DEFAULT, '-'),
+            'browsersecurity' => new external_value(PARAM_TEXT, 'Browser security: - (none), securewindow, safebrowser, securewindowwithjavascript', VALUE_DEFAULT, '-'),
 
             // Extra restrictions
             'canredoquestions' => new external_value(PARAM_BOOL, 'Allow redo within an attempt', VALUE_DEFAULT, 0),
