@@ -208,9 +208,7 @@ class create_quiz extends external_api {
         $quiz->grade = $params['grademax'];
         $quiz->timecreated = time();
         $quiz->timemodified = time();
-        // Use 'quizpassword' instead of 'password' - quiz_add_instance() calls quiz_process_options()
-        // which expects the form field name 'quizpassword' and converts it to 'password' for DB
-        $quiz->quizpassword = isset($params['password']) && $params['password'] !== null ? $params['password'] : '';
+        $quiz->password = isset($params['password']) && $params['password'] !== null ? $params['password'] : '';
         $quiz->subnet = isset($params['subnet']) && $params['subnet'] !== null ? $params['subnet'] : '';
         $quiz->browsersecurity = $params['browsersecurity'];
         $quiz->delay1 = $params['delay1'];
@@ -222,29 +220,57 @@ class create_quiz extends external_api {
         $quiz->completionpass = $params['completionpass'] ? 1 : 0;
         $quiz->allowofflineattempts = 0;
         $quiz->reviewmaxmarks = 0; // Required field for quiz table
-        
-        // Set cmidnumber and coursemodule for proper module creation
-        $quiz->cmidnumber = $params['idnumber'];
-        $quiz->section = $params['section'];
-        $quiz->visible = $params['visible'] ? 1 : 0;
-        $quiz->availability = $params['availability'];
 
-        // Use quiz_add_instance() which properly handles all the setup
-        $quizid = quiz_add_instance($quiz);
-        
+        // Insert quiz record directly
+        $quizid = $DB->insert_record('quiz', $quiz);
+
         if (!$quizid) {
             throw new \moodle_exception('erroraddingquiz', 'local_activity_utils');
         }
 
-        // Get the course module ID that was created
-        $cmid = $DB->get_field('course_modules', 'id', [
-            'course' => $params['courseid'],
-            'module' => $DB->get_field('modules', 'id', ['name' => 'quiz']),
-            'instance' => $quizid
-        ], MUST_EXIST);
+        // Create course module record
+        $moduleid = $DB->get_field('modules', 'id', ['name' => 'quiz'], MUST_EXIST);
+
+        $cm = new \stdClass();
+        $cm->course = $params['courseid'];
+        $cm->module = $moduleid;
+        $cm->instance = $quizid;
+        $cm->section = $params['section'];
+        $cm->idnumber = $params['idnumber'];
+        $cm->added = time();
+        $cm->score = 0;
+        $cm->indent = 0;
+        $cm->visible = $params['visible'] ? 1 : 0;
+        $cm->visibleoncoursepage = 1;
+        $cm->visibleold = $params['visible'] ? 1 : 0;
+        $cm->groupmode = 0;
+        $cm->groupingid = 0;
+        $cm->completion = 0;
+        $cm->completionview = 0;
+        $cm->completionexpected = 0;
+        $cm->completionpassgrade = $params['completionpass'] ? 1 : 0;
+        $cm->showdescription = 0;
+        $cm->availability = $params['availability'];
+        $cm->deletioninprogress = 0;
+        $cm->downloadcontent = 1;
+        $cm->lang = '';
+        $cm->completiongradeitemnumber = null;
+
+        $cmid = $DB->insert_record('course_modules', $cm);
+
+        // Add module to section sequence, handling both regular and delegated (subsection) sections
+        helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible'] ? 1 : 0);
 
         // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
+
+        // Create grade item
+        grade_update('mod/quiz', $params['courseid'], 'mod', 'quiz', $quizid, 0, null, [
+            'itemname' => $params['name'],
+            'gradetype' => GRADE_TYPE_VALUE,
+            'grademax' => $params['grademax'],
+            'grademin' => 0
+        ]);
 
         // Update grade to pass if specified
         if ($params['gradepass'] > 0) {
@@ -259,7 +285,7 @@ class create_quiz extends external_api {
                 $gradeitem->update();
             }
         }
-        
+
         // Update grade category if specified
         if ($params['gradecategory'] > 0) {
             $gradeitem = \grade_item::fetch([
