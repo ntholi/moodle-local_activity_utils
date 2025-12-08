@@ -208,8 +208,10 @@ class create_quiz extends external_api {
         $quiz->grade = $params['grademax'];
         $quiz->timecreated = time();
         $quiz->timemodified = time();
-        $quiz->password = $params['password'];
-        $quiz->subnet = $params['subnet'];
+        // Use 'quizpassword' instead of 'password' - quiz_add_instance() calls quiz_process_options()
+        // which expects the form field name 'quizpassword' and converts it to 'password' for DB
+        $quiz->quizpassword = isset($params['password']) && $params['password'] !== null ? $params['password'] : '';
+        $quiz->subnet = isset($params['subnet']) && $params['subnet'] !== null ? $params['subnet'] : '';
         $quiz->browsersecurity = $params['browsersecurity'];
         $quiz->delay1 = $params['delay1'];
         $quiz->delay2 = $params['delay2'];
@@ -219,6 +221,7 @@ class create_quiz extends external_api {
         $quiz->completionminattempts = $params['completionminattempts'];
         $quiz->completionpass = $params['completionpass'] ? 1 : 0;
         $quiz->allowofflineattempts = 0;
+        $quiz->reviewmaxmarks = 0; // Required field for quiz table
         
         // Set cmidnumber and coursemodule for proper module creation
         $quiz->cmidnumber = $params['idnumber'];
