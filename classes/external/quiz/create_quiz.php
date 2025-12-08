@@ -219,46 +219,29 @@ class create_quiz extends external_api {
         $quiz->completionminattempts = $params['completionminattempts'];
         $quiz->completionpass = $params['completionpass'] ? 1 : 0;
         $quiz->allowofflineattempts = 0;
+        
+        // Set cmidnumber and coursemodule for proper module creation
+        $quiz->cmidnumber = $params['idnumber'];
+        $quiz->section = $params['section'];
+        $quiz->visible = $params['visible'] ? 1 : 0;
+        $quiz->availability = $params['availability'];
 
-        $quizid = $DB->insert_record('quiz', $quiz);
+        // Use quiz_add_instance() which properly handles all the setup
+        $quizid = quiz_add_instance($quiz);
+        
+        if (!$quizid) {
+            throw new \moodle_exception('erroraddingquiz', 'local_activity_utils');
+        }
 
-        // Create course module
-        $moduleid = $DB->get_field('modules', 'id', ['name' => 'quiz'], MUST_EXIST);
+        // Get the course module ID that was created
+        $cmid = $DB->get_field('course_modules', 'id', [
+            'course' => $params['courseid'],
+            'module' => $DB->get_field('modules', 'id', ['name' => 'quiz']),
+            'instance' => $quizid
+        ], MUST_EXIST);
 
-        $cm = new \stdClass();
-        $cm->course = $params['courseid'];
-        $cm->module = $moduleid;
-        $cm->instance = $quizid;
-        $cm->section = $params['section'];
-        $cm->idnumber = $params['idnumber'];
-        $cm->added = time();
-        $cm->score = 0;
-        $cm->indent = 0;
-        $cm->visible = $params['visible'] ? 1 : 0;
-        $cm->visibleoncoursepage = 1;
-        $cm->visibleold = $params['visible'] ? 1 : 0;
-        $cm->groupmode = 0;
-        $cm->groupingid = 0;
-        $cm->completion = ($params['completionattemptsexhausted'] || $params['completionminattempts'] > 0 || $params['completionpass']) ? 2 : 0;
-        $cm->completionview = 0;
-        $cm->completionexpected = 0;
-        $cm->completionpassgrade = $params['completionpass'] ? 1 : 0;
-        $cm->showdescription = 0;
-        $cm->availability = $params['availability'];
-        $cm->deletioninprogress = 0;
-        $cm->downloadcontent = 1;
-        $cm->lang = '';
-        $cm->completiongradeitemnumber = null;
-
-        $cmid = $DB->insert_record('course_modules', $cm);
-
-        // Add module to section
-        helper::add_module_to_section($params['courseid'], $params['section'], $cmid, 1);
-
-        // Initialize grade item
+        // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
-
-        quiz_grade_item_update($quiz);
 
         // Update grade to pass if specified
         if ($params['gradepass'] > 0) {
@@ -270,6 +253,20 @@ class create_quiz extends external_api {
             ]);
             if ($gradeitem) {
                 $gradeitem->gradepass = $params['gradepass'];
+                $gradeitem->update();
+            }
+        }
+        
+        // Update grade category if specified
+        if ($params['gradecategory'] > 0) {
+            $gradeitem = \grade_item::fetch([
+                'courseid' => $params['courseid'],
+                'itemtype' => 'mod',
+                'itemmodule' => 'quiz',
+                'iteminstance' => $quizid
+            ]);
+            if ($gradeitem) {
+                $gradeitem->categoryid = $params['gradecategory'];
                 $gradeitem->update();
             }
         }

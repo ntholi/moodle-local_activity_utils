@@ -53,3 +53,4 @@ $string['activity_utils:deletequestions'] = 'Delete questions via API';
 $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
 $string['subsectionmodulenotfound'] = 'Subsection module not found. This feature requires Moodle 4.0 or later with subsection support.';
+$string['erroraddingquiz'] = 'Failed to create quiz instance. Please check the quiz settings and try again.';
