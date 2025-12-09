@@ -307,5 +307,63 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:deleteurl',
     ),
+
+    // Quiz functions
+    'local_activity_utils_create_quiz' => array(
+        'classname' => 'local_activity_utils\external\quiz\create_quiz',
+        'methodname' => 'execute',
+        'description' => 'Create a new quiz activity with full configuration options',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createquiz',
+    ),
+    'local_activity_utils_update_quiz' => array(
+        'classname' => 'local_activity_utils\external\quiz\update_quiz',
+        'methodname' => 'execute',
+        'description' => 'Update an existing quiz activity settings',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:updatequiz',
+    ),
+    'local_activity_utils_delete_quiz' => array(
+        'classname' => 'local_activity_utils\external\quiz\delete_quiz',
+        'methodname' => 'execute',
+        'description' => 'Delete an existing quiz activity',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletequiz',
+    ),
+    'local_activity_utils_get_quiz' => array(
+        'classname' => 'local_activity_utils\external\quiz\get_quiz',
+        'methodname' => 'execute',
+        'description' => 'Get complete quiz details with all questions and sections',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:viewquiz',
+    ),
+    'local_activity_utils_add_question_to_quiz' => array(
+        'classname' => 'local_activity_utils\external\quiz\add_question_to_quiz',
+        'methodname' => 'execute',
+        'description' => 'Add an existing question to a quiz',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managequizquestions',
+    ),
+    'local_activity_utils_remove_question_from_quiz' => array(
+        'classname' => 'local_activity_utils\external\quiz\remove_question_from_quiz',
+        'methodname' => 'execute',
+        'description' => 'Remove a question from a quiz',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managequizquestions',
+    ),
+    'local_activity_utils_reorder_quiz_questions' => array(
+        'classname' => 'local_activity_utils\external\quiz\reorder_quiz_questions',
+        'methodname' => 'execute',
+        'description' => 'Reorder questions within a quiz',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managequizquestions',
+    ),
 );
 

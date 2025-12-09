@@ -74,6 +74,7 @@ mkdir "%DEST_PATH%\classes\external\page"
 mkdir "%DEST_PATH%\classes\external\rubric"
 mkdir "%DEST_PATH%\classes\external\section"
 mkdir "%DEST_PATH%\classes\external\url"
+mkdir "%DEST_PATH%\classes\external\quiz"
 mkdir "%DEST_PATH%\db"
 mkdir "%DEST_PATH%\lang\en"
 mkdir "%DEST_PATH%\tests"
@@ -352,6 +353,56 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\rubric\get_rubric_filling.php" "%DEST_PATH%\classes\external\rubric\get_rubric_filling.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy rubric\get_rubric_filling.php
+    pause
+    exit /b 1
+)
+
+:: Copy quiz files
+copy /y "%SCRIPT_DIR%classes\external\quiz\create_quiz.php" "%DEST_PATH%\classes\external\quiz\create_quiz.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\create_quiz.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\update_quiz.php" "%DEST_PATH%\classes\external\quiz\update_quiz.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\update_quiz.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\delete_quiz.php" "%DEST_PATH%\classes\external\quiz\delete_quiz.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\delete_quiz.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\get_quiz.php" "%DEST_PATH%\classes\external\quiz\get_quiz.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\get_quiz.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\add_question_to_quiz.php" "%DEST_PATH%\classes\external\quiz\add_question_to_quiz.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\add_question_to_quiz.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\remove_question_from_quiz.php" "%DEST_PATH%\classes\external\quiz\remove_question_from_quiz.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\remove_question_from_quiz.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\reorder_quiz_questions.php" "%DEST_PATH%\classes\external\quiz\reorder_quiz_questions.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\reorder_quiz_questions.php
     pause
     exit /b 1
 )

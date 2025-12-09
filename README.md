@@ -2,11 +2,11 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 2.13 | **Requirements:** Moodle 4.0+ | **Developed for:** Limkokwing University
+**Version:** 4.0 | **Requirements:** Moodle 4.5+ | **Developed for:** Limkokwing University
 
 ## Features
 
-36 web service functions:
+43 web service functions:
 - **Sections** (6): create, update, delete sections and subsections
 - **Assignments** (3): create, update, delete
 - **Pages** (3): create, update, delete
@@ -16,6 +16,7 @@ REST API endpoints for programmatic Moodle course content management.
 - **Rubrics** (7): create, get, update, delete, copy, fill (grade), get filling
 - **BigBlueButton** (3): create, update, delete
 - **Forums** (2): create, delete
+- **Quizzes** (7): create, update, delete, get, add/remove/reorder questions
 
 ## Quick Setup
 
@@ -473,6 +474,218 @@ Parameters: `cmid` (course module ID)
 
 ---
 
+## Quizzes
+
+Complete quiz management API for Moodle 4.5+. These functions fill gaps not covered by core Moodle web services.
+
+### Create Quiz
+`local_activity_utils_create_quiz`
+
+Creates a new quiz with full configuration options.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `courseid` | int | Yes | | Course ID |
+| `name` | string | Yes | | Quiz name |
+| `intro` | string | No | '' | Quiz description (HTML) |
+| `section` | int | No | 0 | Course section number |
+| `idnumber` | string | No | '' | ID number for gradebook |
+| `timeopen` | int | No | 0 | Open timestamp (0 = no restriction) |
+| `timeclose` | int | No | 0 | Close timestamp (0 = no restriction) |
+| `timelimit` | int | No | 0 | Time limit in seconds |
+| `overduehandling` | string | No | 'autosubmit' | autosubmit, graceperiod, autoabandon |
+| `graceperiod` | int | No | 0 | Grace period in seconds |
+| `grade` | float | No | 10.0 | Maximum grade |
+| `grademethod` | int | No | 1 | 1=highest, 2=average, 3=first, 4=last |
+| `decimalpoints` | int | No | 2 | Decimal places (0-5) |
+| `questiondecimalpoints` | int | No | -1 | Question decimals (-1 = same as quiz) |
+| `questionsperpage` | int | No | 1 | Questions per page (0 = all) |
+| `navmethod` | string | No | 'free' | free or sequential |
+| `shuffleanswers` | int | No | 1 | Shuffle answer options |
+| `preferredbehaviour` | string | No | 'deferredfeedback' | Question behaviour |
+| `canredoquestions` | int | No | 0 | Allow redo of questions |
+| `attempts` | int | No | 0 | Max attempts (0 = unlimited) |
+| `attemptonlast` | int | No | 0 | Build on last attempt |
+| `reviewattempt` | int | No | 69904 | Review options bitmask |
+| `reviewcorrectness` | int | No | 69904 | Review correctness bitmask |
+| `reviewmarks` | int | No | 69904 | Review marks bitmask |
+| `reviewspecificfeedback` | int | No | 69904 | Review specific feedback bitmask |
+| `reviewgeneralfeedback` | int | No | 69904 | Review general feedback bitmask |
+| `reviewrightanswer` | int | No | 69904 | Review right answer bitmask |
+| `reviewoverallfeedback` | int | No | 4368 | Review overall feedback bitmask |
+| `reviewmaxmarks` | int | No | 69904 | Review max marks bitmask |
+| `password` | string | No | '' | Quiz password |
+| `subnet` | string | No | '' | Allowed IP addresses |
+| `browsersecurity` | string | No | '-' | - (none) or securewindow |
+| `delay1` | int | No | 0 | Delay between attempts 1-2 (seconds) |
+| `delay2` | int | No | 0 | Delay between later attempts |
+| `showuserpicture` | int | No | 0 | 0=no, 1=small, 2=large |
+| `showblocks` | int | No | 0 | Show blocks during quiz |
+| `completionattemptsexhausted` | int | No | 0 | Complete when attempts exhausted |
+| `completionminattempts` | int | No | 0 | Minimum attempts for completion |
+| `visible` | int | No | 1 | Module visibility |
+| `allowofflineattempts` | int | No | 0 | Allow offline attempts (mobile) |
+
+**Question Behaviours:**
+- `deferredfeedback` - Deferred feedback (default)
+- `adaptivenopenalty` - Adaptive mode (no penalties)
+- `adaptive` - Adaptive mode
+- `interactive` - Interactive with multiple tries
+- `immediatefeedback` - Immediate feedback
+- `immediatecbm` - Immediate feedback with CBM
+
+**Review Options Bitmask:**
+- Bits represent when to show: during (0x10000), immediately after (0x01000), later while open (0x00100), after close (0x00010)
+- Default 69904 = show during + immediately after + later while open + after close
+
+**Response:**
+```json
+{
+  "id": 1,
+  "coursemoduleid": 123,
+  "name": "Week 1 Quiz",
+  "success": true,
+  "message": "Quiz created successfully"
+}
+```
+
+### Update Quiz
+`local_activity_utils_update_quiz`
+
+Updates an existing quiz. All parameters except `quizid` are optional - only provided fields are updated.
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `quizid` | int | Yes |
+| All other parameters from create | * | No |
+
+### Delete Quiz
+`local_activity_utils_delete_quiz`
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `cmid` | int | Yes |
+
+### Get Quiz
+`local_activity_utils_get_quiz`
+
+Retrieves complete quiz details including all questions, sections, and settings.
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `quizid` | int | Yes |
+
+**Response:**
+```json
+{
+  "id": 1,
+  "coursemoduleid": 123,
+  "courseid": 2,
+  "coursename": "Course Name",
+  "name": "Week 1 Quiz",
+  "intro": "<p>Quiz description</p>",
+  "timeopen": 0,
+  "timeclose": 0,
+  "timelimit": 3600,
+  "grade": 100.0,
+  "sumgrades": 50.0,
+  "attemptcount": 15,
+  "sections": [
+    {
+      "id": 1,
+      "firstslot": 1,
+      "heading": "Section 1",
+      "shufflequestions": 0
+    }
+  ],
+  "questions": [
+    {
+      "slotid": 1,
+      "slot": 1,
+      "page": 1,
+      "maxmark": 10.0,
+      "requireprevious": 0,
+      "displaynumber": "",
+      "questionbankentryid": 456,
+      "questionid": 789,
+      "questionidnumber": "Q001",
+      "questionname": "What is 2+2?",
+      "qtype": "multichoice",
+      "questiontext": "<p>What is 2+2?</p>",
+      "defaultmark": 10.0,
+      "version": 1,
+      "status": "ready"
+    }
+  ],
+  "success": true,
+  "message": "Quiz retrieved successfully with 1 question(s)"
+}
+```
+
+### Add Question to Quiz
+`local_activity_utils_add_question_to_quiz`
+
+Adds an existing question from the question bank to a quiz.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `quizid` | int | Yes | | Quiz instance ID |
+| `questionbankentryid` | int | Yes | | Question bank entry ID |
+| `page` | int | No | 0 | Page number (0 = last page) |
+| `maxmark` | float | No | null | Max mark (null = question default) |
+| `requireprevious` | int | No | 0 | Require previous question |
+
+**Note:** Use `questionbankentryid` not `questionid`. In Moodle 4.0+, questions are referenced through the question bank entry system.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Question \"What is 2+2?\" added to quiz at slot 1",
+  "slotid": 123,
+  "slot": 1
+}
+```
+
+### Remove Question from Quiz
+`local_activity_utils_remove_question_from_quiz`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `quizid` | int | Yes | Quiz instance ID |
+| `slot` | int | Yes | Slot number to remove |
+
+**Note:** Removes the question from the specified slot. Subsequent slots are automatically renumbered.
+
+### Reorder Quiz Questions
+`local_activity_utils_reorder_quiz_questions`
+
+Reorders questions within a quiz by specifying new slot positions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `quizid` | int | Yes | Quiz instance ID |
+| `slots` | array | Yes | Array of slot reorder objects |
+
+**Slot reorder object:**
+- `slotid` (int, required): Slot ID
+- `newslot` (int, required): New slot position (1-based)
+- `page` (int, optional): New page number
+
+**Example:**
+```json
+{
+  "quizid": 1,
+  "slots": [
+    {"slotid": 101, "newslot": 3, "page": 1},
+    {"slotid": 102, "newslot": 1, "page": 1},
+    {"slotid": 103, "newslot": 2, "page": 1}
+  ]
+}
+```
+
+---
+
 ## Examples
 
 ### Create Assignment
@@ -503,6 +716,28 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "cmid=123&name=Essay Rubric" \
   -d "criteria[0][description]=Content&criteria[0][levels][0][score]=0&criteria[0][levels][0][definition]=Poor" \
   -d "criteria[0][levels][1][score]=10&criteria[0][levels][1][definition]=Excellent"
+```
+
+### Create Quiz
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_quiz&moodlewsrestformat=json" \
+  -d "courseid=2&name=Week 1 Quiz&intro=<p>Test your knowledge</p>" \
+  -d "timelimit=3600&attempts=3&grademethod=1&grade=100"
+```
+
+### Add Question to Quiz
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_add_question_to_quiz&moodlewsrestformat=json" \
+  -d "quizid=1&questionbankentryid=123&maxmark=10"
+```
+
+### Get Quiz Details
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_get_quiz&moodlewsrestformat=json" \
+  -d "quizid=1"
 ```
 
 ---
@@ -541,6 +776,11 @@ All capabilities granted to **editing teachers** and **managers** by default.
 | `local/activity_utils:deletebigbluebuttonbn` | Delete BigBlueButton |
 | `local/activity_utils:createforum` | Create forums |
 | `local/activity_utils:deleteforum` | Delete forums |
+| `local/activity_utils:createquiz` | Create quizzes |
+| `local/activity_utils:updatequiz` | Update quizzes |
+| `local/activity_utils:deletequiz` | Delete quizzes |
+| `local/activity_utils:viewquiz` | View quiz details (teachers+) |
+| `local/activity_utils:managequizquestions` | Add/remove/reorder quiz questions |
 
 ---
 
