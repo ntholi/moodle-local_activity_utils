@@ -100,7 +100,7 @@ class create_question_numerical extends external_api {
         $DB->insert_record('question_versions', $version);
 
         $options = new \stdClass();
-        $options->question = $questionid;
+        $options->questionid = $questionid;
         $options->showunits = $params['showunits'];
         $options->unitsleft = $params['unitsleft'] ? 1 : 0;
         $options->unitgradingtype = 0;

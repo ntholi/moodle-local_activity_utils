@@ -59,7 +59,7 @@ class create_question_multichoice extends external_api {
             'categoryid', 'name', 'questiontext', 'questiontextformat', 'defaultmark',
             'generalfeedback', 'generalfeedbackformat', 'single', 'shuffleanswers',
             'answernumbering', 'correctfeedback', 'partiallycorrectfeedback',
-            'incorrectfeedback', 'answers', 'penalty', 'idnumber'
+            'incorrectfeedback', 'shownumcorrect', 'answers', 'penalty', 'idnumber'
         ));
 
         if (empty($params['idnumber'])) {
