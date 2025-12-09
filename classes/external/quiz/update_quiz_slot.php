@@ -6,6 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 use mod_quiz\grade_calculator;
+use mod_quiz\quiz_settings;
 
 class update_quiz_slot extends external_api {
 
@@ -72,7 +73,8 @@ class update_quiz_slot extends external_api {
                 );
                 $quiz->sumgrades = $sumgrades;
                 $DB->update_record('quiz', $quiz);
-                grade_calculator::create($quiz)->recompute_quiz_sumgrades();
+                $quizobj = quiz_settings::create($quiz->id);
+                grade_calculator::create($quizobj)->recompute_quiz_sumgrades();
             }
         }
 

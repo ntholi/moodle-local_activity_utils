@@ -6,6 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 use mod_quiz\grade_calculator;
+use mod_quiz\quiz_settings;
 
 class remove_question_from_quiz extends external_api {
 
@@ -56,7 +57,8 @@ class remove_question_from_quiz extends external_api {
         $DB->update_record('quiz', $quiz);
 
         // Update grade item using the new grade_calculator class
-        grade_calculator::create($quiz)->recompute_quiz_sumgrades();
+        $quizobj = quiz_settings::create($quiz->id);
+        grade_calculator::create($quizobj)->recompute_quiz_sumgrades();
 
         return [
             'success' => true,

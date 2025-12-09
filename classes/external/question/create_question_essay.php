@@ -58,6 +58,11 @@ class create_question_essay extends external_api {
             'graderinfo', 'responsetemplate', 'penalty', 'idnumber'
         ));
 
+        // Generate unique idnumber if not provided to avoid duplicate key constraint
+        if (empty($params['idnumber'])) {
+            $params['idnumber'] = 'essay_' . time() . '_' . uniqid();
+        }
+
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
