@@ -37,7 +37,10 @@ class create_question_truefalse extends external_api {
         float $penalty = 1.0,
         string $idnumber = ''
     ): array {
-        global $DB, $USER;
+        global $CFG, $DB, $USER;
+
+        require_once($CFG->dirroot . '/question/engine/bank.php');
+        require_once($CFG->dirroot . '/question/type/truefalse/questiontype.php');
 
         $params = self::validate_parameters(self::execute_parameters(), compact(
             'categoryid', 'name', 'questiontext', 'questiontextformat', 'defaultmark',
@@ -51,7 +54,7 @@ class create_question_truefalse extends external_api {
         require_capability('local/activity_utils:createquestions', $context);
         require_capability('moodle/question:add', $context);
 
-        // Create question
+        // Create question using proper structure for Moodle 4.0+
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -74,6 +77,22 @@ class create_question_truefalse extends external_api {
         $question->modifiedby = $USER->id;
 
         $questionid = $DB->insert_record('question', $question);
+        $question->id = $questionid;
+
+        // Create question bank entry (Moodle 4.0+)
+        $entry = new \stdClass();
+        $entry->questioncategoryid = $params['categoryid'];
+        $entry->idnumber = $params['idnumber'];
+        $entry->ownerid = $USER->id;
+        $entryid = $DB->insert_record('question_bank_entries', $entry);
+
+        // Create question version (Moodle 4.0+)
+        $version = new \stdClass();
+        $version->questionbankentryid = $entryid;
+        $version->questionid = $questionid;
+        $version->version = 1;
+        $version->status = 'ready';
+        $DB->insert_record('question_versions', $version);
 
         // Create true answer
         $trueanswer = new \stdClass();

@@ -82,6 +82,22 @@ class create_question_numerical extends external_api {
         $question->modifiedby = $USER->id;
 
         $questionid = $DB->insert_record('question', $question);
+        $question->id = $questionid;
+
+        // Create question bank entry (Moodle 4.0+)
+        $entry = new \stdClass();
+        $entry->questioncategoryid = $params['categoryid'];
+        $entry->idnumber = $params['idnumber'];
+        $entry->ownerid = $USER->id;
+        $entryid = $DB->insert_record('question_bank_entries', $entry);
+
+        // Create question version (Moodle 4.0+)
+        $version = new \stdClass();
+        $version->questionbankentryid = $entryid;
+        $version->questionid = $questionid;
+        $version->version = 1;
+        $version->status = 'ready';
+        $DB->insert_record('question_versions', $version);
 
         // Insert question type specific options
         $options = new \stdClass();
