@@ -102,7 +102,7 @@ class create_question_truefalse extends external_api {
         $trueanswer->fraction = $params['correctanswer'] ? 1 : 0;
         $trueanswer->feedback = $params['feedbacktrue'];
         $trueanswer->feedbackformat = FORMAT_HTML;
-        $DB->insert_record('question_answers', $trueanswer);
+        $trueanswerid = $DB->insert_record('question_answers', $trueanswer);
 
         $falseanswer = new \stdClass();
         $falseanswer->question = $questionid;
@@ -111,7 +111,14 @@ class create_question_truefalse extends external_api {
         $falseanswer->fraction = $params['correctanswer'] ? 0 : 1;
         $falseanswer->feedback = $params['feedbackfalse'];
         $falseanswer->feedbackformat = FORMAT_HTML;
-        $DB->insert_record('question_answers', $falseanswer);
+        $falseanswerid = $DB->insert_record('question_answers', $falseanswer);
+
+        // Link the question to its true and false answers so the qtype can load correctly.
+        $options = new \stdClass();
+        $options->question = $questionid;
+        $options->trueanswer = $trueanswerid;
+        $options->falseanswer = $falseanswerid;
+        $DB->insert_record('question_truefalse', $options);
 
         return [
             'id' => $questionid,
