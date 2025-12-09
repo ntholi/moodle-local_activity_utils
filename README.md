@@ -2,11 +2,12 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 4.0 | **Requirements:** Moodle 4.5+ | **Developed for:** Limkokwing University
+**Version:** 4.1 | **Requirements:** Moodle 4.5+ | **Developed for:** Limkokwing University
 
 ## Features
 
-43 web service functions:
+52 web service functions:
+
 - **Sections** (6): create, update, delete sections and subsections
 - **Assignments** (3): create, update, delete
 - **Pages** (3): create, update, delete
@@ -17,6 +18,8 @@ REST API endpoints for programmatic Moodle course content management.
 - **BigBlueButton** (3): create, update, delete
 - **Forums** (2): create, delete
 - **Quizzes** (7): create, update, delete, get, add/remove/reorder questions
+- **Question Categories** (2): get/create, list
+- **Questions** (7): create multichoice/truefalse/shortanswer/essay/numerical, get, delete
 
 ## Quick Setup
 
@@ -33,11 +36,11 @@ REST API endpoints for programmatic Moodle course content management.
 POST https://yourmoodle.com/webservice/rest/server.php
 ```
 
-| Parameter | Value |
-|-----------|-------|
-| `wstoken` | Your API token |
-| `wsfunction` | Function name |
-| `moodlewsrestformat` | `json` |
+| Parameter            | Value          |
+| -------------------- | -------------- |
+| `wstoken`            | Your API token |
+| `wsfunction`         | Function name  |
+| `moodlewsrestformat` | `json`         |
 
 **Important:** Boolean parameters must be passed as integers (`0` = false, `1` = true) when calling via REST API, not JSON booleans.
 
@@ -46,44 +49,49 @@ POST https://yourmoodle.com/webservice/rest/server.php
 ## Sections
 
 ### Create Section
+
 `local_activity_utils_create_section`
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| `courseid` | int | Yes |
-| `name` | string | No |
-| `summary` | string | No |
-| `sectionnum` | int | No |
+| Parameter    | Type   | Required |
+| ------------ | ------ | -------- |
+| `courseid`   | int    | Yes      |
+| `name`       | string | No       |
+| `summary`    | string | No       |
+| `sectionnum` | int    | No       |
 
 ### Create Subsection
+
 `local_activity_utils_create_subsection`
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| `courseid` | int | Yes |
-| `parentsection` | int | Yes |
-| `name` | string | Yes |
-| `summary` | string | No |
-| `visible` | int | No |
+| Parameter       | Type   | Required |
+| --------------- | ------ | -------- |
+| `courseid`      | int    | Yes      |
+| `parentsection` | int    | Yes      |
+| `name`          | string | Yes      |
+| `summary`       | string | No       |
+| `visible`       | int    | No       |
 
 **Note:** Use returned `sectionnum` when adding activities to the subsection.
 
 ### Update Section/Subsection
+
 `local_activity_utils_update_section` / `local_activity_utils_update_subsection`
 
 Parameters: `sectionid` (required), `name`, `summary`, `visible`
 
 ### Delete Section
+
 `local_activity_utils_delete_section`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `courseid` | int | Yes | Course ID |
-| `sectionnum` | int | Yes | Section number to delete |
+| Parameter    | Type | Required | Description              |
+| ------------ | ---- | -------- | ------------------------ |
+| `courseid`   | int  | Yes      | Course ID                |
+| `sectionnum` | int  | Yes      | Section number to delete |
 
 **Note:** Cannot delete section 0 (general section). Deletes all content within the section.
 
 ### Delete Subsection
+
 `local_activity_utils_delete_subsection`
 
 Parameters: `cmid` (course module ID)
@@ -93,27 +101,30 @@ Parameters: `cmid` (course module ID)
 ## Assignments
 
 ### Create Assignment
+
 `local_activity_utils_create_assignment`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `courseid` | int | Yes | |
-| `name` | string | Yes | |
-| `intro` | string | No | Description (HTML) |
-| `activity` | string | No | Instructions (HTML) |
-| `allowsubmissionsfromdate` | int | No | Unix timestamp |
-| `duedate` | int | No | Unix timestamp |
-| `section` | int | No | Default: 0 |
-| `idnumber` | string | No | Gradebook ID |
-| `grademax` | int | No | Default: 100 |
-| `introfiles` | string | No | JSON array (base64) |
+| Parameter                  | Type   | Required | Description         |
+| -------------------------- | ------ | -------- | ------------------- |
+| `courseid`                 | int    | Yes      |                     |
+| `name`                     | string | Yes      |                     |
+| `intro`                    | string | No       | Description (HTML)  |
+| `activity`                 | string | No       | Instructions (HTML) |
+| `allowsubmissionsfromdate` | int    | No       | Unix timestamp      |
+| `duedate`                  | int    | No       | Unix timestamp      |
+| `section`                  | int    | No       | Default: 0          |
+| `idnumber`                 | string | No       | Gradebook ID        |
+| `grademax`                 | int    | No       | Default: 100        |
+| `introfiles`               | string | No       | JSON array (base64) |
 
 ### Update Assignment
+
 `local_activity_utils_update_assignment`
 
 Parameters: `assignmentid` (required), `name`, `intro`, `activity`, `allowsubmissionsfromdate`, `duedate`, `cutoffdate`, `idnumber`, `grademax`, `visible`
 
 ### Delete Assignment
+
 `local_activity_utils_delete_assignment`
 
 Parameters: `cmid` (course module ID)
@@ -123,23 +134,26 @@ Parameters: `cmid` (course module ID)
 ## Pages
 
 ### Create Page
+
 `local_activity_utils_create_page`
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| `courseid` | int | Yes |
-| `name` | string | Yes |
-| `intro` | string | No |
-| `content` | string | No |
-| `section` | int | No |
-| `visible` | int | No |
+| Parameter  | Type   | Required |
+| ---------- | ------ | -------- |
+| `courseid` | int    | Yes      |
+| `name`     | string | Yes      |
+| `intro`    | string | No       |
+| `content`  | string | No       |
+| `section`  | int    | No       |
+| `visible`  | int    | No       |
 
 ### Update Page
+
 `local_activity_utils_update_page`
 
 Parameters: `pageid` (required), `name`, `intro`, `content`, `visible`
 
 ### Delete Page
+
 `local_activity_utils_delete_page`
 
 Parameters: `cmid` (course module ID)
@@ -149,24 +163,27 @@ Parameters: `cmid` (course module ID)
 ## Files
 
 ### Create File
+
 `local_activity_utils_create_file`
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| `courseid` | int | Yes |
-| `name` | string | Yes |
-| `intro` | string | No |
-| `filename` | string | Yes |
+| Parameter     | Type   | Required     |
+| ------------- | ------ | ------------ |
+| `courseid`    | int    | Yes          |
+| `name`        | string | Yes          |
+| `intro`       | string | No           |
+| `filename`    | string | Yes          |
 | `filecontent` | string | Yes (base64) |
-| `section` | int | No |
-| `visible` | int | No |
+| `section`     | int    | No           |
+| `visible`     | int    | No           |
 
 ### Update File
+
 `local_activity_utils_update_file`
 
 Parameters: `resourceid` (required), `name`, `intro`, `filename`, `filecontent`, `visible`
 
 ### Delete File
+
 `local_activity_utils_delete_file`
 
 Parameters: `cmid` (course module ID)
@@ -176,24 +193,27 @@ Parameters: `cmid` (course module ID)
 ## URLs
 
 ### Create URL
+
 `local_activity_utils_create_url`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `courseid` | int | Yes | |
-| `name` | string | Yes | |
-| `externalurl` | string | Yes | The external URL |
-| `intro` | string | No | Description (HTML) |
-| `section` | int | No | Default: 0 |
-| `visible` | int | No | Default: 1 |
-| `display` | int | No | 0=auto, 1=embed, 2=frame, 5=open, 6=popup |
+| Parameter     | Type   | Required | Description                               |
+| ------------- | ------ | -------- | ----------------------------------------- |
+| `courseid`    | int    | Yes      |                                           |
+| `name`        | string | Yes      |                                           |
+| `externalurl` | string | Yes      | The external URL                          |
+| `intro`       | string | No       | Description (HTML)                        |
+| `section`     | int    | No       | Default: 0                                |
+| `visible`     | int    | No       | Default: 1                                |
+| `display`     | int    | No       | 0=auto, 1=embed, 2=frame, 5=open, 6=popup |
 
 ### Update URL
+
 `local_activity_utils_update_url`
 
 Parameters: `urlid` (required), `name`, `externalurl`, `intro`, `display`, `visible`
 
 ### Delete URL
+
 `local_activity_utils_delete_url`
 
 Parameters: `cmid` (course module ID)
@@ -203,43 +223,49 @@ Parameters: `cmid` (course module ID)
 ## Books
 
 ### Create Book
+
 `local_activity_utils_create_book`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `courseid` | int | Yes | |
-| `name` | string | Yes | |
-| `intro` | string | No | |
-| `section` | int | No | |
-| `visible` | int | No | |
-| `numbering` | int | No | 0=none, 1=numbers, 2=bullets, 3=indented |
-| `navstyle` | int | No | 0=none, 1=images, 2=text |
-| `customtitles` | int | No | |
-| `chapters` | array | No | Chapter objects |
+| Parameter      | Type   | Required | Description                              |
+| -------------- | ------ | -------- | ---------------------------------------- |
+| `courseid`     | int    | Yes      |                                          |
+| `name`         | string | Yes      |                                          |
+| `intro`        | string | No       |                                          |
+| `section`      | int    | No       |                                          |
+| `visible`      | int    | No       |                                          |
+| `numbering`    | int    | No       | 0=none, 1=numbers, 2=bullets, 3=indented |
+| `navstyle`     | int    | No       | 0=none, 1=images, 2=text                 |
+| `customtitles` | int    | No       |                                          |
+| `chapters`     | array  | No       | Chapter objects                          |
 
 **Chapter object:** `title` (required), `content`, `subchapter` (0=main, 1=sub), `hidden`, `tags`
 
 ### Add Book Chapter
+
 `local_activity_utils_add_book_chapter`
 
 Parameters: `bookid` (required), `title` (required), `content`, `subchapter`, `hidden`, `pagenum`, `tags`
 
 ### Get Book
+
 `local_activity_utils_get_book`
 
 Parameters: `bookid`
 
 ### Update Book
+
 `local_activity_utils_update_book`
 
 Parameters: `bookid` (required), `name`, `intro`, `numbering`, `navstyle`, `customtitles`, `visible`
 
 ### Update Book Chapter
+
 `local_activity_utils_update_book_chapter`
 
 Parameters: `chapterid` (required), `title`, `content`, `subchapter`, `hidden`, `tags`
 
 ### Delete Book
+
 `local_activity_utils_delete_book`
 
 Parameters: `cmid` (course module ID)
@@ -251,55 +277,62 @@ Parameters: `cmid` (course module ID)
 Simplified rubric management (cleaner than `core_grading_save_definitions`).
 
 ### Create Rubric
+
 `local_activity_utils_create_rubric`
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| `cmid` | int | Yes |
-| `name` | string | Yes |
-| `description` | string | No |
-| `criteria` | array | Yes |
-| `options` | object | No |
+| Parameter     | Type   | Required |
+| ------------- | ------ | -------- |
+| `cmid`        | int    | Yes      |
+| `name`        | string | Yes      |
+| `description` | string | No       |
+| `criteria`    | array  | Yes      |
+| `options`     | object | No       |
 
 **Criterion:** `description` (required), `sortorder`, `levels` (required)
 **Level:** `score` (required), `definition` (required)
 **Options:** `sortlevelsasc`, `lockzeropoints`, `showdescriptionstudent`, `showdescriptionteacher`, `showscoreteacher`, `showscorestudent`, `enableremarks`, `showremarksstudent`
 
 ### Get Rubric
+
 `local_activity_utils_get_rubric`
 
 Parameters: `cmid`
 
 ### Update Rubric
+
 `local_activity_utils_update_rubric`
 
 Parameters: `cmid` (required), `name`, `description`, `criteria`, `options`
 
 ### Delete Rubric
+
 `local_activity_utils_delete_rubric`
 
 Parameters: `cmid`
 
 ### Copy Rubric
+
 `local_activity_utils_copy_rubric`
 
 Parameters: `sourcecmid`, `targetcmid`
 
 ### Fill Rubric (Grade Student)
+
 `local_activity_utils_fill_rubric`
 
 Grade a student's assignment submission by selecting levels for each rubric criterion.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `cmid` | int | Yes | Course module ID of the assignment |
-| `userid` | int | Yes | User ID of the student being graded |
-| `fillings` | array | Yes | Array of rubric fillings |
-| `overallremark` | string | No | Overall feedback/remark |
+| Parameter       | Type   | Required | Description                         |
+| --------------- | ------ | -------- | ----------------------------------- |
+| `cmid`          | int    | Yes      | Course module ID of the assignment  |
+| `userid`        | int    | Yes      | User ID of the student being graded |
+| `fillings`      | array  | Yes      | Array of rubric fillings            |
+| `overallremark` | string | No       | Overall feedback/remark             |
 
 **Filling object:** `criterionid` (required), `levelid` (required), `remark` (optional feedback for the criterion)
 
 **Example:**
+
 ```json
 {
   "cmid": 123,
@@ -321,6 +354,7 @@ Grade a student's assignment submission by selecting levels for each rubric crit
 ```
 
 **Response:**
+
 ```json
 {
   "instanceid": 789,
@@ -331,16 +365,18 @@ Grade a student's assignment submission by selecting levels for each rubric crit
 ```
 
 ### Get Rubric Filling
+
 `local_activity_utils_get_rubric_filling`
 
 Retrieve how a teacher graded a student using the rubric.
 
 | Parameter | Type | Required |
-|-----------|------|----------|
-| `cmid` | int | Yes |
-| `userid` | int | Yes |
+| --------- | ---- | -------- |
+| `cmid`    | int  | Yes      |
+| `userid`  | int  | Yes      |
 
 **Response:**
+
 ```json
 {
   "instanceid": 789,
@@ -372,44 +408,46 @@ Retrieve how a teacher graded a student using the rubric.
 ## BigBlueButton
 
 ### Create BigBlueButton
+
 `local_activity_utils_create_bigbluebuttonbn`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `courseid` | int | Yes | |
-| `name` | string | Yes | |
-| `intro` | string | No | Description (HTML) |
-| `section` | int | No | Default: 0 |
-| `visible` | int | No | Default: 1 |
-| `type` | int | No | 0=room+recordings, 1=room only, 2=recordings only |
-| `welcome` | string | No | Welcome message |
-| `voicebridge` | int | No | 4-digit voice bridge number |
-| `wait` | int | No | Wait for moderator (1/0) |
-| `userlimit` | int | No | Max participants (0=unlimited) |
-| `record` | int | No | Enable recording (1/0) |
-| `muteonstart` | int | No | Mute on start (1/0) |
-| `disablecam` | int | No | Disable webcams (1/0) |
-| `disablemic` | int | No | Disable microphones (1/0) |
-| `disableprivatechat` | int | No | Disable private chat (1/0) |
-| `disablepublicchat` | int | No | Disable public chat (1/0) |
-| `disablenote` | int | No | Disable shared notes (1/0) |
-| `hideuserlist` | int | No | Hide user list (1/0) |
-| `openingtime` | int | No | Unix timestamp (0=no restriction) |
-| `closingtime` | int | No | Unix timestamp (0=no restriction) |
-| `guestallowed` | int | No | Allow guests (1/0) |
-| `mustapproveuser` | int | No | Approve guests (1/0) |
-| `recordings_deleted` | int | No | Show deleted recordings (1/0) |
-| `recordings_imported` | int | No | Show imported recordings (1/0) |
-| `recordings_preview` | int | No | Show preview (1/0) |
-| `showpresentation` | int | No | Show presentation on page (1/0) |
-| `completionattendance` | int | No | Required attendance minutes |
-| `completionengagementchats` | int | No | Required chat messages |
-| `completionengagementtalks` | int | No | Required talk time |
-| `completionengagementraisehand` | int | No | Required raise hand count |
-| `completionengagementpollvotes` | int | No | Required poll votes |
-| `completionengagementemojis` | int | No | Required emoji count |
+| Parameter                       | Type   | Required | Description                                       |
+| ------------------------------- | ------ | -------- | ------------------------------------------------- |
+| `courseid`                      | int    | Yes      |                                                   |
+| `name`                          | string | Yes      |                                                   |
+| `intro`                         | string | No       | Description (HTML)                                |
+| `section`                       | int    | No       | Default: 0                                        |
+| `visible`                       | int    | No       | Default: 1                                        |
+| `type`                          | int    | No       | 0=room+recordings, 1=room only, 2=recordings only |
+| `welcome`                       | string | No       | Welcome message                                   |
+| `voicebridge`                   | int    | No       | 4-digit voice bridge number                       |
+| `wait`                          | int    | No       | Wait for moderator (1/0)                          |
+| `userlimit`                     | int    | No       | Max participants (0=unlimited)                    |
+| `record`                        | int    | No       | Enable recording (1/0)                            |
+| `muteonstart`                   | int    | No       | Mute on start (1/0)                               |
+| `disablecam`                    | int    | No       | Disable webcams (1/0)                             |
+| `disablemic`                    | int    | No       | Disable microphones (1/0)                         |
+| `disableprivatechat`            | int    | No       | Disable private chat (1/0)                        |
+| `disablepublicchat`             | int    | No       | Disable public chat (1/0)                         |
+| `disablenote`                   | int    | No       | Disable shared notes (1/0)                        |
+| `hideuserlist`                  | int    | No       | Hide user list (1/0)                              |
+| `openingtime`                   | int    | No       | Unix timestamp (0=no restriction)                 |
+| `closingtime`                   | int    | No       | Unix timestamp (0=no restriction)                 |
+| `guestallowed`                  | int    | No       | Allow guests (1/0)                                |
+| `mustapproveuser`               | int    | No       | Approve guests (1/0)                              |
+| `recordings_deleted`            | int    | No       | Show deleted recordings (1/0)                     |
+| `recordings_imported`           | int    | No       | Show imported recordings (1/0)                    |
+| `recordings_preview`            | int    | No       | Show preview (1/0)                                |
+| `showpresentation`              | int    | No       | Show presentation on page (1/0)                   |
+| `completionattendance`          | int    | No       | Required attendance minutes                       |
+| `completionengagementchats`     | int    | No       | Required chat messages                            |
+| `completionengagementtalks`     | int    | No       | Required talk time                                |
+| `completionengagementraisehand` | int    | No       | Required raise hand count                         |
+| `completionengagementpollvotes` | int    | No       | Required poll votes                               |
+| `completionengagementemojis`    | int    | No       | Required emoji count                              |
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -422,11 +460,13 @@ Retrieve how a teacher graded a student using the rubric.
 ```
 
 ### Update BigBlueButton
+
 `local_activity_utils_update_bigbluebuttonbn`
 
 Parameters: `bigbluebuttonbnid` (required), plus any field from create (all optional)
 
 ### Delete BigBlueButton
+
 `local_activity_utils_delete_bigbluebuttonbn`
 
 Parameters: `cmid` (course module ID)
@@ -436,18 +476,20 @@ Parameters: `cmid` (course module ID)
 ## Forums
 
 ### Create Forum
+
 `local_activity_utils_create_forum`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `courseid` | int | Yes | |
-| `name` | string | Yes | |
-| `intro` | string | No | Forum description (HTML) |
-| `type` | string | No | Forum type: general, news, social, eachuser, single, qanda, blog (default: general) |
-| `section` | int | No | Default: 0 |
-| `idnumber` | string | No | ID number |
+| Parameter  | Type   | Required | Description                                                                         |
+| ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `courseid` | int    | Yes      |                                                                                     |
+| `name`     | string | Yes      |                                                                                     |
+| `intro`    | string | No       | Forum description (HTML)                                                            |
+| `type`     | string | No       | Forum type: general, news, social, eachuser, single, qanda, blog (default: general) |
+| `section`  | int    | No       | Default: 0                                                                          |
+| `idnumber` | string | No       | ID number                                                                           |
 
 **Forum Types:**
+
 - `general` - Standard forum for general use
 - `news` - News forum (announcements)
 - `social` - Social forum for off-topic discussions
@@ -457,6 +499,7 @@ Parameters: `cmid` (course module ID)
 - `blog` - Blog-like format
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -468,6 +511,7 @@ Parameters: `cmid` (course module ID)
 ```
 
 ### Delete Forum
+
 `local_activity_utils_delete_forum`
 
 Parameters: `cmid` (course module ID)
@@ -479,54 +523,56 @@ Parameters: `cmid` (course module ID)
 Complete quiz management API for Moodle 4.5+. These functions fill gaps not covered by core Moodle web services.
 
 ### Create Quiz
+
 `local_activity_utils_create_quiz`
 
 Creates a new quiz with full configuration options.
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `courseid` | int | Yes | | Course ID |
-| `name` | string | Yes | | Quiz name |
-| `intro` | string | No | '' | Quiz description (HTML) |
-| `section` | int | No | 0 | Course section number |
-| `idnumber` | string | No | '' | ID number for gradebook |
-| `timeopen` | int | No | 0 | Open timestamp (0 = no restriction) |
-| `timeclose` | int | No | 0 | Close timestamp (0 = no restriction) |
-| `timelimit` | int | No | 0 | Time limit in seconds |
-| `overduehandling` | string | No | 'autosubmit' | autosubmit, graceperiod, autoabandon |
-| `graceperiod` | int | No | 0 | Grace period in seconds |
-| `grade` | float | No | 10.0 | Maximum grade |
-| `grademethod` | int | No | 1 | 1=highest, 2=average, 3=first, 4=last |
-| `decimalpoints` | int | No | 2 | Decimal places (0-5) |
-| `questiondecimalpoints` | int | No | -1 | Question decimals (-1 = same as quiz) |
-| `questionsperpage` | int | No | 1 | Questions per page (0 = all) |
-| `navmethod` | string | No | 'free' | free or sequential |
-| `shuffleanswers` | int | No | 1 | Shuffle answer options |
-| `preferredbehaviour` | string | No | 'deferredfeedback' | Question behaviour |
-| `canredoquestions` | int | No | 0 | Allow redo of questions |
-| `attempts` | int | No | 0 | Max attempts (0 = unlimited) |
-| `attemptonlast` | int | No | 0 | Build on last attempt |
-| `reviewattempt` | int | No | 69904 | Review options bitmask |
-| `reviewcorrectness` | int | No | 69904 | Review correctness bitmask |
-| `reviewmarks` | int | No | 69904 | Review marks bitmask |
-| `reviewspecificfeedback` | int | No | 69904 | Review specific feedback bitmask |
-| `reviewgeneralfeedback` | int | No | 69904 | Review general feedback bitmask |
-| `reviewrightanswer` | int | No | 69904 | Review right answer bitmask |
-| `reviewoverallfeedback` | int | No | 4368 | Review overall feedback bitmask |
-| `reviewmaxmarks` | int | No | 69904 | Review max marks bitmask |
-| `password` | string | No | '' | Quiz password |
-| `subnet` | string | No | '' | Allowed IP addresses |
-| `browsersecurity` | string | No | '-' | - (none) or securewindow |
-| `delay1` | int | No | 0 | Delay between attempts 1-2 (seconds) |
-| `delay2` | int | No | 0 | Delay between later attempts |
-| `showuserpicture` | int | No | 0 | 0=no, 1=small, 2=large |
-| `showblocks` | int | No | 0 | Show blocks during quiz |
-| `completionattemptsexhausted` | int | No | 0 | Complete when attempts exhausted |
-| `completionminattempts` | int | No | 0 | Minimum attempts for completion |
-| `visible` | int | No | 1 | Module visibility |
-| `allowofflineattempts` | int | No | 0 | Allow offline attempts (mobile) |
+| Parameter                     | Type   | Required | Default            | Description                           |
+| ----------------------------- | ------ | -------- | ------------------ | ------------------------------------- |
+| `courseid`                    | int    | Yes      |                    | Course ID                             |
+| `name`                        | string | Yes      |                    | Quiz name                             |
+| `intro`                       | string | No       | ''                 | Quiz description (HTML)               |
+| `section`                     | int    | No       | 0                  | Course section number                 |
+| `idnumber`                    | string | No       | ''                 | ID number for gradebook               |
+| `timeopen`                    | int    | No       | 0                  | Open timestamp (0 = no restriction)   |
+| `timeclose`                   | int    | No       | 0                  | Close timestamp (0 = no restriction)  |
+| `timelimit`                   | int    | No       | 0                  | Time limit in seconds                 |
+| `overduehandling`             | string | No       | 'autosubmit'       | autosubmit, graceperiod, autoabandon  |
+| `graceperiod`                 | int    | No       | 0                  | Grace period in seconds               |
+| `grade`                       | float  | No       | 10.0               | Maximum grade                         |
+| `grademethod`                 | int    | No       | 1                  | 1=highest, 2=average, 3=first, 4=last |
+| `decimalpoints`               | int    | No       | 2                  | Decimal places (0-5)                  |
+| `questiondecimalpoints`       | int    | No       | -1                 | Question decimals (-1 = same as quiz) |
+| `questionsperpage`            | int    | No       | 1                  | Questions per page (0 = all)          |
+| `navmethod`                   | string | No       | 'free'             | free or sequential                    |
+| `shuffleanswers`              | int    | No       | 1                  | Shuffle answer options                |
+| `preferredbehaviour`          | string | No       | 'deferredfeedback' | Question behaviour                    |
+| `canredoquestions`            | int    | No       | 0                  | Allow redo of questions               |
+| `attempts`                    | int    | No       | 0                  | Max attempts (0 = unlimited)          |
+| `attemptonlast`               | int    | No       | 0                  | Build on last attempt                 |
+| `reviewattempt`               | int    | No       | 69904              | Review options bitmask                |
+| `reviewcorrectness`           | int    | No       | 69904              | Review correctness bitmask            |
+| `reviewmarks`                 | int    | No       | 69904              | Review marks bitmask                  |
+| `reviewspecificfeedback`      | int    | No       | 69904              | Review specific feedback bitmask      |
+| `reviewgeneralfeedback`       | int    | No       | 69904              | Review general feedback bitmask       |
+| `reviewrightanswer`           | int    | No       | 69904              | Review right answer bitmask           |
+| `reviewoverallfeedback`       | int    | No       | 4368               | Review overall feedback bitmask       |
+| `reviewmaxmarks`              | int    | No       | 69904              | Review max marks bitmask              |
+| `password`                    | string | No       | ''                 | Quiz password                         |
+| `subnet`                      | string | No       | ''                 | Allowed IP addresses                  |
+| `browsersecurity`             | string | No       | '-'                | - (none) or securewindow              |
+| `delay1`                      | int    | No       | 0                  | Delay between attempts 1-2 (seconds)  |
+| `delay2`                      | int    | No       | 0                  | Delay between later attempts          |
+| `showuserpicture`             | int    | No       | 0                  | 0=no, 1=small, 2=large                |
+| `showblocks`                  | int    | No       | 0                  | Show blocks during quiz               |
+| `completionattemptsexhausted` | int    | No       | 0                  | Complete when attempts exhausted      |
+| `completionminattempts`       | int    | No       | 0                  | Minimum attempts for completion       |
+| `visible`                     | int    | No       | 1                  | Module visibility                     |
+| `allowofflineattempts`        | int    | No       | 0                  | Allow offline attempts (mobile)       |
 
 **Question Behaviours:**
+
 - `deferredfeedback` - Deferred feedback (default)
 - `adaptivenopenalty` - Adaptive mode (no penalties)
 - `adaptive` - Adaptive mode
@@ -535,10 +581,12 @@ Creates a new quiz with full configuration options.
 - `immediatecbm` - Immediate feedback with CBM
 
 **Review Options Bitmask:**
+
 - Bits represent when to show: during (0x10000), immediately after (0x01000), later while open (0x00100), after close (0x00010)
 - Default 69904 = show during + immediately after + later while open + after close
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -550,32 +598,36 @@ Creates a new quiz with full configuration options.
 ```
 
 ### Update Quiz
+
 `local_activity_utils_update_quiz`
 
 Updates an existing quiz. All parameters except `quizid` are optional - only provided fields are updated.
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| `quizid` | int | Yes |
-| All other parameters from create | * | No |
+| Parameter                        | Type | Required |
+| -------------------------------- | ---- | -------- |
+| `quizid`                         | int  | Yes      |
+| All other parameters from create | \*   | No       |
 
 ### Delete Quiz
+
 `local_activity_utils_delete_quiz`
 
 | Parameter | Type | Required |
-|-----------|------|----------|
-| `cmid` | int | Yes |
+| --------- | ---- | -------- |
+| `cmid`    | int  | Yes      |
 
 ### Get Quiz
+
 `local_activity_utils_get_quiz`
 
 Retrieves complete quiz details including all questions, sections, and settings.
 
 | Parameter | Type | Required |
-|-----------|------|----------|
-| `quizid` | int | Yes |
+| --------- | ---- | -------- |
+| `quizid`  | int  | Yes      |
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -623,21 +675,23 @@ Retrieves complete quiz details including all questions, sections, and settings.
 ```
 
 ### Add Question to Quiz
+
 `local_activity_utils_add_question_to_quiz`
 
 Adds an existing question from the question bank to a quiz.
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `quizid` | int | Yes | | Quiz instance ID |
-| `questionbankentryid` | int | Yes | | Question bank entry ID |
-| `page` | int | No | 0 | Page number (0 = last page) |
-| `maxmark` | float | No | null | Max mark (null = question default) |
-| `requireprevious` | int | No | 0 | Require previous question |
+| Parameter             | Type  | Required | Default | Description                        |
+| --------------------- | ----- | -------- | ------- | ---------------------------------- |
+| `quizid`              | int   | Yes      |         | Quiz instance ID                   |
+| `questionbankentryid` | int   | Yes      |         | Question bank entry ID             |
+| `page`                | int   | No       | 0       | Page number (0 = last page)        |
+| `maxmark`             | float | No       | null    | Max mark (null = question default) |
+| `requireprevious`     | int   | No       | 0       | Require previous question          |
 
 **Note:** Use `questionbankentryid` not `questionid`. In Moodle 4.0+, questions are referenced through the question bank entry system.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -648,47 +702,342 @@ Adds an existing question from the question bank to a quiz.
 ```
 
 ### Remove Question from Quiz
+
 `local_activity_utils_remove_question_from_quiz`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `quizid` | int | Yes | Quiz instance ID |
-| `slot` | int | Yes | Slot number to remove |
+| Parameter | Type | Required | Description           |
+| --------- | ---- | -------- | --------------------- |
+| `quizid`  | int  | Yes      | Quiz instance ID      |
+| `slot`    | int  | Yes      | Slot number to remove |
 
 **Note:** Removes the question from the specified slot. Subsequent slots are automatically renumbered.
 
 ### Reorder Quiz Questions
+
 `local_activity_utils_reorder_quiz_questions`
 
 Reorders questions within a quiz by specifying new slot positions.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `quizid` | int | Yes | Quiz instance ID |
-| `slots` | array | Yes | Array of slot reorder objects |
+| Parameter | Type  | Required | Description                   |
+| --------- | ----- | -------- | ----------------------------- |
+| `quizid`  | int   | Yes      | Quiz instance ID              |
+| `slots`   | array | Yes      | Array of slot reorder objects |
 
 **Slot reorder object:**
+
 - `slotid` (int, required): Slot ID
 - `newslot` (int, required): New slot position (1-based)
 - `page` (int, optional): New page number
 
 **Example:**
+
 ```json
 {
   "quizid": 1,
   "slots": [
-    {"slotid": 101, "newslot": 3, "page": 1},
-    {"slotid": 102, "newslot": 1, "page": 1},
-    {"slotid": 103, "newslot": 2, "page": 1}
+    { "slotid": 101, "newslot": 3, "page": 1 },
+    { "slotid": 102, "newslot": 1, "page": 1 },
+    { "slotid": 103, "newslot": 2, "page": 1 }
   ]
 }
 ```
 
 ---
 
+## Question Bank
+
+Complete question bank management API for creating and managing questions in Moodle 4.5+.
+
+### Get or Create Question Category
+
+`local_activity_utils_get_or_create_question_category`
+
+Gets an existing category or creates a new one if it doesn't exist.
+
+| Parameter          | Type   | Required | Default | Description                               |
+| ------------------ | ------ | -------- | ------- | ----------------------------------------- |
+| `courseid`         | int    | Yes      |         | Course ID                                 |
+| `name`             | string | Yes      |         | Category name                             |
+| `info`             | string | No       | ''      | Category description                      |
+| `parentcategoryid` | int    | No       | 0       | Parent category ID (0 = course top-level) |
+
+**Response:**
+
+```json
+{
+  "id": 123,
+  "name": "Week 1 Questions",
+  "contextid": 456,
+  "created": true,
+  "success": true,
+  "message": "Category created successfully"
+}
+```
+
+### List Question Categories
+
+`local_activity_utils_list_question_categories`
+
+| Parameter  | Type | Required |
+| ---------- | ---- | -------- |
+| `courseid` | int  | Yes      |
+
+**Response:**
+
+```json
+{
+  "categories": [
+    {
+      "id": 123,
+      "name": "Default for Course",
+      "info": "",
+      "parent": 0,
+      "contextid": 456,
+      "sortorder": 999,
+      "questioncount": 15,
+      "idnumber": ""
+    }
+  ],
+  "success": true,
+  "message": "Found 1 category(ies)"
+}
+```
+
+### Create Multiple Choice Question
+
+`local_activity_utils_create_multichoice_question`
+
+Creates a multiple choice question supporting both single and multiple answer modes.
+
+| Parameter                  | Type   | Required | Default | Description                                                  |
+| -------------------------- | ------ | -------- | ------- | ------------------------------------------------------------ |
+| `categoryid`               | int    | Yes      |         | Question category ID                                         |
+| `name`                     | string | Yes      |         | Question name                                                |
+| `questiontext`             | string | Yes      |         | Question text (HTML)                                         |
+| `answers`                  | array  | Yes      |         | Array of answer objects                                      |
+| `defaultmark`              | float  | No       | 1.0     | Default mark (points)                                        |
+| `single`                   | int    | No       | 1       | 1 = single answer (radio), 0 = multiple answers (checkboxes) |
+| `shuffleanswers`           | int    | No       | 1       | Shuffle answer order                                         |
+| `answernumbering`          | string | No       | 'abc'   | abc, ABC, 123, iii, III, none                                |
+| `correctfeedback`          | string | No       | ''      | Feedback for correct answer                                  |
+| `partiallycorrectfeedback` | string | No       | ''      | Feedback for partially correct                               |
+| `incorrectfeedback`        | string | No       | ''      | Feedback for incorrect answer                                |
+| `generalfeedback`          | string | No       | ''      | General feedback                                             |
+| `idnumber`                 | string | No       | ''      | ID number                                                    |
+| `tags`                     | array  | No       | []      | Array of tag names                                           |
+
+**Answer object:**
+
+- `text` (string, required): Answer text (HTML)
+- `fraction` (float, required): Grade fraction (1.0 = 100%, 0.5 = 50%, 0 = 0%, negative for penalties)
+- `feedback` (string, optional): Feedback for this answer
+
+**Example:**
+
+```json
+{
+  "categoryid": 123,
+  "name": "Capital of France",
+  "questiontext": "<p>What is the capital of France?</p>",
+  "single": 1,
+  "answers": [
+    { "text": "Paris", "fraction": 1.0, "feedback": "Correct!" },
+    { "text": "London", "fraction": 0, "feedback": "That's the capital of UK" },
+    {
+      "text": "Berlin",
+      "fraction": 0,
+      "feedback": "That's the capital of Germany"
+    },
+    {
+      "text": "Madrid",
+      "fraction": 0,
+      "feedback": "That's the capital of Spain"
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "questionid": 789,
+  "questionbankentryid": 456,
+  "name": "Capital of France",
+  "success": true,
+  "message": "Multiple choice question created successfully"
+}
+```
+
+### Create True/False Question
+
+`local_activity_utils_create_truefalse_question`
+
+| Parameter         | Type   | Required | Default | Description                  |
+| ----------------- | ------ | -------- | ------- | ---------------------------- |
+| `categoryid`      | int    | Yes      |         | Question category ID         |
+| `name`            | string | Yes      |         | Question name                |
+| `questiontext`    | string | Yes      |         | Question text (HTML)         |
+| `correctanswer`   | int    | Yes      |         | 1 = True, 0 = False          |
+| `defaultmark`     | float  | No       | 1.0     | Default mark                 |
+| `feedbacktrue`    | string | No       | ''      | Feedback when True selected  |
+| `feedbackfalse`   | string | No       | ''      | Feedback when False selected |
+| `generalfeedback` | string | No       | ''      | General feedback             |
+| `idnumber`        | string | No       | ''      | ID number                    |
+| `tags`            | array  | No       | []      | Array of tag names           |
+
+### Create Short Answer Question
+
+`local_activity_utils_create_shortanswer_question`
+
+| Parameter         | Type   | Required | Default | Description                     |
+| ----------------- | ------ | -------- | ------- | ------------------------------- |
+| `categoryid`      | int    | Yes      |         | Question category ID            |
+| `name`            | string | Yes      |         | Question name                   |
+| `questiontext`    | string | Yes      |         | Question text (HTML)            |
+| `answers`         | array  | Yes      |         | Array of accepted answers       |
+| `defaultmark`     | float  | No       | 1.0     | Default mark                    |
+| `usecase`         | int    | No       | 0       | Case sensitive: 1 = yes, 0 = no |
+| `generalfeedback` | string | No       | ''      | General feedback                |
+| `idnumber`        | string | No       | ''      | ID number                       |
+| `tags`            | array  | No       | []      | Array of tag names              |
+
+**Answer object:**
+
+- `text` (string, required): Accepted answer text
+- `fraction` (float, optional): Grade fraction (default 1.0)
+- `feedback` (string, optional): Feedback for this answer
+
+### Create Essay Question
+
+`local_activity_utils_create_essay_question`
+
+| Parameter             | Type   | Required | Default  | Description                                           |
+| --------------------- | ------ | -------- | -------- | ----------------------------------------------------- |
+| `categoryid`          | int    | Yes      |          | Question category ID                                  |
+| `name`                | string | Yes      |          | Question name                                         |
+| `questiontext`        | string | Yes      |          | Question text (HTML)                                  |
+| `defaultmark`         | float  | No       | 1.0      | Default mark                                          |
+| `responseformat`      | string | No       | 'editor' | editor, editorfilepicker, plain, monospaced, noinline |
+| `responserequired`    | int    | No       | 1        | Response required                                     |
+| `responsefieldlines`  | int    | No       | 15       | Number of lines                                       |
+| `minwordlimit`        | int    | No       | 0        | Minimum words (0 = no limit)                          |
+| `maxwordlimit`        | int    | No       | 0        | Maximum words (0 = no limit)                          |
+| `attachments`         | int    | No       | 0        | Attachments allowed: 0, 1, 2, 3, -1 (unlimited)       |
+| `attachmentsrequired` | int    | No       | 0        | Required attachments                                  |
+| `maxbytes`            | int    | No       | 0        | Max file size (0 = site default)                      |
+| `filetypeslist`       | string | No       | ''       | Accepted file types (e.g., ".pdf,.doc")               |
+| `graderinfo`          | string | No       | ''       | Information for graders                               |
+| `responsetemplate`    | string | No       | ''       | Response template                                     |
+| `generalfeedback`     | string | No       | ''       | General feedback                                      |
+| `idnumber`            | string | No       | ''       | ID number                                             |
+| `tags`                | array  | No       | []       | Array of tag names                                    |
+
+### Create Numerical Question
+
+`local_activity_utils_create_numerical_question`
+
+| Parameter         | Type   | Required | Default | Description                                                     |
+| ----------------- | ------ | -------- | ------- | --------------------------------------------------------------- |
+| `categoryid`      | int    | Yes      |         | Question category ID                                            |
+| `name`            | string | Yes      |         | Question name                                                   |
+| `questiontext`    | string | Yes      |         | Question text (HTML)                                            |
+| `answers`         | array  | Yes      |         | Array of numerical answers                                      |
+| `defaultmark`     | float  | No       | 1.0     | Default mark                                                    |
+| `unitgradingtype` | int    | No       | 0       | 0 = not graded, 1 = fraction of response, 2 = fraction of total |
+| `unitpenalty`     | float  | No       | 0.1     | Penalty for wrong unit                                          |
+| `showunits`       | int    | No       | 3       | 0 = text input, 1 = multichoice, 2 = dropdown, 3 = not visible  |
+| `unitsleft`       | int    | No       | 0       | 0 = right, 1 = left                                             |
+| `units`           | array  | No       | []      | Array of unit objects                                           |
+| `generalfeedback` | string | No       | ''      | General feedback                                                |
+| `idnumber`        | string | No       | ''      | ID number                                                       |
+| `tags`            | array  | No       | []      | Array of tag names                                              |
+
+**Answer object:**
+
+- `answer` (string, required): Numerical answer value
+- `tolerance` (float, optional): Tolerance/error margin (default 0)
+- `fraction` (float, optional): Grade fraction (default 1.0)
+- `feedback` (string, optional): Feedback
+
+**Unit object:**
+
+- `unit` (string, required): Unit name (e.g., "m", "kg")
+- `multiplier` (float, optional): Multiplier (default 1.0)
+
+**Example:**
+
+```json
+{
+  "categoryid": 123,
+  "name": "Calculate Area",
+  "questiontext": "<p>What is the area of a rectangle with width 5m and height 3m?</p>",
+  "answers": [
+    { "answer": "15", "tolerance": 0, "fraction": 1.0, "feedback": "Correct!" }
+  ],
+  "units": [
+    { "unit": "m²", "multiplier": 1.0 },
+    { "unit": "m2", "multiplier": 1.0 }
+  ]
+}
+```
+
+### Get Questions
+
+`local_activity_utils_get_questions`
+
+Get questions in a category for browsing and selection.
+
+| Parameter              | Type   | Required | Default | Description                                   |
+| ---------------------- | ------ | -------- | ------- | --------------------------------------------- |
+| `categoryid`           | int    | Yes      |         | Question category ID                          |
+| `includesubcategories` | int    | No       | 0       | Include subcategories: 1 = yes                |
+| `qtype`                | string | No       | ''      | Filter by type (multichoice, truefalse, etc.) |
+| `limit`                | int    | No       | 0       | Max results (0 = no limit)                    |
+| `offset`               | int    | No       | 0       | Offset for pagination                         |
+
+**Response:**
+
+```json
+{
+  "questions": [
+    {
+      "questionid": 789,
+      "questionbankentryid": 456,
+      "name": "Capital of France",
+      "questiontext": "<p>What is the capital of France?</p>",
+      "qtype": "multichoice",
+      "defaultmark": 1.0,
+      "categoryid": 123,
+      "idnumber": "Q001",
+      "version": 1,
+      "status": "ready",
+      "timecreated": 1701234567,
+      "timemodified": 1701234567
+    }
+  ],
+  "totalcount": 1,
+  "success": true,
+  "message": "Found 1 question(s)"
+}
+```
+
+### Delete Question
+
+`local_activity_utils_delete_question`
+
+| Parameter             | Type | Required | Description            |
+| --------------------- | ---- | -------- | ---------------------- |
+| `questionbankentryid` | int  | Yes      | Question bank entry ID |
+
+**Note:** Cannot delete questions that are used in quizzes. Remove from all quizzes first.
+
+---
+
 ## Examples
 
 ### Create Assignment
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_assignment&moodlewsrestformat=json" \
@@ -696,6 +1045,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 ### Create BigBlueButton Session
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_bigbluebuttonbn&moodlewsrestformat=json" \
@@ -703,6 +1053,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 ### Create Forum
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_forum&moodlewsrestformat=json" \
@@ -710,6 +1061,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 ### Create Rubric
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_rubric&moodlewsrestformat=json" \
@@ -719,6 +1071,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 ### Create Quiz
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_quiz&moodlewsrestformat=json" \
@@ -727,6 +1080,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 ### Add Question to Quiz
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_add_question_to_quiz&moodlewsrestformat=json" \
@@ -734,10 +1088,38 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 ```
 
 ### Get Quiz Details
+
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "wstoken=TOKEN&wsfunction=local_activity_utils_get_quiz&moodlewsrestformat=json" \
   -d "quizid=1"
+```
+
+### Create Question Category
+
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_get_or_create_question_category&moodlewsrestformat=json" \
+  -d "courseid=2&name=Week 1 Questions"
+```
+
+### Create Multiple Choice Question
+
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_create_multichoice_question&moodlewsrestformat=json" \
+  -d "categoryid=123&name=Capital Question&questiontext=<p>What is the capital of France?</p>" \
+  -d "answers[0][text]=Paris&answers[0][fraction]=1" \
+  -d "answers[1][text]=London&answers[1][fraction]=0" \
+  -d "answers[2][text]=Berlin&answers[2][fraction]=0"
+```
+
+### Get Questions in Category
+
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_get_questions&moodlewsrestformat=json" \
+  -d "categoryid=123&limit=50"
 ```
 
 ---
@@ -746,41 +1128,45 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
 
 All capabilities granted to **editing teachers** and **managers** by default.
 
-| Capability | Description |
-|------------|-------------|
-| `local/activity_utils:createassignment` | Create assignments |
-| `local/activity_utils:updateassignment` | Update assignments |
-| `local/activity_utils:deleteassignment` | Delete assignments |
-| `local/activity_utils:createsection` | Create sections |
-| `local/activity_utils:updatesection` | Update sections |
-| `local/activity_utils:deletesection` | Delete sections |
-| `local/activity_utils:createsubsection` | Create subsections |
-| `local/activity_utils:updatesubsection` | Update subsections |
-| `local/activity_utils:deletesubsection` | Delete subsections |
-| `local/activity_utils:createpage` | Create pages |
-| `local/activity_utils:updatepage` | Update pages |
-| `local/activity_utils:deletepage` | Delete pages |
-| `local/activity_utils:createfile` | Create files |
-| `local/activity_utils:updatefile` | Update files |
-| `local/activity_utils:deletefile` | Delete files |
-| `local/activity_utils:createurl` | Create URLs |
-| `local/activity_utils:updateurl` | Update URLs |
-| `local/activity_utils:deleteurl` | Delete URLs |
-| `local/activity_utils:createbook` | Create books |
-| `local/activity_utils:updatebook` | Update books |
-| `local/activity_utils:deletebook` | Delete books |
-| `local/activity_utils:readbook` | Read books (includes students) |
-| `local/activity_utils:managerubric` | Manage rubrics |
-| `local/activity_utils:createbigbluebuttonbn` | Create BigBlueButton |
-| `local/activity_utils:updatebigbluebuttonbn` | Update BigBlueButton |
-| `local/activity_utils:deletebigbluebuttonbn` | Delete BigBlueButton |
-| `local/activity_utils:createforum` | Create forums |
-| `local/activity_utils:deleteforum` | Delete forums |
-| `local/activity_utils:createquiz` | Create quizzes |
-| `local/activity_utils:updatequiz` | Update quizzes |
-| `local/activity_utils:deletequiz` | Delete quizzes |
-| `local/activity_utils:viewquiz` | View quiz details (teachers+) |
-| `local/activity_utils:managequizquestions` | Add/remove/reorder quiz questions |
+| Capability                                    | Description                       |
+| --------------------------------------------- | --------------------------------- |
+| `local/activity_utils:createassignment`       | Create assignments                |
+| `local/activity_utils:updateassignment`       | Update assignments                |
+| `local/activity_utils:deleteassignment`       | Delete assignments                |
+| `local/activity_utils:createsection`          | Create sections                   |
+| `local/activity_utils:updatesection`          | Update sections                   |
+| `local/activity_utils:deletesection`          | Delete sections                   |
+| `local/activity_utils:createsubsection`       | Create subsections                |
+| `local/activity_utils:updatesubsection`       | Update subsections                |
+| `local/activity_utils:deletesubsection`       | Delete subsections                |
+| `local/activity_utils:createpage`             | Create pages                      |
+| `local/activity_utils:updatepage`             | Update pages                      |
+| `local/activity_utils:deletepage`             | Delete pages                      |
+| `local/activity_utils:createfile`             | Create files                      |
+| `local/activity_utils:updatefile`             | Update files                      |
+| `local/activity_utils:deletefile`             | Delete files                      |
+| `local/activity_utils:createurl`              | Create URLs                       |
+| `local/activity_utils:updateurl`              | Update URLs                       |
+| `local/activity_utils:deleteurl`              | Delete URLs                       |
+| `local/activity_utils:createbook`             | Create books                      |
+| `local/activity_utils:updatebook`             | Update books                      |
+| `local/activity_utils:deletebook`             | Delete books                      |
+| `local/activity_utils:readbook`               | Read books (includes students)    |
+| `local/activity_utils:managerubric`           | Manage rubrics                    |
+| `local/activity_utils:createbigbluebuttonbn`  | Create BigBlueButton              |
+| `local/activity_utils:updatebigbluebuttonbn`  | Update BigBlueButton              |
+| `local/activity_utils:deletebigbluebuttonbn`  | Delete BigBlueButton              |
+| `local/activity_utils:createforum`            | Create forums                     |
+| `local/activity_utils:deleteforum`            | Delete forums                     |
+| `local/activity_utils:createquiz`             | Create quizzes                    |
+| `local/activity_utils:updatequiz`             | Update quizzes                    |
+| `local/activity_utils:deletequiz`             | Delete quizzes                    |
+| `local/activity_utils:viewquiz`               | View quiz details (teachers+)     |
+| `local/activity_utils:managequizquestions`    | Add/remove/reorder quiz questions |
+| `local/activity_utils:managequestioncategory` | Manage question categories        |
+| `local/activity_utils:createquestion`         | Create questions                  |
+| `local/activity_utils:viewquestions`          | View questions (teachers+)        |
+| `local/activity_utils:deletequestion`         | Delete questions                  |
 
 ---
 

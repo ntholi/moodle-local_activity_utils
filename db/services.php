@@ -365,5 +365,83 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:managequizquestions',
     ),
+
+    // Question category functions
+    'local_activity_utils_get_or_create_question_category' => array(
+        'classname' => 'local_activity_utils\external\question\get_or_create_category',
+        'methodname' => 'execute',
+        'description' => 'Get or create a question category for a course',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managequestioncategory',
+    ),
+    'local_activity_utils_list_question_categories' => array(
+        'classname' => 'local_activity_utils\external\question\list_categories',
+        'methodname' => 'execute',
+        'description' => 'List all question categories in a course',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:managequestioncategory',
+    ),
+
+    // Question creation functions
+    'local_activity_utils_create_multichoice_question' => array(
+        'classname' => 'local_activity_utils\external\question\create_multichoice_question',
+        'methodname' => 'execute',
+        'description' => 'Create a multiple choice question (single or multiple answer)',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createquestion',
+    ),
+    'local_activity_utils_create_truefalse_question' => array(
+        'classname' => 'local_activity_utils\external\question\create_truefalse_question',
+        'methodname' => 'execute',
+        'description' => 'Create a true/false question',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createquestion',
+    ),
+    'local_activity_utils_create_shortanswer_question' => array(
+        'classname' => 'local_activity_utils\external\question\create_shortanswer_question',
+        'methodname' => 'execute',
+        'description' => 'Create a short answer question',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createquestion',
+    ),
+    'local_activity_utils_create_essay_question' => array(
+        'classname' => 'local_activity_utils\external\question\create_essay_question',
+        'methodname' => 'execute',
+        'description' => 'Create an essay question',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createquestion',
+    ),
+    'local_activity_utils_create_numerical_question' => array(
+        'classname' => 'local_activity_utils\external\question\create_numerical_question',
+        'methodname' => 'execute',
+        'description' => 'Create a numerical question',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:createquestion',
+    ),
+
+    // Question management functions
+    'local_activity_utils_get_questions' => array(
+        'classname' => 'local_activity_utils\external\question\get_questions',
+        'methodname' => 'execute',
+        'description' => 'Get questions in a category',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:viewquestions',
+    ),
+    'local_activity_utils_delete_question' => array(
+        'classname' => 'local_activity_utils\external\question\delete_question',
+        'methodname' => 'execute',
+        'description' => 'Delete a question from the question bank',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:deletequestion',
+    ),
 );
 

@@ -75,6 +75,7 @@ mkdir "%DEST_PATH%\classes\external\rubric"
 mkdir "%DEST_PATH%\classes\external\section"
 mkdir "%DEST_PATH%\classes\external\url"
 mkdir "%DEST_PATH%\classes\external\quiz"
+mkdir "%DEST_PATH%\classes\external\question"
 mkdir "%DEST_PATH%\db"
 mkdir "%DEST_PATH%\lang\en"
 mkdir "%DEST_PATH%\tests"
@@ -403,6 +404,70 @@ if errorlevel 1 (
 copy /y "%SCRIPT_DIR%classes\external\quiz\reorder_quiz_questions.php" "%DEST_PATH%\classes\external\quiz\reorder_quiz_questions.php" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to copy quiz\reorder_quiz_questions.php
+    pause
+    exit /b 1
+)
+
+:: Copy question files
+copy /y "%SCRIPT_DIR%classes\external\question\get_or_create_category.php" "%DEST_PATH%\classes\external\question\get_or_create_category.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\get_or_create_category.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\list_categories.php" "%DEST_PATH%\classes\external\question\list_categories.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\list_categories.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\create_multichoice_question.php" "%DEST_PATH%\classes\external\question\create_multichoice_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\create_multichoice_question.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\create_truefalse_question.php" "%DEST_PATH%\classes\external\question\create_truefalse_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\create_truefalse_question.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\create_shortanswer_question.php" "%DEST_PATH%\classes\external\question\create_shortanswer_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\create_shortanswer_question.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\create_essay_question.php" "%DEST_PATH%\classes\external\question\create_essay_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\create_essay_question.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\create_numerical_question.php" "%DEST_PATH%\classes\external\question\create_numerical_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\create_numerical_question.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\get_questions.php" "%DEST_PATH%\classes\external\question\get_questions.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\get_questions.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\question\delete_question.php" "%DEST_PATH%\classes\external\question\delete_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy question\delete_question.php
     pause
     exit /b 1
 )
