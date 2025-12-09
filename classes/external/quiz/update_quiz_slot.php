@@ -71,7 +71,7 @@ class update_quiz_slot extends external_api {
                 );
                 $quiz->sumgrades = $sumgrades;
                 $DB->update_record('quiz', $quiz);
-                quiz_update_sumgrades($quiz);
+                \mod_quiz\grade_calculator::create($quiz)->recompute_quiz_sumgrades();
             }
         }
 

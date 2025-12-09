@@ -71,8 +71,8 @@ class add_question_to_quiz extends external_api {
         $quiz->sumgrades = $sumgrades;
         $DB->update_record('quiz', $quiz);
 
-        // Update grade item
-        quiz_update_sumgrades($quiz);
+        // Update grade item using the new grade_calculator class
+        \mod_quiz\grade_calculator::create($quiz)->recompute_quiz_sumgrades();
 
         return [
             'slotid' => $slotid,
