@@ -38,7 +38,7 @@ $string['activity_utils:deleteurl'] = 'Delete URL resources via API';
 
 $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
-$string['subsectionmodulenotfound'] = 'Subsection module not found. This feature requires Moodle 4.0 or later with subsection support.';
+$string['subsectionmodulenotfound'] = 'Subsection module not found. This feature requires Moodle 5.0 or later with subsection support.';
 
 // Quiz capabilities
 $string['activity_utils:createquiz'] = 'Create quiz activities via API';

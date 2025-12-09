@@ -3,6 +3,8 @@
 ## Project Overview
 A Moodle local plugin exposing REST API endpoints for programmatic course content management. Used to create assignments, sections, pages, and file resources in Moodle courses.
 
+**Requirements:** Moodle 5.0 or later
+
 ## Architecture
 
 ### Plugin Structure

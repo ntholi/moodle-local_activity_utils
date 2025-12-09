@@ -522,7 +522,7 @@ Parameters: `cmid` (course module ID)
 
 ## Quizzes
 
-Complete quiz management API for Moodle 4.5+. These functions fill gaps not covered by core Moodle web services.
+Complete quiz management API for Moodle 5.0+. These functions fill gaps not covered by core Moodle web services.
 
 ### Create Quiz
 
@@ -690,7 +690,7 @@ Adds an existing question from the question bank to a quiz.
 | `maxmark`             | float | No       | null    | Max mark (null = question default) |
 | `requireprevious`     | int   | No       | 0       | Require previous question          |
 
-**Note:** Use `questionbankentryid` not `questionid`. In Moodle 4.0+, questions are referenced through the question bank entry system.
+**Note:** Use `questionbankentryid` not `questionid`. In Moodle 5.0+, questions are referenced through the question bank entry system.
 
 **Response:**
 
@@ -748,7 +748,7 @@ Reorders questions within a quiz by specifying new slot positions.
 
 ## Question Bank
 
-Complete question bank management API for creating and managing questions in Moodle 4.5+.
+Complete question bank management API for creating and managing questions in Moodle 5.0+.
 
 ### Get or Create Question Category
 
