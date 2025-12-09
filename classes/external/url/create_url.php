@@ -94,7 +94,7 @@ class create_url extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence, handling both regular and delegated (subsection) sections
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
         rebuild_course_cache($params['courseid'], true);

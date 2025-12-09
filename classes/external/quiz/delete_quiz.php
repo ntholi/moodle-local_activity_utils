@@ -23,7 +23,7 @@ class delete_quiz extends external_api {
             'cmid' => $cmid,
         ]);
 
-        // Get course module.
+        
         $cm = $DB->get_record('course_modules', ['id' => $params['cmid']]);
         if (!$cm) {
             return [
@@ -32,7 +32,7 @@ class delete_quiz extends external_api {
             ];
         }
 
-        // Verify this is a quiz module.
+        
         $module = $DB->get_record('modules', ['id' => $cm->module]);
         if (!$module || $module->name !== 'quiz') {
             return [
@@ -41,7 +41,7 @@ class delete_quiz extends external_api {
             ];
         }
 
-        // Get quiz instance.
+        
         $quiz = $DB->get_record('quiz', ['id' => $cm->instance]);
         if (!$quiz) {
             return [
@@ -50,7 +50,7 @@ class delete_quiz extends external_api {
             ];
         }
 
-        // Validate context and capabilities.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:deletequiz', $context);
@@ -59,14 +59,14 @@ class delete_quiz extends external_api {
         $quizname = $quiz->name;
         $courseid = $cm->course;
 
-        // Delete the quiz using Moodle's course_delete_module function.
-        // This handles all cleanup including:
-        // - Quiz attempts and grades
-        // - Quiz slots and question references
-        // - Quiz sections
-        // - Grade items
-        // - Calendar events
-        // - Files
+        
+        
+        
+        
+        
+        
+        
+        
         course_delete_module($cm->id);
 
         return [

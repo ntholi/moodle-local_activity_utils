@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing page.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_page extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -45,7 +39,7 @@ class update_page extends external_api {
             'visible' => $visible,
         ]);
 
-        // Get the page record.
+        
         $page = $DB->get_record('page', ['id' => $params['pageid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('page', $page->id, 0, false, MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -55,7 +49,7 @@ class update_page extends external_api {
         require_capability('local/activity_utils:updatepage', $context);
         require_capability('mod/page:addinstance', $context);
 
-        // Update page fields if provided.
+        
         $updated = false;
 
         if ($params['name'] !== null) {
@@ -77,7 +71,7 @@ class update_page extends external_api {
             $DB->update_record('page', $page);
         }
 
-        // Update course module visibility if provided.
+        
         if ($params['visible'] !== null) {
             $cm->visible = $params['visible'];
             $cm->visibleold = $params['visible'];

@@ -7,9 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Create a true/false question.
- */
+
 class create_truefalse_question extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -62,7 +60,7 @@ class create_truefalse_question extends external_api {
             'tags' => $tags,
         ]);
 
-        // Validate category exists.
+        
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
@@ -70,10 +68,10 @@ class create_truefalse_question extends external_api {
         require_capability('local/activity_utils:createquestion', $context);
         require_capability('moodle/question:add', $context);
 
-        // Normalize correctanswer to 0 or 1.
+        
         $correctanswer = $params['correctanswer'] ? 1 : 0;
 
-        // Create the question record.
+        
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -94,7 +92,7 @@ class create_truefalse_question extends external_api {
 
         $questionid = $DB->insert_record('question', $question);
 
-        // Create question_bank_entries record.
+        
         $qbe = new \stdClass();
         $qbe->questioncategoryid = $params['categoryid'];
         $qbe->idnumber = !empty($params['idnumber']) ? $params['idnumber'] : null;
@@ -102,7 +100,7 @@ class create_truefalse_question extends external_api {
 
         $qbeid = $DB->insert_record('question_bank_entries', $qbe);
 
-        // Create question_versions record.
+        
         $qv = new \stdClass();
         $qv->questionbankentryid = $qbeid;
         $qv->questionid = $questionid;
@@ -111,7 +109,7 @@ class create_truefalse_question extends external_api {
 
         $DB->insert_record('question_versions', $qv);
 
-        // Create the True answer.
+        
         $trueanswer = new \stdClass();
         $trueanswer->question = $questionid;
         $trueanswer->answer = get_string('true', 'qtype_truefalse');
@@ -122,7 +120,7 @@ class create_truefalse_question extends external_api {
 
         $trueanswerid = $DB->insert_record('question_answers', $trueanswer);
 
-        // Create the False answer.
+        
         $falseanswer = new \stdClass();
         $falseanswer->question = $questionid;
         $falseanswer->answer = get_string('false', 'qtype_truefalse');
@@ -133,7 +131,7 @@ class create_truefalse_question extends external_api {
 
         $falseanswerid = $DB->insert_record('question_answers', $falseanswer);
 
-        // Create truefalse options record.
+        
         $options = new \stdClass();
         $options->question = $questionid;
         $options->trueanswer = $trueanswerid;
@@ -141,7 +139,7 @@ class create_truefalse_question extends external_api {
 
         $DB->insert_record('question_truefalse', $options);
 
-        // Add tags if provided.
+        
         if (!empty($params['tags'])) {
             \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $params['tags']);
         }

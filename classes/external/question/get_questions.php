@@ -7,9 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Get questions in a category.
- */
+
 class get_questions extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -39,7 +37,7 @@ class get_questions extends external_api {
             'offset' => $offset,
         ]);
 
-        // Validate category exists.
+        
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
@@ -47,16 +45,16 @@ class get_questions extends external_api {
         require_capability('local/activity_utils:viewquestions', $context);
         require_capability('moodle/question:viewall', $context);
 
-        // Build list of category IDs to search.
+        
         $categoryids = [$params['categoryid']];
 
         if ($params['includesubcategories']) {
-            // Get all subcategories recursively.
+            
             $subcats = self::get_subcategories($params['categoryid']);
             $categoryids = array_merge($categoryids, $subcats);
         }
 
-        // Build the query.
+        
         list($insql, $inparams) = $DB->get_in_or_equal($categoryids, SQL_PARAMS_NAMED, 'cat');
 
         $sql = "SELECT q.id AS questionid,
@@ -78,13 +76,13 @@ class get_questions extends external_api {
                  WHERE qbe.questioncategoryid {$insql}
                    AND qv.status = 'ready'";
 
-        // Filter by question type if specified.
+        
         if (!empty($params['qtype'])) {
             $sql .= " AND q.qtype = :qtype";
             $inparams['qtype'] = $params['qtype'];
         }
 
-        // Only get the latest version of each question.
+        
         $sql .= " AND qv.version = (
                     SELECT MAX(qv2.version)
                       FROM {question_versions} qv2
@@ -94,13 +92,13 @@ class get_questions extends external_api {
 
         $sql .= " ORDER BY q.name ASC, q.id ASC";
 
-        // Apply limit and offset.
+        
         $limitfrom = $params['offset'];
         $limitnum = $params['limit'] > 0 ? $params['limit'] : 0;
 
         $questions = $DB->get_records_sql($sql, $inparams, $limitfrom, $limitnum);
 
-        // Get total count for pagination.
+        
         $countsql = "SELECT COUNT(DISTINCT qbe.id)
                        FROM {question} q
                        JOIN {question_versions} qv ON qv.questionid = q.id
@@ -140,12 +138,7 @@ class get_questions extends external_api {
         ];
     }
 
-    /**
-     * Get all subcategory IDs recursively.
-     *
-     * @param int $parentid Parent category ID
-     * @return array Array of subcategory IDs
-     */
+    
     private static function get_subcategories(int $parentid): array {
         global $DB;
 

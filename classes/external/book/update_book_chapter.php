@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing book chapter.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_book_chapter extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -49,7 +43,7 @@ class update_book_chapter extends external_api {
             'tags' => $tags,
         ]);
 
-        // Get the chapter record.
+        
         $chapter = $DB->get_record('book_chapters', ['id' => $params['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('book', $book->id, 0, false, MUST_EXIST);
@@ -62,7 +56,7 @@ class update_book_chapter extends external_api {
         require_capability('local/activity_utils:updatebook', $coursecontext);
         require_capability('mod/book:edit', $context);
 
-        // Update chapter fields if provided.
+        
         $updated = false;
 
         if ($params['title'] !== null) {
@@ -86,14 +80,14 @@ class update_book_chapter extends external_api {
             $chapter->timemodified = time();
             $DB->update_record('book_chapters', $chapter);
 
-            // Increment book revision.
+            
             $DB->set_field('book', 'revision', $book->revision + 1, ['id' => $book->id]);
         }
 
-        // Handle tags if provided (including clearing tags with empty string).
+        
         if ($params['tags'] !== null) {
             if (empty($params['tags'])) {
-                // Clear all tags.
+                
                 \core_tag_tag::remove_all_item_tags('mod_book', 'book_chapters', $chapter->id);
             } else {
                 $tagsarray = array_map('trim', explode(',', $params['tags']));

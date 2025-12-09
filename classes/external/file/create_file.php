@@ -65,7 +65,7 @@ class create_file extends external_api {
         $resource->tobemigrated = 0;
         $resource->legacyfiles = 0;
         $resource->legacyfileslast = null;
-        $resource->display = 0; // Automatic
+        $resource->display = 0; 
         $resource->displayoptions = 'a:2:{s:12:"printheading";s:1:"1";s:10:"printintro";s:1:"0";}';
         $resource->filterfiles = 0;
         $resource->revision = 1;
@@ -125,7 +125,7 @@ class create_file extends external_api {
 
         $fs->create_file_from_string($filerecord, $content);
 
-        // Add module to section sequence, handling both regular and delegated (subsection) sections
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
         rebuild_course_cache($params['courseid'], true);

@@ -58,7 +58,7 @@ class create_page extends external_api {
         $page->contentformat = FORMAT_HTML;
         $page->legacyfiles = 0;
         $page->legacyfileslast = null;
-        $page->display = 5; // Display page content on a separate page
+        $page->display = 5; 
         $page->displayoptions = 'a:2:{s:12:"printheading";s:1:"1";s:10:"printintro";s:1:"0";}';
         $page->revision = 1;
         $page->timemodified = time();
@@ -95,7 +95,7 @@ class create_page extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence, handling both regular and delegated (subsection) sections
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
         rebuild_course_cache($params['courseid'], true);

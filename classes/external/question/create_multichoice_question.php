@@ -7,9 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Create a multiple choice question (single or multiple answer).
- */
+
 class create_multichoice_question extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -70,7 +68,7 @@ class create_multichoice_question extends external_api {
             'tags' => $tags,
         ]);
 
-        // Decode JSON arrays.
+        
         $answersarray = json_decode($params['answers'], true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersarray)) {
             return [
@@ -87,7 +85,7 @@ class create_multichoice_question extends external_api {
             $tagsarray = [];
         }
 
-        // Validate category exists.
+        
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
@@ -95,7 +93,7 @@ class create_multichoice_question extends external_api {
         require_capability('local/activity_utils:createquestion', $context);
         require_capability('moodle/question:add', $context);
 
-        // Validate answers.
+        
         if (empty($answersarray) || count($answersarray) < 2) {
             return [
                 'questionid' => 0,
@@ -106,13 +104,13 @@ class create_multichoice_question extends external_api {
             ];
         }
 
-        // Validate answernumbering.
+        
         $validnumbering = ['abc', 'ABC', '123', 'iii', 'III', 'none'];
         if (!in_array($params['answernumbering'], $validnumbering)) {
             $params['answernumbering'] = 'abc';
         }
 
-        // Create the question record.
+        
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -133,7 +131,7 @@ class create_multichoice_question extends external_api {
 
         $questionid = $DB->insert_record('question', $question);
 
-        // Create question_bank_entries record.
+        
         $qbe = new \stdClass();
         $qbe->questioncategoryid = $params['categoryid'];
         $qbe->idnumber = !empty($params['idnumber']) ? $params['idnumber'] : null;
@@ -141,7 +139,7 @@ class create_multichoice_question extends external_api {
 
         $qbeid = $DB->insert_record('question_bank_entries', $qbe);
 
-        // Create question_versions record.
+        
         $qv = new \stdClass();
         $qv->questionbankentryid = $qbeid;
         $qv->questionid = $questionid;
@@ -150,7 +148,7 @@ class create_multichoice_question extends external_api {
 
         $DB->insert_record('question_versions', $qv);
 
-        // Create multichoice options.
+        
         $options = new \stdClass();
         $options->questionid = $questionid;
         $options->single = $params['single'];
@@ -167,7 +165,7 @@ class create_multichoice_question extends external_api {
 
         $DB->insert_record('qtype_multichoice_options', $options);
 
-        // Create answers.
+        
         foreach ($answersarray as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;
@@ -180,7 +178,7 @@ class create_multichoice_question extends external_api {
             $DB->insert_record('question_answers', $answer);
         }
 
-        // Add tags if provided.
+        
         if (!empty($tagsarray)) {
             \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }

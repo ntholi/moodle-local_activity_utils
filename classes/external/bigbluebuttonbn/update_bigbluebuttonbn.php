@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing BigBlueButton activity.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_bigbluebuttonbn extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -22,10 +16,10 @@ class update_bigbluebuttonbn extends external_api {
             'intro' => new external_value(PARAM_RAW, 'Activity description (HTML)', VALUE_DEFAULT, null),
             'visible' => new external_value(PARAM_INT, 'Visibility (1=visible, 0=hidden)', VALUE_DEFAULT, null),
             
-            // Instance type
+            
             'type' => new external_value(PARAM_INT, 'Instance type: 0=room with recordings, 1=room only, 2=recordings only', VALUE_DEFAULT, null),
             
-            // Room settings
+            
             'welcome' => new external_value(PARAM_RAW, 'Welcome message displayed in the room', VALUE_DEFAULT, null),
             'voicebridge' => new external_value(PARAM_INT, 'Voice bridge number (4 digits)', VALUE_DEFAULT, null),
             'wait' => new external_value(PARAM_INT, 'Wait for moderator before joining (1=yes, 0=no)', VALUE_DEFAULT, null),
@@ -33,7 +27,7 @@ class update_bigbluebuttonbn extends external_api {
             'record' => new external_value(PARAM_INT, 'Enable recording (1=yes, 0=no)', VALUE_DEFAULT, null),
             'muteonstart' => new external_value(PARAM_INT, 'Mute participants on start (1=yes, 0=no)', VALUE_DEFAULT, null),
             
-            // Lock settings
+            
             'disablecam' => new external_value(PARAM_INT, 'Disable webcams (1=yes, 0=no)', VALUE_DEFAULT, null),
             'disablemic' => new external_value(PARAM_INT, 'Disable microphones (1=yes, 0=no)', VALUE_DEFAULT, null),
             'disableprivatechat' => new external_value(PARAM_INT, 'Disable private chat (1=yes, 0=no)', VALUE_DEFAULT, null),
@@ -41,23 +35,23 @@ class update_bigbluebuttonbn extends external_api {
             'disablenote' => new external_value(PARAM_INT, 'Disable shared notes (1=yes, 0=no)', VALUE_DEFAULT, null),
             'hideuserlist' => new external_value(PARAM_INT, 'Hide user list (1=yes, 0=no)', VALUE_DEFAULT, null),
             
-            // Schedule settings
+            
             'openingtime' => new external_value(PARAM_INT, 'Opening time (Unix timestamp, 0=no restriction)', VALUE_DEFAULT, null),
             'closingtime' => new external_value(PARAM_INT, 'Closing time (Unix timestamp, 0=no restriction)', VALUE_DEFAULT, null),
             
-            // Guest access
+            
             'guestallowed' => new external_value(PARAM_INT, 'Allow guest access (1=yes, 0=no)', VALUE_DEFAULT, null),
             'mustapproveuser' => new external_value(PARAM_INT, 'Moderator must approve guests (1=yes, 0=no)', VALUE_DEFAULT, null),
             
-            // Recording settings
+            
             'recordings_deleted' => new external_value(PARAM_INT, 'Show deleted recordings (1=yes, 0=no)', VALUE_DEFAULT, null),
             'recordings_imported' => new external_value(PARAM_INT, 'Show imported recordings (1=yes, 0=no)', VALUE_DEFAULT, null),
             'recordings_preview' => new external_value(PARAM_INT, 'Show recording preview (1=yes, 0=no)', VALUE_DEFAULT, null),
             
-            // Presentation
+            
             'showpresentation' => new external_value(PARAM_INT, 'Show presentation on activity page (1=yes, 0=no)', VALUE_DEFAULT, null),
             
-            // Completion settings
+            
             'completionattendance' => new external_value(PARAM_INT, 'Required attendance time in minutes for completion', VALUE_DEFAULT, null),
             'completionengagementchats' => new external_value(PARAM_INT, 'Required number of chat messages for completion', VALUE_DEFAULT, null),
             'completionengagementtalks' => new external_value(PARAM_INT, 'Required number of talk time for completion', VALUE_DEFAULT, null),
@@ -139,7 +133,7 @@ class update_bigbluebuttonbn extends external_api {
             'completionengagementemojis' => $completionengagementemojis,
         ]);
 
-        // Get the BigBlueButton instance
+        
         $bigbluebuttonbn = $DB->get_record('bigbluebuttonbn', ['id' => $params['bigbluebuttonbnid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('bigbluebuttonbn', $bigbluebuttonbn->id, 0, false, MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -149,11 +143,11 @@ class update_bigbluebuttonbn extends external_api {
         require_capability('local/activity_utils:updatebigbluebuttonbn', $context);
         require_capability('mod/bigbluebuttonbn:addinstance', $context);
 
-        // Track if we made any updates
+        
         $updated = false;
         $cmupdated = false;
 
-        // Update BigBlueButton instance fields if provided
+        
         if ($params['name'] !== null) {
             $bigbluebuttonbn->name = $params['name'];
             $updated = true;
@@ -224,7 +218,7 @@ class update_bigbluebuttonbn extends external_api {
         }
         if ($params['guestallowed'] !== null) {
             $bigbluebuttonbn->guestallowed = $params['guestallowed'];
-            // Generate guest credentials if enabling guest access and not already set
+            
             if ($params['guestallowed'] && empty($bigbluebuttonbn->guestlinkuid)) {
                 [$bigbluebuttonbn->guestlinkuid, $bigbluebuttonbn->guestpassword] = 
                     \mod_bigbluebuttonbn\plugin::generate_guest_meeting_credentials();
@@ -276,13 +270,13 @@ class update_bigbluebuttonbn extends external_api {
             $updated = true;
         }
 
-        // Update BigBlueButton record if changes were made
+        
         if ($updated) {
             $bigbluebuttonbn->timemodified = time();
             $DB->update_record('bigbluebuttonbn', $bigbluebuttonbn);
         }
 
-        // Update course module visibility if provided
+        
         if ($params['visible'] !== null) {
             $cm->visible = $params['visible'];
             $cm->visibleold = $params['visible'];
@@ -290,7 +284,7 @@ class update_bigbluebuttonbn extends external_api {
             $cmupdated = true;
         }
 
-        // Rebuild course cache if any changes were made
+        
         if ($updated || $cmupdated) {
             rebuild_course_cache($course->id, true);
         }

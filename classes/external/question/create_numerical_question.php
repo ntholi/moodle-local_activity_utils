@@ -7,9 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Create a numerical question.
- */
+
 class create_numerical_question extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -66,7 +64,7 @@ class create_numerical_question extends external_api {
             'tags' => $tags,
         ]);
 
-        // Decode JSON arrays.
+        
         $answersarray = json_decode($params['answers'], true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersarray)) {
             return [
@@ -88,7 +86,7 @@ class create_numerical_question extends external_api {
             $tagsarray = [];
         }
 
-        // Validate category exists.
+        
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
@@ -96,7 +94,7 @@ class create_numerical_question extends external_api {
         require_capability('local/activity_utils:createquestion', $context);
         require_capability('moodle/question:add', $context);
 
-        // Validate answers.
+        
         if (empty($answersarray)) {
             return [
                 'questionid' => 0,
@@ -107,7 +105,7 @@ class create_numerical_question extends external_api {
             ];
         }
 
-        // Create the question record.
+        
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -128,7 +126,7 @@ class create_numerical_question extends external_api {
 
         $questionid = $DB->insert_record('question', $question);
 
-        // Create question_bank_entries record.
+        
         $qbe = new \stdClass();
         $qbe->questioncategoryid = $params['categoryid'];
         $qbe->idnumber = !empty($params['idnumber']) ? $params['idnumber'] : null;
@@ -136,7 +134,7 @@ class create_numerical_question extends external_api {
 
         $qbeid = $DB->insert_record('question_bank_entries', $qbe);
 
-        // Create question_versions record.
+        
         $qv = new \stdClass();
         $qv->questionbankentryid = $qbeid;
         $qv->questionid = $questionid;
@@ -145,7 +143,7 @@ class create_numerical_question extends external_api {
 
         $DB->insert_record('question_versions', $qv);
 
-        // Create numerical options.
+        
         $options = new \stdClass();
         $options->question = $questionid;
         $options->unitgradingtype = $params['unitgradingtype'];
@@ -155,7 +153,7 @@ class create_numerical_question extends external_api {
 
         $DB->insert_record('question_numerical_options', $options);
 
-        // Create answers and numerical records.
+        
         foreach ($answersarray as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;
@@ -167,7 +165,7 @@ class create_numerical_question extends external_api {
 
             $answerid = $DB->insert_record('question_answers', $answer);
 
-            // Create numerical record for tolerance.
+            
             $numerical = new \stdClass();
             $numerical->question = $questionid;
             $numerical->answer = $answerid;
@@ -176,7 +174,7 @@ class create_numerical_question extends external_api {
             $DB->insert_record('question_numerical', $numerical);
         }
 
-        // Create units if provided.
+        
         foreach ($unitsarray as $unitdata) {
             $unit = new \stdClass();
             $unit->question = $questionid;
@@ -186,7 +184,7 @@ class create_numerical_question extends external_api {
             $DB->insert_record('question_numerical_units', $unit);
         }
 
-        // Add tags if provided.
+        
         if (!empty($tagsarray)) {
             \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }

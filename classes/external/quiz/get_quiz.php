@@ -22,22 +22,22 @@ class get_quiz extends external_api {
             'quizid' => $quizid,
         ]);
 
-        // Get quiz record.
+        
         $quiz = $DB->get_record('quiz', ['id' => $params['quizid']], '*', MUST_EXIST);
 
-        // Get course module.
+        
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
 
-        // Validate context and capabilities.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:viewquiz', $context);
         require_capability('mod/quiz:view', $context);
 
-        // Get course info.
+        
         $course = $DB->get_record('course', ['id' => $cm->course], 'id, fullname, shortname', MUST_EXIST);
 
-        // Get quiz sections.
+        
         $sections = $DB->get_records('quiz_sections', ['quizid' => $quiz->id], 'firstslot ASC');
         $sectionsarray = [];
         foreach ($sections as $section) {
@@ -49,8 +49,8 @@ class get_quiz extends external_api {
             ];
         }
 
-        // Get quiz slots with questions using Moodle 4.0+ schema.
-        // In Moodle 4.0+, quiz_slots links to questions via question_references -> question_bank_entries -> question_versions -> question.
+        
+        
         $sql = "SELECT qs.id AS slotid, qs.slot, qs.page, qs.maxmark, qs.requireprevious, qs.displaynumber,
                        qr.questionbankentryid, qr.version AS refversion,
                        qbe.idnumber AS questionidnumber,
@@ -99,7 +99,7 @@ class get_quiz extends external_api {
             ];
         }
 
-        // Get attempt statistics.
+        
         $attemptcount = $DB->count_records('quiz_attempts', ['quiz' => $quiz->id, 'preview' => 0]);
 
         return [

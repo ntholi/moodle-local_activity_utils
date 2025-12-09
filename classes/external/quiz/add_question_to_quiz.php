@@ -38,19 +38,19 @@ class add_question_to_quiz extends external_api {
             'requireprevious' => $requireprevious,
         ]);
 
-        // Get quiz record.
+        
         $quiz = $DB->get_record('quiz', ['id' => $params['quizid']], '*', MUST_EXIST);
 
-        // Get course module.
+        
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
 
-        // Validate context and capabilities.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:managequizquestions', $context);
         require_capability('mod/quiz:manage', $context);
 
-        // Verify question bank entry exists.
+        
         $qbe = $DB->get_record('question_bank_entries', ['id' => $params['questionbankentryid']]);
         if (!$qbe) {
             return [
@@ -61,7 +61,7 @@ class add_question_to_quiz extends external_api {
             ];
         }
 
-        // Get the latest ready version of the question.
+        
         $sql = "SELECT qv.questionid, qv.version, q.qtype, q.name, q.defaultmark
                   FROM {question_versions} qv
                   JOIN {question} q ON q.id = qv.questionid
@@ -80,7 +80,7 @@ class add_question_to_quiz extends external_api {
             ];
         }
 
-        // Check if question is already in the quiz.
+        
         $existingref = $DB->get_record_sql(
             "SELECT qr.id
                FROM {question_references} qr
@@ -101,7 +101,7 @@ class add_question_to_quiz extends external_api {
             ];
         }
 
-        // Random questions cannot be added via this API.
+        
         if ($questionversion->qtype === 'random') {
             return [
                 'success' => false,
@@ -111,16 +111,16 @@ class add_question_to_quiz extends external_api {
             ];
         }
 
-        // Get the maximum slot number in the quiz.
+        
         $maxslot = $DB->get_field_sql(
             'SELECT MAX(slot) FROM {quiz_slots} WHERE quizid = ?',
             [$params['quizid']]
         );
         $maxslot = $maxslot ? (int)$maxslot : 0;
 
-        // Determine the page number.
+        
         if ($params['page'] <= 0) {
-            // Add to the last page.
+            
             $lastpage = $DB->get_field_sql(
                 'SELECT MAX(page) FROM {quiz_slots} WHERE quizid = ?',
                 [$params['quizid']]
@@ -130,13 +130,13 @@ class add_question_to_quiz extends external_api {
             $page = $params['page'];
         }
 
-        // Determine the mark to use.
+        
         $mark = $params['maxmark'] !== null ? $params['maxmark'] : (float)$questionversion->defaultmark;
 
-        // Calculate the new slot number.
+        
         $newslot = $maxslot + 1;
 
-        // Create the quiz_slots record.
+        
         $slot = new \stdClass();
         $slot->quizid = $params['quizid'];
         $slot->slot = $newslot;
@@ -146,18 +146,18 @@ class add_question_to_quiz extends external_api {
 
         $slotid = $DB->insert_record('quiz_slots', $slot);
 
-        // Create the question_references record to link the slot to the question.
+        
         $reference = new \stdClass();
         $reference->usingcontextid = $context->id;
         $reference->component = 'mod_quiz';
         $reference->questionarea = 'slot';
         $reference->itemid = $slotid;
         $reference->questionbankentryid = $params['questionbankentryid'];
-        $reference->version = null; // null means always use the latest ready version.
+        $reference->version = null; 
 
         $DB->insert_record('question_references', $reference);
 
-        // Update the quiz's sumgrades.
+        
         $sumgrades = $DB->get_field_sql(
             'SELECT SUM(maxmark) FROM {quiz_slots} WHERE quizid = ?',
             [$params['quizid']]
@@ -165,7 +165,7 @@ class add_question_to_quiz extends external_api {
         $DB->set_field('quiz', 'sumgrades', $sumgrades, ['id' => $params['quizid']]);
         $DB->set_field('quiz', 'timemodified', time(), ['id' => $params['quizid']]);
 
-        // Trigger the slot_created event.
+        
         $event = \mod_quiz\event\slot_created::create([
             'context' => $context,
             'objectid' => $slotid,

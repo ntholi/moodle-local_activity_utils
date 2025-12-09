@@ -128,7 +128,7 @@ class create_assignment extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence, handling both regular and delegated (subsection) sections
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, 1);
 
         rebuild_course_cache($params['courseid'], true);
@@ -140,7 +140,7 @@ class create_assignment extends external_api {
             'grademin' => 0
         ]);
 
-        // Enable file submissions
+        
         $pluginconfig = new \stdClass();
         $pluginconfig->assignment = $assignid;
         $pluginconfig->plugin = 'file';
@@ -149,7 +149,7 @@ class create_assignment extends external_api {
         $pluginconfig->value = '1';
         $DB->insert_record('assign_plugin_config', $pluginconfig);
 
-        // Set maximum number of uploaded files (default: 20)
+        
         $pluginconfig = new \stdClass();
         $pluginconfig->assignment = $assignid;
         $pluginconfig->plugin = 'file';
@@ -158,7 +158,7 @@ class create_assignment extends external_api {
         $pluginconfig->value = '20';
         $DB->insert_record('assign_plugin_config', $pluginconfig);
 
-        // Set maximum file size to site upload limit
+        
         $pluginconfig = new \stdClass();
         $pluginconfig->assignment = $assignid;
         $pluginconfig->plugin = 'file';

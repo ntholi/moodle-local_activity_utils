@@ -7,11 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Create a rubric for an assignment.
- *
- * This provides a simplified API for creating rubrics compared to core_grading_save_definitions.
- */
+
 class create_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -66,7 +62,7 @@ class create_rubric extends external_api {
             'options' => $options,
         ]);
 
-        // Get the course module and verify it's an assignment.
+        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -74,10 +70,10 @@ class create_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $context);
         require_capability('moodle/grade:managegradingforms', $context);
 
-        // Get or create grading area.
+        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
-        // Check if a rubric already exists.
+        
         $currentmethod = $gradingmanager->get_active_method();
         if ($currentmethod === 'rubric') {
             $controller = $gradingmanager->get_controller('rubric');
@@ -90,15 +86,15 @@ class create_rubric extends external_api {
             }
         }
 
-        // Set rubric as the active method.
+        
         $gradingmanager->set_active_method('rubric');
 
-        // Get the controller.
+        
         $controller = $gradingmanager->get_controller('rubric');
         $definitionid = $controller->get_definition() ? $controller->get_definition()->id : null;
 
-        // Build the rubric definition data.
-        // Moodle expects criteria and levels to be keyed by 'NEWIDn' for new items.
+        
+        
         $rubriccriteria = [];
         $sortorder = 1;
         $criterionindex = 1;
@@ -127,7 +123,7 @@ class create_rubric extends external_api {
             $criterionindex++;
         }
 
-        // Set default options.
+        
         $defaultoptions = [
             'sortlevelsasc' => 1,
             'lockzeropoints' => 1,
@@ -140,7 +136,7 @@ class create_rubric extends external_api {
         ];
         $rubricoptions = array_merge($defaultoptions, $params['options']);
 
-        // Prepare the form data as stdClass (required by update_definition).
+        
         $rubricdata = new \stdClass();
         $rubricdata->name = $params['name'];
         $rubricdata->description_editor = [
@@ -153,10 +149,10 @@ class create_rubric extends external_api {
         ];
         $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
-        // Update the definition.
+        
         $controller->update_definition($rubricdata);
 
-        // Get the new definition ID.
+        
         $definition = $controller->get_definition();
 
         return [

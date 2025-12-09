@@ -15,33 +15,33 @@ class update_quiz extends external_api {
             'intro' => new external_value(PARAM_RAW, 'Quiz description/introduction (HTML)', VALUE_DEFAULT, null),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for gradebook', VALUE_DEFAULT, null),
 
-            // Timing settings
+            
             'timeopen' => new external_value(PARAM_INT, 'Quiz open timestamp (0 = no restriction)', VALUE_DEFAULT, null),
             'timeclose' => new external_value(PARAM_INT, 'Quiz close timestamp (0 = no restriction)', VALUE_DEFAULT, null),
             'timelimit' => new external_value(PARAM_INT, 'Time limit in seconds (0 = no limit)', VALUE_DEFAULT, null),
             'overduehandling' => new external_value(PARAM_ALPHA, 'How to handle overdue attempts: autosubmit, graceperiod, autoabandon', VALUE_DEFAULT, null),
             'graceperiod' => new external_value(PARAM_INT, 'Grace period in seconds', VALUE_DEFAULT, null),
 
-            // Grade settings
+            
             'grade' => new external_value(PARAM_FLOAT, 'Maximum grade for the quiz', VALUE_DEFAULT, null),
             'grademethod' => new external_value(PARAM_INT, 'Grade method: 1=highest, 2=average, 3=first, 4=last', VALUE_DEFAULT, null),
             'decimalpoints' => new external_value(PARAM_INT, 'Number of decimal places for grades', VALUE_DEFAULT, null),
             'questiondecimalpoints' => new external_value(PARAM_INT, 'Decimal places for question grades', VALUE_DEFAULT, null),
 
-            // Layout settings
+            
             'questionsperpage' => new external_value(PARAM_INT, 'Questions per page (0 = unlimited)', VALUE_DEFAULT, null),
             'navmethod' => new external_value(PARAM_ALPHA, 'Navigation method: free or sequential', VALUE_DEFAULT, null),
             'shuffleanswers' => new external_value(PARAM_INT, 'Shuffle answer options (1=yes, 0=no)', VALUE_DEFAULT, null),
 
-            // Behaviour settings
+            
             'preferredbehaviour' => new external_value(PARAM_ALPHANUMEXT, 'Question behaviour', VALUE_DEFAULT, null),
             'canredoquestions' => new external_value(PARAM_INT, 'Allow redo of individual questions', VALUE_DEFAULT, null),
 
-            // Attempt settings
+            
             'attempts' => new external_value(PARAM_INT, 'Number of allowed attempts (0 = unlimited)', VALUE_DEFAULT, null),
             'attemptonlast' => new external_value(PARAM_INT, 'Each attempt builds on last', VALUE_DEFAULT, null),
 
-            // Review options
+            
             'reviewattempt' => new external_value(PARAM_INT, 'Review attempt options bitmask', VALUE_DEFAULT, null),
             'reviewcorrectness' => new external_value(PARAM_INT, 'Review correctness options bitmask', VALUE_DEFAULT, null),
             'reviewmarks' => new external_value(PARAM_INT, 'Review marks options bitmask', VALUE_DEFAULT, null),
@@ -51,25 +51,25 @@ class update_quiz extends external_api {
             'reviewoverallfeedback' => new external_value(PARAM_INT, 'Review overall feedback options bitmask', VALUE_DEFAULT, null),
             'reviewmaxmarks' => new external_value(PARAM_INT, 'Review max marks options bitmask', VALUE_DEFAULT, null),
 
-            // Security settings
+            
             'password' => new external_value(PARAM_RAW, 'Password to access the quiz', VALUE_DEFAULT, null),
             'subnet' => new external_value(PARAM_RAW, 'IP addresses allowed', VALUE_DEFAULT, null),
             'browsersecurity' => new external_value(PARAM_ALPHANUMEXT, 'Browser security mode', VALUE_DEFAULT, null),
             'delay1' => new external_value(PARAM_INT, 'Delay between 1st and 2nd attempt', VALUE_DEFAULT, null),
             'delay2' => new external_value(PARAM_INT, 'Delay between subsequent attempts', VALUE_DEFAULT, null),
 
-            // Display settings
+            
             'showuserpicture' => new external_value(PARAM_INT, 'Show user picture', VALUE_DEFAULT, null),
             'showblocks' => new external_value(PARAM_INT, 'Show blocks during quiz', VALUE_DEFAULT, null),
 
-            // Completion settings
+            
             'completionattemptsexhausted' => new external_value(PARAM_INT, 'Complete when attempts exhausted', VALUE_DEFAULT, null),
             'completionminattempts' => new external_value(PARAM_INT, 'Minimum attempts for completion', VALUE_DEFAULT, null),
 
-            // Visibility
+            
             'visible' => new external_value(PARAM_INT, 'Module visibility (1=visible, 0=hidden)', VALUE_DEFAULT, null),
 
-            // Mobile
+            
             'allowofflineattempts' => new external_value(PARAM_INT, 'Allow offline attempts', VALUE_DEFAULT, null),
         ]);
     }
@@ -163,13 +163,13 @@ class update_quiz extends external_api {
             'allowofflineattempts' => $allowofflineattempts,
         ]);
 
-        // Get quiz record.
+        
         $quiz = $DB->get_record('quiz', ['id' => $params['quizid']], '*', MUST_EXIST);
 
-        // Get course module.
+        
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
 
-        // Validate context and capabilities.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:updatequiz', $context);
@@ -179,7 +179,7 @@ class update_quiz extends external_api {
         $oldgrademethod = $quiz->grademethod;
         $oldgrade = $quiz->grade;
 
-        // Update quiz fields if provided.
+        
         if ($params['name'] !== null) {
             $quiz->name = $params['name'];
             $updated = true;
@@ -259,7 +259,7 @@ class update_quiz extends external_api {
             $updated = true;
         }
 
-        // Review options.
+        
         if ($params['reviewattempt'] !== null) {
             $quiz->reviewattempt = $params['reviewattempt'];
             $updated = true;
@@ -293,7 +293,7 @@ class update_quiz extends external_api {
             $updated = true;
         }
 
-        // Security settings.
+        
         if ($params['password'] !== null) {
             $quiz->password = $params['password'];
             $updated = true;
@@ -318,7 +318,7 @@ class update_quiz extends external_api {
             $updated = true;
         }
 
-        // Display settings.
+        
         if ($params['showuserpicture'] !== null) {
             $quiz->showuserpicture = $params['showuserpicture'];
             $updated = true;
@@ -328,7 +328,7 @@ class update_quiz extends external_api {
             $updated = true;
         }
 
-        // Completion settings.
+        
         if ($params['completionattemptsexhausted'] !== null) {
             $quiz->completionattemptsexhausted = $params['completionattemptsexhausted'] ? 1 : 0;
             $updated = true;
@@ -338,7 +338,7 @@ class update_quiz extends external_api {
             $updated = true;
         }
 
-        // Mobile settings.
+        
         if ($params['allowofflineattempts'] !== null) {
             $quiz->allowofflineattempts = $params['allowofflineattempts'] ? 1 : 0;
             $updated = true;
@@ -353,24 +353,24 @@ class update_quiz extends external_api {
             ];
         }
 
-        // Update timestamp.
+        
         $quiz->timemodified = time();
 
-        // Update the quiz record.
+        
         $DB->update_record('quiz', $quiz);
 
-        // Update course module visibility if changed.
+        
         if ($params['visible'] !== null) {
             $DB->set_field('course_modules', 'visible', $params['visible'] ? 1 : 0, ['id' => $cm->id]);
             $DB->set_field('course_modules', 'visibleold', $params['visible'] ? 1 : 0, ['id' => $cm->id]);
         }
 
-        // Update course module idnumber if changed.
+        
         if ($params['idnumber'] !== null) {
             $DB->set_field('course_modules', 'idnumber', $params['idnumber'], ['id' => $cm->id]);
         }
 
-        // Update grade item if grade or name changed.
+        
         if ($params['grade'] !== null || $params['name'] !== null || $params['idnumber'] !== null) {
             $gradeitem = [];
             if ($params['name'] !== null) {
@@ -387,7 +387,7 @@ class update_quiz extends external_api {
             }
         }
 
-        // Rebuild course cache.
+        
         rebuild_course_cache($cm->course, true);
 
         return [

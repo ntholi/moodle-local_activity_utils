@@ -7,59 +7,44 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for retrieving complete book details with all chapters and content.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class get_book extends external_api {
 
-    /**
-     * Returns description of method parameters.
-     *
-     * @return external_function_parameters
-     */
+    
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'bookid' => new external_value(PARAM_INT, 'Book instance ID'),
         ]);
     }
 
-    /**
-     * Retrieves complete book details including all chapters and their content.
-     *
-     * @param int $bookid Book instance ID
-     * @return array Book details with all chapters
-     */
+    
     public static function execute(int $bookid): array {
         global $DB;
 
-        // Validate parameters.
+        
         $params = self::validate_parameters(self::execute_parameters(), [
             'bookid' => $bookid,
         ]);
 
-        // Get book record.
+        
         $book = $DB->get_record('book', ['id' => $params['bookid']], '*', MUST_EXIST);
 
-        // Get course module.
+        
         $cm = get_coursemodule_from_instance('book', $book->id, 0, false, MUST_EXIST);
 
-        // Validate context.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:readbook', \context_course::instance($cm->course));
         require_capability('mod/book:read', $context);
 
-        // Check if user can see hidden chapters.
+        
         $canedit = has_capability('mod/book:edit', $context);
 
-        // Get course details.
+        
         $course = $DB->get_record('course', ['id' => $cm->course], 'id, fullname, shortname', MUST_EXIST);
 
-        // Get all chapters.
+        
         $sql = "SELECT bc.id, bc.bookid, bc.pagenum, bc.subchapter, bc.title,
                        bc.content, bc.contentformat, bc.hidden,
                        bc.timecreated, bc.timemodified, bc.importsrc
@@ -68,7 +53,7 @@ class get_book extends external_api {
 
         $sqlparams = [$book->id];
 
-        // Only show visible chapters unless user has edit permission.
+        
         if (!$canedit) {
             $sql .= " AND bc.hidden = 0";
         }
@@ -77,10 +62,10 @@ class get_book extends external_api {
 
         $chapters = $DB->get_records_sql($sql, $sqlparams);
 
-        // Process chapters.
+        
         $chaptersarray = [];
         foreach ($chapters as $chapter) {
-            // Get tags for this chapter.
+            
             $tags = \core_tag_tag::get_item_tags_array('mod_book', 'book_chapters', $chapter->id);
 
             $chaptersarray[] = [
@@ -118,11 +103,7 @@ class get_book extends external_api {
         ];
     }
 
-    /**
-     * Returns description of method result value.
-     *
-     * @return external_single_structure
-     */
+    
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'id' => new external_value(PARAM_INT, 'Book ID'),

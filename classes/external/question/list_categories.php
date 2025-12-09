@@ -8,12 +8,7 @@ use core_external\external_multiple_structure;
 use core_external\external_value;
 use core_question\local\bank\question_bank_helper;
 
-/**
- * List all question categories in a course.
- *
- * In Moodle 5+, question categories use module context from mod_qbank,
- * not course context. This function queries the system question bank.
- */
+
 class list_categories extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -29,7 +24,7 @@ class list_categories extends external_api {
             'courseid' => $courseid,
         ]);
 
-        // Validate course exists.
+        
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
         $coursecontext = \context_course::instance($course->id);
 
@@ -37,10 +32,10 @@ class list_categories extends external_api {
         require_capability('local/activity_utils:managequestioncategory', $coursecontext);
         require_capability('moodle/question:managecategory', $coursecontext);
 
-        // In Moodle 5+, get the system question bank for this course.
+        
         $qbank = question_bank_helper::get_default_open_instance_system_type($course, false);
         if (!$qbank) {
-            // No question bank exists yet for this course.
+            
             return [
                 'categories' => [],
                 'success' => true,
@@ -48,17 +43,17 @@ class list_categories extends external_api {
             ];
         }
 
-        // Get the module context from the question bank.
+        
         $context = \context_module::instance($qbank->id);
 
-        // Get all categories for this question bank context.
+        
         $categories = $DB->get_records('question_categories', [
             'contextid' => $context->id,
         ], 'parent ASC, sortorder ASC, name ASC');
 
         $result = [];
         foreach ($categories as $cat) {
-            // Count questions in this category.
+            
             $questioncount = $DB->count_records_sql(
                 "SELECT COUNT(qbe.id)
                    FROM {question_bank_entries} qbe

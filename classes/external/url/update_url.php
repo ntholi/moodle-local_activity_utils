@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing URL resource.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_url extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -48,7 +42,7 @@ class update_url extends external_api {
             'visible' => $visible,
         ]);
 
-        // Get the URL record.
+        
         $url = $DB->get_record('url', ['id' => $params['urlid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('url', $url->id, 0, false, MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -58,7 +52,7 @@ class update_url extends external_api {
         require_capability('local/activity_utils:updateurl', $context);
         require_capability('mod/url:addinstance', $context);
 
-        // Update URL fields if provided.
+        
         $updated = false;
 
         if ($params['name'] !== null) {
@@ -83,7 +77,7 @@ class update_url extends external_api {
             $DB->update_record('url', $url);
         }
 
-        // Update course module visibility if provided.
+        
         if ($params['visible'] !== null) {
             $cm->visible = $params['visible'];
             $cm->visibleold = $params['visible'];

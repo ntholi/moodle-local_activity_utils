@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing subsection.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_subsection extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -41,7 +35,7 @@ class update_subsection extends external_api {
             'visible' => $visible,
         ]);
 
-        // Get the section record (delegated section for subsection).
+        
         $section = $DB->get_record('course_sections', ['id' => $params['sectionid']], '*', MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $section->course], '*', MUST_EXIST);
         $context = \context_course::instance($course->id);
@@ -50,12 +44,12 @@ class update_subsection extends external_api {
         require_capability('local/activity_utils:updatesubsection', $context);
         require_capability('moodle/course:update', $context);
 
-        // Verify this is a delegated section (subsection).
+        
         if (empty($section->component) || $section->component !== 'mod_subsection') {
             throw new \moodle_exception('invalidsubsection', 'local_activity_utils');
         }
 
-        // Update section fields if provided.
+        
         $sectionupdated = false;
 
         if ($params['name'] !== null) {
@@ -77,7 +71,7 @@ class update_subsection extends external_api {
             $DB->update_record('course_sections', $section);
         }
 
-        // Also update the subsection module instance if name changed.
+        
         if ($params['name'] !== null && !empty($section->itemid)) {
             $subsection = $DB->get_record('subsection', ['id' => $section->itemid]);
             if ($subsection) {
@@ -87,7 +81,7 @@ class update_subsection extends external_api {
             }
         }
 
-        // Update course module visibility if needed.
+        
         if ($params['visible'] !== null && !empty($section->itemid)) {
             $cm = $DB->get_record('course_modules', [
                 'instance' => $section->itemid,

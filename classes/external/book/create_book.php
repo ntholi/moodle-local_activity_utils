@@ -8,20 +8,10 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use local_activity_utils\helper;
 
-/**
- * External function for creating a book resource with chapters.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class create_book extends external_api {
 
-    /**
-     * Returns description of method parameters.
-     *
-     * @return external_function_parameters
-     */
+    
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course ID'),
@@ -47,20 +37,7 @@ class create_book extends external_api {
         ]);
     }
 
-    /**
-     * Creates a new book resource with optional chapters.
-     *
-     * @param int $courseid Course ID
-     * @param string $name Book name
-     * @param string $intro Book introduction
-     * @param int $section Course section number
-     * @param int $visible Visibility
-     * @param int $numbering Chapter numbering style
-     * @param int $navstyle Navigation style
-     * @param int $customtitles Use custom titles
-     * @param array $chapters Array of chapters
-     * @return array Response with book details
-     */
+    
     public static function execute(
         int $courseid,
         string $name,
@@ -78,7 +55,7 @@ class create_book extends external_api {
         require_once($CFG->dirroot . '/mod/book/lib.php');
         require_once($CFG->dirroot . '/mod/book/locallib.php');
 
-        // Validate parameters.
+        
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
             'name' => $name,
@@ -91,7 +68,7 @@ class create_book extends external_api {
             'chapters' => $chapters,
         ]);
 
-        // Get course and validate context.
+        
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
         $context = \context_course::instance($course->id);
 
@@ -99,13 +76,13 @@ class create_book extends external_api {
         require_capability('local/activity_utils:createbook', $context);
         require_capability('mod/book:addinstance', $context);
 
-        // Validate numbering style (0-3).
+        
         $numbering = max(0, min(3, $params['numbering']));
 
-        // Validate navigation style (0-2).
+        
         $navstyle = max(0, min(2, $params['navstyle']));
 
-        // Create the book record.
+        
         $book = new \stdClass();
         $book->course = $params['courseid'];
         $book->name = $params['name'];
@@ -120,10 +97,10 @@ class create_book extends external_api {
 
         $bookid = $DB->insert_record('book', $book);
 
-        // Get module ID for book.
+        
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'book'], MUST_EXIST);
 
-        // Create course module record.
+        
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
@@ -151,13 +128,13 @@ class create_book extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence.
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
-        // Get module context for file handling.
+        
         $modulecontext = \context_module::instance($cmid);
 
-        // Create chapters if provided.
+        
         $createdchapters = [];
         $pagenum = 0;
 
@@ -178,7 +155,7 @@ class create_book extends external_api {
 
             $chapterid = $DB->insert_record('book_chapters', $chapter);
 
-            // Handle tags if provided.
+            
             if (!empty($chapterdata['tags'])) {
                 $tags = array_map('trim', explode(',', $chapterdata['tags']));
                 $tags = array_filter($tags);
@@ -195,7 +172,7 @@ class create_book extends external_api {
             ];
         }
 
-        // Rebuild course cache.
+        
         rebuild_course_cache($params['courseid'], true);
 
         return [
@@ -209,11 +186,7 @@ class create_book extends external_api {
         ];
     }
 
-    /**
-     * Returns description of method result value.
-     *
-     * @return external_single_structure
-     */
+    
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'id' => new external_value(PARAM_INT, 'Book ID'),

@@ -10,13 +10,7 @@ use mod_bigbluebuttonbn\plugin;
 use mod_bigbluebuttonbn\local\helpers\mod_helper;
 use mod_bigbluebuttonbn\meeting;
 
-/**
- * External function for creating a BigBlueButton activity.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class create_bigbluebuttonbn extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -27,10 +21,10 @@ class create_bigbluebuttonbn extends external_api {
             'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
             'visible' => new external_value(PARAM_INT, 'Visibility (1=visible, 0=hidden)', VALUE_DEFAULT, 1),
             
-            // Instance type
+            
             'type' => new external_value(PARAM_INT, 'Instance type: 0=room with recordings, 1=room only, 2=recordings only', VALUE_DEFAULT, 0),
             
-            // Room settings
+            
             'welcome' => new external_value(PARAM_RAW, 'Welcome message displayed in the room', VALUE_DEFAULT, ''),
             'voicebridge' => new external_value(PARAM_INT, 'Voice bridge number (4 digits)', VALUE_DEFAULT, 0),
             'wait' => new external_value(PARAM_INT, 'Wait for moderator before joining (1=yes, 0=no)', VALUE_DEFAULT, 0),
@@ -38,7 +32,7 @@ class create_bigbluebuttonbn extends external_api {
             'record' => new external_value(PARAM_INT, 'Enable recording (1=yes, 0=no)', VALUE_DEFAULT, 1),
             'muteonstart' => new external_value(PARAM_INT, 'Mute participants on start (1=yes, 0=no)', VALUE_DEFAULT, 0),
             
-            // Lock settings
+            
             'disablecam' => new external_value(PARAM_INT, 'Disable webcams (1=yes, 0=no)', VALUE_DEFAULT, 0),
             'disablemic' => new external_value(PARAM_INT, 'Disable microphones (1=yes, 0=no)', VALUE_DEFAULT, 0),
             'disableprivatechat' => new external_value(PARAM_INT, 'Disable private chat (1=yes, 0=no)', VALUE_DEFAULT, 0),
@@ -46,23 +40,23 @@ class create_bigbluebuttonbn extends external_api {
             'disablenote' => new external_value(PARAM_INT, 'Disable shared notes (1=yes, 0=no)', VALUE_DEFAULT, 0),
             'hideuserlist' => new external_value(PARAM_INT, 'Hide user list (1=yes, 0=no)', VALUE_DEFAULT, 0),
             
-            // Schedule settings
+            
             'openingtime' => new external_value(PARAM_INT, 'Opening time (Unix timestamp, 0=no restriction)', VALUE_DEFAULT, 0),
             'closingtime' => new external_value(PARAM_INT, 'Closing time (Unix timestamp, 0=no restriction)', VALUE_DEFAULT, 0),
             
-            // Guest access
+            
             'guestallowed' => new external_value(PARAM_INT, 'Allow guest access (1=yes, 0=no)', VALUE_DEFAULT, 0),
             'mustapproveuser' => new external_value(PARAM_INT, 'Moderator must approve guests (1=yes, 0=no)', VALUE_DEFAULT, 1),
             
-            // Recording settings
+            
             'recordings_deleted' => new external_value(PARAM_INT, 'Show deleted recordings (1=yes, 0=no)', VALUE_DEFAULT, 1),
             'recordings_imported' => new external_value(PARAM_INT, 'Show imported recordings (1=yes, 0=no)', VALUE_DEFAULT, 0),
             'recordings_preview' => new external_value(PARAM_INT, 'Show recording preview (1=yes, 0=no)', VALUE_DEFAULT, 0),
             
-            // Presentation
+            
             'showpresentation' => new external_value(PARAM_INT, 'Show presentation on activity page (1=yes, 0=no)', VALUE_DEFAULT, 1),
             
-            // Completion settings
+            
             'completionattendance' => new external_value(PARAM_INT, 'Required attendance time in minutes for completion', VALUE_DEFAULT, 0),
             'completionengagementchats' => new external_value(PARAM_INT, 'Required number of chat messages for completion', VALUE_DEFAULT, 0),
             'completionengagementtalks' => new external_value(PARAM_INT, 'Required number of talk time for completion', VALUE_DEFAULT, 0),
@@ -146,7 +140,7 @@ class create_bigbluebuttonbn extends external_api {
             'completionengagementemojis' => $completionengagementemojis,
         ]);
 
-        // Validate course exists
+        
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
         $context = \context_course::instance($course->id);
 
@@ -154,19 +148,19 @@ class create_bigbluebuttonbn extends external_api {
         require_capability('local/activity_utils:createbigbluebuttonbn', $context);
         require_capability('mod/bigbluebuttonbn:addinstance', $context);
 
-        // Generate unique meeting credentials
+        
         $meetingid = meeting::get_unique_meetingid_seed();
         $moderatorpass = plugin::random_password(12);
         $viewerpass = plugin::random_password(12, $moderatorpass);
         
-        // Generate guest credentials
+        
         $guestlinkuid = '';
         $guestpassword = '';
         if ($params['guestallowed']) {
             [$guestlinkuid, $guestpassword] = plugin::generate_guest_meeting_credentials();
         }
 
-        // Create the BigBlueButton instance record
+        
         $bigbluebuttonbn = new \stdClass();
         $bigbluebuttonbn->course = $params['courseid'];
         $bigbluebuttonbn->name = $params['name'];
@@ -203,7 +197,7 @@ class create_bigbluebuttonbn extends external_api {
         $bigbluebuttonbn->timecreated = time();
         $bigbluebuttonbn->timemodified = 0;
         
-        // Completion settings
+        
         $bigbluebuttonbn->completionattendance = $params['completionattendance'];
         $bigbluebuttonbn->completionengagementchats = $params['completionengagementchats'];
         $bigbluebuttonbn->completionengagementtalks = $params['completionengagementtalks'];
@@ -211,13 +205,13 @@ class create_bigbluebuttonbn extends external_api {
         $bigbluebuttonbn->completionengagementpollvotes = $params['completionengagementpollvotes'];
         $bigbluebuttonbn->completionengagementemojis = $params['completionengagementemojis'];
 
-        // Insert the BigBlueButton instance
+        
         $bigbluebuttonbnid = $DB->insert_record('bigbluebuttonbn', $bigbluebuttonbn);
 
-        // Get the module ID for bigbluebuttonbn
+        
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'bigbluebuttonbn'], MUST_EXIST);
 
-        // Create the course module record
+        
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
@@ -245,10 +239,10 @@ class create_bigbluebuttonbn extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
-        // Rebuild course cache
+        
         rebuild_course_cache($params['courseid'], true);
 
         return [

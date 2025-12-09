@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing file resource.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_file extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -48,7 +42,7 @@ class update_file extends external_api {
             'visible' => $visible,
         ]);
 
-        // Get the resource record.
+        
         $resource = $DB->get_record('resource', ['id' => $params['resourceid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('resource', $resource->id, 0, false, MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -58,7 +52,7 @@ class update_file extends external_api {
         require_capability('local/activity_utils:updatefile', $context);
         require_capability('mod/resource:addinstance', $context);
 
-        // Update resource fields if provided.
+        
         $updated = false;
 
         if ($params['name'] !== null) {
@@ -70,20 +64,20 @@ class update_file extends external_api {
             $updated = true;
         }
 
-        // Handle file replacement if new content is provided.
+        
         $currentfilename = null;
         if ($params['filecontent'] !== null) {
             $modulecontext = \context_module::instance($cm->id);
             $fs = get_file_storage();
 
-            // Get the current file to potentially replace.
+            
             $files = $fs->get_area_files($modulecontext->id, 'mod_resource', 'content', 0, 'sortorder', false);
             foreach ($files as $file) {
                 $currentfilename = $file->get_filename();
                 break;
             }
 
-            // Determine the filename to use.
+            
             $newfilename = $params['filename'];
             if (empty($newfilename)) {
                 $newfilename = $currentfilename;
@@ -93,16 +87,16 @@ class update_file extends external_api {
             }
             $newfilename = clean_param($newfilename, PARAM_FILE);
 
-            // Delete existing files.
+            
             $fs->delete_area_files($modulecontext->id, 'mod_resource', 'content');
 
-            // Decode content.
+            
             $content = base64_decode($params['filecontent'], true);
             if ($content === false) {
                 $content = $params['filecontent'];
             }
 
-            // Create new file.
+            
             $filerecord = [
                 'contextid' => $modulecontext->id,
                 'component' => 'mod_resource',
@@ -120,7 +114,7 @@ class update_file extends external_api {
             $updated = true;
             $currentfilename = $newfilename;
         } else if ($params['filename'] !== null) {
-            // Just rename the file without changing content.
+            
             $modulecontext = \context_module::instance($cm->id);
             $fs = get_file_storage();
 
@@ -128,7 +122,7 @@ class update_file extends external_api {
             foreach ($files as $file) {
                 $newfilename = clean_param($params['filename'], PARAM_FILE);
                 if (!empty($newfilename) && $newfilename !== $file->get_filename()) {
-                    // Create a new file with the new name.
+                    
                     $filerecord = [
                         'contextid' => $modulecontext->id,
                         'component' => 'mod_resource',
@@ -148,7 +142,7 @@ class update_file extends external_api {
                 break;
             }
         } else {
-            // Get current filename for response.
+            
             $modulecontext = \context_module::instance($cm->id);
             $fs = get_file_storage();
             $files = $fs->get_area_files($modulecontext->id, 'mod_resource', 'content', 0, 'sortorder', false);
@@ -163,7 +157,7 @@ class update_file extends external_api {
             $DB->update_record('resource', $resource);
         }
 
-        // Update course module visibility if provided.
+        
         if ($params['visible'] !== null) {
             $cm->visible = $params['visible'];
             $cm->visibleold = $params['visible'];

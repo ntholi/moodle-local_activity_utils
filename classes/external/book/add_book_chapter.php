@@ -7,20 +7,10 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for adding a chapter to an existing book.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class add_book_chapter extends external_api {
 
-    /**
-     * Returns description of method parameters.
-     *
-     * @return external_function_parameters
-     */
+    
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'bookid' => new external_value(PARAM_INT, 'Book instance ID'),
@@ -33,18 +23,7 @@ class add_book_chapter extends external_api {
         ]);
     }
 
-    /**
-     * Adds a chapter to an existing book.
-     *
-     * @param int $bookid Book instance ID
-     * @param string $title Chapter title
-     * @param string $content Chapter content
-     * @param int $subchapter Is subchapter
-     * @param int $hidden Is hidden
-     * @param int $pagenum Page number position
-     * @param string $tags Comma-separated tags
-     * @return array Response with chapter details
-     */
+    
     public static function execute(
         int $bookid,
         string $title,
@@ -60,7 +39,7 @@ class add_book_chapter extends external_api {
         require_once($CFG->dirroot . '/mod/book/lib.php');
         require_once($CFG->dirroot . '/mod/book/locallib.php');
 
-        // Validate parameters.
+        
         $params = self::validate_parameters(self::execute_parameters(), [
             'bookid' => $bookid,
             'title' => $title,
@@ -71,36 +50,36 @@ class add_book_chapter extends external_api {
             'tags' => $tags,
         ]);
 
-        // Get book and course module.
+        
         $book = $DB->get_record('book', ['id' => $params['bookid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('book', $book->id, 0, false, MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
-        // Validate context.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:createbook', \context_course::instance($course->id));
         require_capability('mod/book:edit', $context);
 
-        // Determine page number.
+        
         $maxpagenum = $DB->get_field_sql('SELECT MAX(pagenum) FROM {book_chapters} WHERE bookid = ?', [$book->id]);
         $maxpagenum = $maxpagenum ? (int)$maxpagenum : 0;
 
         if ($params['pagenum'] <= 0 || $params['pagenum'] > $maxpagenum + 1) {
-            // Append at the end.
+            
             $newpagenum = $maxpagenum + 1;
         } else {
-            // Insert at specified position.
+            
             $newpagenum = $params['pagenum'];
 
-            // Make room for the new chapter by shifting existing pages.
+            
             $sql = "UPDATE {book_chapters}
                        SET pagenum = pagenum + 1
                      WHERE bookid = ? AND pagenum >= ?";
             $DB->execute($sql, [$book->id, $newpagenum]);
         }
 
-        // Create chapter record.
+        
         $chapter = new \stdClass();
         $chapter->bookid = $book->id;
         $chapter->pagenum = $newpagenum;
@@ -115,7 +94,7 @@ class add_book_chapter extends external_api {
 
         $chapterid = $DB->insert_record('book_chapters', $chapter);
 
-        // Handle tags if provided.
+        
         if (!empty($params['tags'])) {
             $tagsarray = array_map('trim', explode(',', $params['tags']));
             $tagsarray = array_filter($tagsarray);
@@ -124,10 +103,10 @@ class add_book_chapter extends external_api {
             }
         }
 
-        // Increment book revision.
+        
         $DB->set_field('book', 'revision', $book->revision + 1, ['id' => $book->id]);
 
-        // Rebuild course cache.
+        
         rebuild_course_cache($course->id, true);
 
         return [
@@ -141,11 +120,7 @@ class add_book_chapter extends external_api {
         ];
     }
 
-    /**
-     * Returns description of method result value.
-     *
-     * @return external_single_structure
-     */
+    
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'id' => new external_value(PARAM_INT, 'Chapter ID'),

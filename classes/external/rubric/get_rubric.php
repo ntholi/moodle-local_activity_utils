@@ -7,11 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Get rubric definition for an assignment.
- *
- * This provides a simplified API compared to core_grading_get_definitions.
- */
+
 class get_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -29,17 +25,17 @@ class get_rubric extends external_api {
             'cmid' => $cmid,
         ]);
 
-        // Get the course module and verify it's an assignment.
+        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
         self::validate_context($context);
         require_capability('local/activity_utils:managerubric', $context);
 
-        // Get grading manager.
+        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
-        // Check if rubric is active.
+        
         $activemethod = $gradingmanager->get_active_method();
         if ($activemethod !== 'rubric') {
             return [
@@ -55,7 +51,7 @@ class get_rubric extends external_api {
             ];
         }
 
-        // Get the rubric controller.
+        
         $controller = $gradingmanager->get_controller('rubric');
 
         if (!$controller->is_form_defined()) {
@@ -74,7 +70,7 @@ class get_rubric extends external_api {
 
         $definition = $controller->get_definition();
 
-        // Get criteria and levels.
+        
         $criteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
 
         $criteriaresult = [];
@@ -106,7 +102,7 @@ class get_rubric extends external_api {
             $maxscore += $criterionmaxscore;
         }
 
-        // Get options.
+        
         $options = json_decode($definition->options ?? '{}', true) ?: [];
         $optionsresult = array_merge(self::get_default_options(), $options);
 

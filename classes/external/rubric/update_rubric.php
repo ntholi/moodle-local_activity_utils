@@ -7,9 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Update an existing rubric for an assignment.
- */
+
 class update_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -68,7 +66,7 @@ class update_rubric extends external_api {
             'options' => $options,
         ]);
 
-        // Get the course module and verify it's an assignment.
+        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -76,10 +74,10 @@ class update_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $context);
         require_capability('moodle/grade:managegradingforms', $context);
 
-        // Get grading manager.
+        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
-        // Check if rubric is active.
+        
         if ($gradingmanager->get_active_method() !== 'rubric') {
             return [
                 'definitionid' => 0,
@@ -88,7 +86,7 @@ class update_rubric extends external_api {
             ];
         }
 
-        // Get the controller.
+        
         $controller = $gradingmanager->get_controller('rubric');
 
         if (!$controller->is_form_defined()) {
@@ -101,7 +99,7 @@ class update_rubric extends external_api {
 
         $definition = $controller->get_definition();
 
-        // Build the updated rubric data as stdClass (required by update_definition).
+        
         $rubricdata = new \stdClass();
         $rubricdata->name = !empty($params['name']) ? $params['name'] : $definition->name;
         $rubricdata->description_editor = [
@@ -110,8 +108,8 @@ class update_rubric extends external_api {
         ];
         $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
-        // Handle criteria update.
-        // Moodle expects criteria and levels to be keyed by ID (existing) or 'NEWIDn' (new items).
+        
+        
         if (!empty($params['criteria'])) {
             $rubriccriteria = [];
             $sortorder = 1;
@@ -125,7 +123,7 @@ class update_rubric extends external_api {
                     'levels' => [],
                 ];
 
-                // Determine criterion key: use existing ID or generate NEWIDn.
+                
                 if (!empty($criterion['id'])) {
                     $criterionkey = $criterion['id'];
                 } else {
@@ -141,7 +139,7 @@ class update_rubric extends external_api {
                         'definitionformat' => FORMAT_HTML,
                     ];
 
-                    // Determine level key: use existing ID or generate NEWIDn.
+                    
                     if (!empty($level['id'])) {
                         $levelkey = $level['id'];
                     } else {
@@ -158,7 +156,7 @@ class update_rubric extends external_api {
 
             $rubricdata->rubric['criteria'] = $rubriccriteria;
         } else {
-            // Keep existing criteria - use numeric IDs as keys (existing items).
+            
             $existingcriteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
             $rubriccriteria = [];
 
@@ -185,7 +183,7 @@ class update_rubric extends external_api {
             $rubricdata->rubric['criteria'] = $rubriccriteria;
         }
 
-        // Handle options update.
+        
         $existingoptions = json_decode($definition->options ?? '{}', true) ?: [];
         $newoptions = [];
 
@@ -197,7 +195,7 @@ class update_rubric extends external_api {
 
         $rubricdata->rubric['options'] = array_merge($existingoptions, $newoptions);
 
-        // Update the definition.
+        
         $controller->update_definition($rubricdata);
 
         return [

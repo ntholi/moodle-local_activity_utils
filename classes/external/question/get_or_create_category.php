@@ -7,14 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use core_question\local\bank\question_bank_helper;
 
-/**
- * Get or create a question category for a course.
- * If a category with the given name already exists at the specified parent, returns it.
- *
- * In Moodle 5+, question categories must use module context (from mod_qbank),
- * not course context. This function automatically gets or creates the system
- * question bank for the course and uses its context.
- */
+
 class get_or_create_category extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -41,7 +34,7 @@ class get_or_create_category extends external_api {
             'parentcategoryid' => $parentcategoryid,
         ]);
 
-        // Validate course exists.
+        
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
         $coursecontext = \context_course::instance($course->id);
 
@@ -49,8 +42,8 @@ class get_or_create_category extends external_api {
         require_capability('local/activity_utils:managequestioncategory', $coursecontext);
         require_capability('moodle/question:managecategory', $coursecontext);
 
-        // In Moodle 5+, question categories must use module context from mod_qbank.
-        // Get or create the system question bank for this course.
+        
+        
         $qbank = question_bank_helper::get_default_open_instance_system_type($course, true);
         if (!$qbank) {
             return [
@@ -63,12 +56,12 @@ class get_or_create_category extends external_api {
             ];
         }
 
-        // Get the module context from the question bank.
+        
         $context = \context_module::instance($qbank->id);
 
-        // Determine the parent category.
+        
         if ($params['parentcategoryid'] > 0) {
-            // Verify parent category exists.
+            
             $parent = $DB->get_record('question_categories', ['id' => $params['parentcategoryid']]);
             if (!$parent) {
                 return [
@@ -81,17 +74,17 @@ class get_or_create_category extends external_api {
                 ];
             }
             $parentid = $parent->id;
-            // Use the parent's context to ensure consistency.
+            
             $context = \context::instance_by_id($parent->contextid);
         } else {
-            // Get or create the top-level category for the question bank context.
+            
             $topcat = $DB->get_record('question_categories', [
                 'contextid' => $context->id,
                 'parent' => 0,
             ]);
 
             if (!$topcat) {
-                // Create the top-level category (this is the "top" category for the qbank).
+                
                 $topcat = new \stdClass();
                 $topcat->name = 'top';
                 $topcat->info = '';
@@ -106,7 +99,7 @@ class get_or_create_category extends external_api {
             $parentid = $topcat->id;
         }
 
-        // Check if a category with this name already exists under the parent.
+        
         $existing = $DB->get_record('question_categories', [
             'contextid' => $context->id,
             'parent' => $parentid,
@@ -124,7 +117,7 @@ class get_or_create_category extends external_api {
             ];
         }
 
-        // Create the new category.
+        
         $category = new \stdClass();
         $category->name = $params['name'];
         $category->info = $params['info'];

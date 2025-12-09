@@ -33,19 +33,19 @@ class reorder_quiz_questions extends external_api {
             'slots' => $slots,
         ]);
 
-        // Get quiz record.
+        
         $quiz = $DB->get_record('quiz', ['id' => $params['quizid']], '*', MUST_EXIST);
 
-        // Get course module.
+        
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
 
-        // Validate context and capabilities.
+        
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('local/activity_utils:managequizquestions', $context);
         require_capability('mod/quiz:manage', $context);
 
-        // Verify all slot IDs belong to this quiz.
+        
         $existingslots = $DB->get_records('quiz_slots', ['quizid' => $params['quizid']], '', 'id, slot, page');
 
         if (empty($existingslots)) {
@@ -55,13 +55,13 @@ class reorder_quiz_questions extends external_api {
             ];
         }
 
-        // Build a map of existing slot IDs.
+        
         $existingslotids = [];
         foreach ($existingslots as $slot) {
             $existingslotids[$slot->id] = $slot;
         }
 
-        // Validate the provided slots.
+        
         $newpositions = [];
         $providedslotids = [];
 
@@ -98,21 +98,21 @@ class reorder_quiz_questions extends external_api {
             $newpositions[$slotdata['newslot']] = $slotdata;
         }
 
-        // Start a transaction for data integrity.
+        
         $transaction = $DB->start_delegated_transaction();
 
         try {
-            // First, set all slots to temporary high values to avoid conflicts.
+            
             $offset = 10000;
             foreach ($params['slots'] as $slotdata) {
                 $DB->set_field('quiz_slots', 'slot', $offset + $slotdata['slotid'], ['id' => $slotdata['slotid']]);
             }
 
-            // Now set the new slot numbers.
+            
             foreach ($params['slots'] as $slotdata) {
                 $updatedata = ['slot' => $slotdata['newslot']];
 
-                // Update page if provided.
+                
                 if ($slotdata['page'] !== null && $slotdata['page'] > 0) {
                     $updatedata['page'] = $slotdata['page'];
                 }
@@ -124,13 +124,13 @@ class reorder_quiz_questions extends external_api {
                 }
             }
 
-            // Update quiz timemodified.
+            
             $DB->set_field('quiz', 'timemodified', time(), ['id' => $params['quizid']]);
 
-            // Commit the transaction.
+            
             $transaction->allow_commit();
 
-            // Trigger the slot_moved event for each moved slot.
+            
             foreach ($params['slots'] as $slotdata) {
                 $newpage = $slotdata['page'] ?? $existingslotids[$slotdata['slotid']]->page;
                 $event = \mod_quiz\event\slot_moved::create([

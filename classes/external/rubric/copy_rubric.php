@@ -6,11 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * Copy a rubric from one assignment to another.
- *
- * Not available in the core Moodle API.
- */
+
 class copy_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -31,15 +27,15 @@ class copy_rubric extends external_api {
             'targetcmid' => $targetcmid,
         ]);
 
-        // Get source course module.
+        
         $sourcecm = get_coursemodule_from_id('assign', $params['sourcecmid'], 0, false, MUST_EXIST);
         $sourcecontext = \context_module::instance($sourcecm->id);
 
-        // Get target course module.
+        
         $targetcm = get_coursemodule_from_id('assign', $params['targetcmid'], 0, false, MUST_EXIST);
         $targetcontext = \context_module::instance($targetcm->id);
 
-        // Validate both contexts and capabilities.
+        
         self::validate_context($sourcecontext);
         require_capability('local/activity_utils:managerubric', $sourcecontext);
 
@@ -47,10 +43,10 @@ class copy_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $targetcontext);
         require_capability('moodle/grade:managegradingforms', $targetcontext);
 
-        // Get source grading manager.
+        
         $sourcegradingmanager = get_grading_manager($sourcecontext, 'mod_assign', 'submissions');
 
-        // Check if source has a rubric.
+        
         if ($sourcegradingmanager->get_active_method() !== 'rubric') {
             return [
                 'definitionid' => 0,
@@ -70,10 +66,10 @@ class copy_rubric extends external_api {
 
         $sourcedefinition = $sourcecontroller->get_definition();
 
-        // Get target grading manager.
+        
         $targetgradingmanager = get_grading_manager($targetcontext, 'mod_assign', 'submissions');
 
-        // Check if target already has a rubric.
+        
         if ($targetgradingmanager->get_active_method() === 'rubric') {
             $targetcontroller = $targetgradingmanager->get_controller('rubric');
             if ($targetcontroller->is_form_defined()) {
@@ -85,11 +81,11 @@ class copy_rubric extends external_api {
             }
         }
 
-        // Set rubric as the active method for target.
+        
         $targetgradingmanager->set_active_method('rubric');
         $targetcontroller = $targetgradingmanager->get_controller('rubric');
 
-        // Get source criteria and levels.
+        
         $sourcecriteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $sourcedefinition->id], 'sortorder ASC');
 
         $rubriccriteria = [];
@@ -113,10 +109,10 @@ class copy_rubric extends external_api {
             ];
         }
 
-        // Get source options.
+        
         $sourceoptions = json_decode($sourcedefinition->options ?? '{}', true) ?: [];
 
-        // Prepare the form data for target.
+        
         $rubricdata = [
             'name' => $sourcedefinition->name . ' (Copy)',
             'description_editor' => [
@@ -130,7 +126,7 @@ class copy_rubric extends external_api {
             'status' => \gradingform_controller::DEFINITION_STATUS_READY,
         ];
 
-        // Create the rubric on target.
+        
         $targetcontroller->update_definition($rubricdata);
 
         $newdefinition = $targetcontroller->get_definition();

@@ -51,7 +51,7 @@ class delete_section extends external_api {
             ];
         }
 
-        // Cannot delete section 0 (general section)
+        
         if ($section->section == 0) {
             return [
                 'success' => false,
@@ -61,7 +61,7 @@ class delete_section extends external_api {
 
         $sectionname = get_section_name($course, $section);
 
-        // Delete the section and all its content
+        
         course_delete_section($course, $section, true);
 
         return [

@@ -7,11 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Get rubric filling (grading) for a student's assignment submission.
- *
- * This retrieves how a teacher graded a student using the rubric.
- */
+
 class get_rubric_filling extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -33,17 +29,17 @@ class get_rubric_filling extends external_api {
             'userid' => $userid,
         ]);
 
-        // Get the course module and verify it's an assignment.
+        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
         self::validate_context($context);
         require_capability('local/activity_utils:viewrubricfilling', $context);
 
-        // Verify the user exists.
+        
         $user = $DB->get_record('user', ['id' => $params['userid']], '*', MUST_EXIST);
 
-        // Get grading manager and verify rubric is active.
+        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
         $activemethod = $gradingmanager->get_active_method();
 
@@ -60,7 +56,7 @@ class get_rubric_filling extends external_api {
             ];
         }
 
-        // Get the rubric controller.
+        
         $controller = $gradingmanager->get_controller('rubric');
 
         if (!$controller->is_form_defined()) {
@@ -76,10 +72,10 @@ class get_rubric_filling extends external_api {
             ];
         }
 
-        // Get the assignment.
+        
         $assignment = new \assign($context, $cm, $cm->course);
 
-        // Get the user's grade.
+        
         $grade = $assignment->get_user_grade($params['userid'], false);
 
         if (!$grade) {
@@ -95,7 +91,7 @@ class get_rubric_filling extends external_api {
             ];
         }
 
-        // Get the grading instance.
+        
         $instances = $DB->get_records('grading_instances', [
             'definitionid' => $controller->get_definition()->id,
             'itemid' => $grade->id
@@ -116,19 +112,19 @@ class get_rubric_filling extends external_api {
 
         $instance = reset($instances);
 
-        // Get the grader's name.
+        
         $grader = $DB->get_record('user', ['id' => $instance->raterid], 'id, firstname, lastname');
         $gradername = $grader ? fullname($grader) : 'Unknown';
 
-        // Get the rubric fillings.
+        
         $fillingsdb = $DB->get_records('gradingform_rubric_fillings', ['instanceid' => $instance->id]);
 
         $fillings = [];
         foreach ($fillingsdb as $filling) {
-            // Get criterion details.
+            
             $criterion = $DB->get_record('gradingform_rubric_criteria', ['id' => $filling->criterionid]);
             
-            // Get level details if a level is selected.
+            
             $leveldata = null;
             if ($filling->levelid) {
                 $level = $DB->get_record('gradingform_rubric_levels', ['id' => $filling->levelid]);

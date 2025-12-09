@@ -6,9 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * Delete a question from the question bank.
- */
+
 class delete_question extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -26,7 +24,7 @@ class delete_question extends external_api {
             'questionbankentryid' => $questionbankentryid,
         ]);
 
-        // Get the question bank entry.
+        
         $qbe = $DB->get_record('question_bank_entries', ['id' => $params['questionbankentryid']]);
         if (!$qbe) {
             return [
@@ -35,7 +33,7 @@ class delete_question extends external_api {
             ];
         }
 
-        // Get the category to determine context.
+        
         $category = $DB->get_record('question_categories', ['id' => $qbe->questioncategoryid], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
@@ -43,7 +41,7 @@ class delete_question extends external_api {
         require_capability('local/activity_utils:deletequestion', $context);
         require_capability('moodle/question:editall', $context);
 
-        // Get the latest question version to get the question ID.
+        
         $sql = "SELECT qv.questionid, q.name
                   FROM {question_versions} qv
                   JOIN {question} q ON q.id = qv.questionid
@@ -61,7 +59,7 @@ class delete_question extends external_api {
 
         $questionname = $latestversion->name;
 
-        // Check if question is used in any quiz.
+        
         $inuse = $DB->record_exists_sql(
             "SELECT 1
                FROM {question_references} qr
@@ -77,7 +75,7 @@ class delete_question extends external_api {
             ];
         }
 
-        // Check if question is used in any question set (random questions).
+        
         $inset = $DB->record_exists_sql(
             "SELECT 1
                FROM {question_set_references} qsr
@@ -85,18 +83,18 @@ class delete_question extends external_api {
             [$context->id]
         );
 
-        // Get all question versions for this entry.
+        
         $versions = $DB->get_records('question_versions', ['questionbankentryid' => $params['questionbankentryid']]);
 
-        // Delete each question version.
+        
         foreach ($versions as $version) {
-            // Delete question answers.
+            
             $DB->delete_records('question_answers', ['question' => $version->questionid]);
 
-            // Delete question type specific data.
+            
             $question = $DB->get_record('question', ['id' => $version->questionid]);
             if ($question) {
-                // Delete type-specific tables.
+                
                 switch ($question->qtype) {
                     case 'multichoice':
                         $DB->delete_records('qtype_multichoice_options', ['questionid' => $version->questionid]);
@@ -117,21 +115,21 @@ class delete_question extends external_api {
                         break;
                 }
 
-                // Delete question hints.
+                
                 $DB->delete_records('question_hints', ['questionid' => $version->questionid]);
 
-                // Delete tags.
+                
                 \core_tag_tag::remove_all_item_tags('core_question', 'question', $version->questionid);
 
-                // Delete the question record.
+                
                 $DB->delete_records('question', ['id' => $version->questionid]);
             }
         }
 
-        // Delete question versions.
+        
         $DB->delete_records('question_versions', ['questionbankentryid' => $params['questionbankentryid']]);
 
-        // Delete the question bank entry.
+        
         $DB->delete_records('question_bank_entries', ['id' => $params['questionbankentryid']]);
 
         return [

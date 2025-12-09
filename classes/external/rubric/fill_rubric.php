@@ -7,11 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Fill a rubric for a student's assignment submission (grade the student).
- *
- * This allows teachers to grade a student by selecting levels for each rubric criterion.
- */
+
 class fill_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -49,7 +45,7 @@ class fill_rubric extends external_api {
             'overallremark' => $overallremark,
         ]);
 
-        // Get the course module and verify it's an assignment.
+        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -57,7 +53,7 @@ class fill_rubric extends external_api {
         require_capability('local/activity_utils:graderubric', $context);
         require_capability('mod/assign:grade', $context);
 
-        // Verify the user exists and is enrolled in the course.
+        
         $user = $DB->get_record('user', ['id' => $params['userid']], '*', MUST_EXIST);
         if (!is_enrolled($context, $user)) {
             return [
@@ -68,7 +64,7 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Get grading manager and verify rubric is active.
+        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
         $activemethod = $gradingmanager->get_active_method();
 
@@ -81,7 +77,7 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Get the rubric controller.
+        
         $controller = $gradingmanager->get_controller('rubric');
 
         if (!$controller->is_form_defined()) {
@@ -93,10 +89,10 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Get the assignment.
+        
         $assignment = new \assign($context, $cm, $cm->course);
 
-        // Get or create the submission.
+        
         $submission = $assignment->get_user_submission($params['userid'], false);
 
         if (!$submission) {
@@ -108,11 +104,11 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Get or create grading instance.
+        
         $grade = $assignment->get_user_grade($params['userid'], true);
         $instance = $controller->get_or_create_instance($grade->id, $USER->id, $grade->id);
 
-        // Validate criteria IDs and level IDs.
+        
         $definition = $controller->get_definition();
         $criteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], '', 'id');
         
@@ -128,7 +124,7 @@ class fill_rubric extends external_api {
             }
 
             if ($filling['levelid'] > 0) {
-                // Verify the level belongs to this criterion.
+                
                 $level = $DB->get_record('gradingform_rubric_levels', [
                     'id' => $filling['levelid'],
                     'criterionid' => $filling['criterionid']
@@ -150,7 +146,7 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Update the grading instance.
+        
         $instancedata = [
             'instanceid' => $instance->get_id(),
             'advancedgrading' => [
@@ -158,7 +154,7 @@ class fill_rubric extends external_api {
             ]
         ];
 
-        // Build the criteria data for update.
+        
         foreach ($validfillings as $criterionid => $filling) {
             $instancedata['advancedgrading']['criteria'][$criterionid] = [
                 'levelid' => $filling['levelid'],
@@ -166,19 +162,19 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Update the instance with the filling data.
+        
         $instance->update($instancedata);
 
-        // Calculate the grade.
+        
         $gradevalue = $instance->get_grade();
 
-        // Update the assignment grade.
+        
         $gradedata = new \stdClass();
         $gradedata->userid = $params['userid'];
         $gradedata->grade = $gradevalue;
         $gradedata->attemptnumber = $submission->attemptnumber;
 
-        // Add overall remark as feedback comment if provided.
+        
         if (!empty($params['overallremark'])) {
             $gradedata->assignfeedbackcomments_editor = [
                 'text' => $params['overallremark'],
@@ -186,7 +182,7 @@ class fill_rubric extends external_api {
             ];
         }
 
-        // Save the grade.
+        
         $assignment->save_grade($params['userid'], $gradedata);
 
         return [

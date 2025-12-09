@@ -17,34 +17,34 @@ class create_quiz extends external_api {
             'section' => new external_value(PARAM_INT, 'Course section number', VALUE_DEFAULT, 0),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for gradebook and external system reference', VALUE_DEFAULT, ''),
 
-            // Timing settings
+            
             'timeopen' => new external_value(PARAM_INT, 'Quiz open timestamp (0 = no restriction)', VALUE_DEFAULT, 0),
             'timeclose' => new external_value(PARAM_INT, 'Quiz close timestamp (0 = no restriction)', VALUE_DEFAULT, 0),
             'timelimit' => new external_value(PARAM_INT, 'Time limit in seconds (0 = no limit)', VALUE_DEFAULT, 0),
             'overduehandling' => new external_value(PARAM_ALPHA, 'How to handle overdue attempts: autosubmit, graceperiod, autoabandon', VALUE_DEFAULT, 'autosubmit'),
             'graceperiod' => new external_value(PARAM_INT, 'Grace period in seconds for graceperiod handling', VALUE_DEFAULT, 0),
 
-            // Grade settings
+            
             'grade' => new external_value(PARAM_FLOAT, 'Maximum grade for the quiz', VALUE_DEFAULT, 10.0),
             'grademethod' => new external_value(PARAM_INT, 'Grade method: 1=highest, 2=average, 3=first, 4=last', VALUE_DEFAULT, 1),
             'decimalpoints' => new external_value(PARAM_INT, 'Number of decimal places for grades (0-5)', VALUE_DEFAULT, 2),
             'questiondecimalpoints' => new external_value(PARAM_INT, 'Decimal places for question grades (-1 = same as quiz)', VALUE_DEFAULT, -1),
 
-            // Layout settings
+            
             'questionsperpage' => new external_value(PARAM_INT, 'Questions per page (0 = unlimited)', VALUE_DEFAULT, 1),
             'navmethod' => new external_value(PARAM_ALPHA, 'Navigation method: free or sequential', VALUE_DEFAULT, 'free'),
             'shuffleanswers' => new external_value(PARAM_INT, 'Shuffle answer options within questions (1=yes, 0=no)', VALUE_DEFAULT, 1),
 
-            // Behaviour settings
+            
             'preferredbehaviour' => new external_value(PARAM_ALPHANUMEXT, 'Question behaviour: deferredfeedback, adaptivenopenalty, adaptive, interactive, etc.', VALUE_DEFAULT, 'deferredfeedback'),
             'canredoquestions' => new external_value(PARAM_INT, 'Allow redo of individual questions (1=yes, 0=no)', VALUE_DEFAULT, 0),
 
-            // Attempt settings
+            
             'attempts' => new external_value(PARAM_INT, 'Number of allowed attempts (0 = unlimited)', VALUE_DEFAULT, 0),
             'attemptonlast' => new external_value(PARAM_INT, 'Each attempt builds on last (1=yes, 0=no)', VALUE_DEFAULT, 0),
 
-            // Review options - bitmask values for when to show each element
-            // Bits: during=0x10000, immediately after=0x01000, later while open=0x00100, after close=0x00010
+            
+            
             'reviewattempt' => new external_value(PARAM_INT, 'Review attempt options bitmask', VALUE_DEFAULT, 69904),
             'reviewcorrectness' => new external_value(PARAM_INT, 'Review correctness options bitmask', VALUE_DEFAULT, 69904),
             'reviewmarks' => new external_value(PARAM_INT, 'Review marks options bitmask', VALUE_DEFAULT, 69904),
@@ -54,25 +54,25 @@ class create_quiz extends external_api {
             'reviewoverallfeedback' => new external_value(PARAM_INT, 'Review overall feedback options bitmask', VALUE_DEFAULT, 4368),
             'reviewmaxmarks' => new external_value(PARAM_INT, 'Review max marks options bitmask', VALUE_DEFAULT, 69904),
 
-            // Security settings
+            
             'password' => new external_value(PARAM_RAW, 'Password to access the quiz', VALUE_DEFAULT, ''),
             'subnet' => new external_value(PARAM_RAW, 'IP addresses allowed to access (comma-separated)', VALUE_DEFAULT, ''),
             'browsersecurity' => new external_value(PARAM_ALPHANUMEXT, 'Browser security: - (none) or securewindow', VALUE_DEFAULT, '-'),
             'delay1' => new external_value(PARAM_INT, 'Delay between 1st and 2nd attempt in seconds', VALUE_DEFAULT, 0),
             'delay2' => new external_value(PARAM_INT, 'Delay between subsequent attempts in seconds', VALUE_DEFAULT, 0),
 
-            // Display settings
+            
             'showuserpicture' => new external_value(PARAM_INT, 'Show user picture (0=no, 1=small, 2=large)', VALUE_DEFAULT, 0),
             'showblocks' => new external_value(PARAM_INT, 'Show blocks during quiz attempts (1=yes, 0=no)', VALUE_DEFAULT, 0),
 
-            // Completion settings
+            
             'completionattemptsexhausted' => new external_value(PARAM_INT, 'Complete when attempts exhausted (1=yes, 0=no)', VALUE_DEFAULT, 0),
             'completionminattempts' => new external_value(PARAM_INT, 'Minimum number of attempts required for completion', VALUE_DEFAULT, 0),
 
-            // Visibility
+            
             'visible' => new external_value(PARAM_INT, 'Module visibility (1=visible, 0=hidden)', VALUE_DEFAULT, 1),
 
-            // Mobile
+            
             'allowofflineattempts' => new external_value(PARAM_INT, 'Allow offline attempts in mobile app (1=yes, 0=no)', VALUE_DEFAULT, 0),
         ]);
     }
@@ -168,7 +168,7 @@ class create_quiz extends external_api {
             'allowofflineattempts' => $allowofflineattempts,
         ]);
 
-        // Validate course exists.
+        
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
         $context = \context_course::instance($course->id);
 
@@ -176,35 +176,35 @@ class create_quiz extends external_api {
         require_capability('local/activity_utils:createquiz', $context);
         require_capability('mod/quiz:addinstance', $context);
 
-        // Validate overduehandling value.
+        
         $validoverduehandling = ['autosubmit', 'graceperiod', 'autoabandon'];
         if (!in_array($params['overduehandling'], $validoverduehandling)) {
             $params['overduehandling'] = 'autosubmit';
         }
 
-        // Validate navmethod value.
+        
         $validnavmethods = ['free', 'sequential'];
         if (!in_array($params['navmethod'], $validnavmethods)) {
             $params['navmethod'] = 'free';
         }
 
-        // Validate grademethod (1-4).
+        
         if ($params['grademethod'] < 1 || $params['grademethod'] > 4) {
             $params['grademethod'] = 1;
         }
 
-        // Validate decimalpoints (0-5).
+        
         if ($params['decimalpoints'] < 0 || $params['decimalpoints'] > 5) {
             $params['decimalpoints'] = 2;
         }
 
-        // Validate browsersecurity.
+        
         $validbrowsersecurity = ['-', 'securewindow'];
         if (!in_array($params['browsersecurity'], $validbrowsersecurity)) {
             $params['browsersecurity'] = '-';
         }
 
-        // Create quiz object.
+        
         $quiz = new \stdClass();
         $quiz->course = $params['courseid'];
         $quiz->name = $params['name'];
@@ -248,10 +248,10 @@ class create_quiz extends external_api {
         $quiz->completionminattempts = $params['completionminattempts'];
         $quiz->allowofflineattempts = $params['allowofflineattempts'];
 
-        // Insert quiz record.
+        
         $quizid = $DB->insert_record('quiz', $quiz);
 
-        // Create the initial section (required for quiz structure).
+        
         $section = new \stdClass();
         $section->quizid = $quizid;
         $section->firstslot = 1;
@@ -259,10 +259,10 @@ class create_quiz extends external_api {
         $section->shufflequestions = 0;
         $DB->insert_record('quiz_sections', $section);
 
-        // Get module ID.
+        
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'quiz'], MUST_EXIST);
 
-        // Create course_modules record.
+        
         $cm = new \stdClass();
         $cm->course = $params['courseid'];
         $cm->module = $moduleid;
@@ -290,13 +290,13 @@ class create_quiz extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence.
+        
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
-        // Rebuild course cache.
+        
         rebuild_course_cache($params['courseid'], true);
 
-        // Create grade item for the quiz.
+        
         $gradeitem = [
             'itemname' => $params['name'],
             'gradetype' => GRADE_TYPE_VALUE,

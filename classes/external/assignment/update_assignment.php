@@ -6,13 +6,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-/**
- * External function for updating an existing assignment.
- *
- * @package    local_activity_utils
- * @copyright  2024 Activity Utils
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+
 class update_assignment extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -61,7 +55,7 @@ class update_assignment extends external_api {
             'visible' => $visible,
         ]);
 
-        // Get the assignment record.
+        
         $assign = $DB->get_record('assign', ['id' => $params['assignmentid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('assign', $assign->id, 0, false, MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -71,7 +65,7 @@ class update_assignment extends external_api {
         require_capability('local/activity_utils:updateassignment', $context);
         require_capability('mod/assign:addinstance', $context);
 
-        // Update assignment fields if provided.
+        
         $updated = false;
 
         if ($params['name'] !== null) {
@@ -108,7 +102,7 @@ class update_assignment extends external_api {
             $DB->update_record('assign', $assign);
         }
 
-        // Update course module fields if provided.
+        
         if ($params['idnumber'] !== null || $params['visible'] !== null) {
             if ($params['idnumber'] !== null) {
                 $cm->idnumber = $params['idnumber'];
@@ -120,7 +114,7 @@ class update_assignment extends external_api {
             $DB->update_record('course_modules', $cm);
         }
 
-        // Update grade item if grademax changed.
+        
         if ($params['grademax'] !== null || $params['name'] !== null) {
             grade_update('mod/assign', $course->id, 'mod', 'assign', $assign->id, 0, null, [
                 'itemname' => $assign->name,

@@ -7,9 +7,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-/**
- * Create an essay question.
- */
+
 class create_essay_question extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -81,13 +79,13 @@ class create_essay_question extends external_api {
             'tags' => $tags,
         ]);
 
-        // Decode JSON tags array.
+        
         $tagsarray = json_decode($params['tags'], true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $tagsarray = [];
         }
 
-        // Validate category exists.
+        
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
 
@@ -95,13 +93,13 @@ class create_essay_question extends external_api {
         require_capability('local/activity_utils:createquestion', $context);
         require_capability('moodle/question:add', $context);
 
-        // Validate responseformat.
+        
         $validformats = ['editor', 'editorfilepicker', 'plain', 'monospaced', 'noinline'];
         if (!in_array($params['responseformat'], $validformats)) {
             $params['responseformat'] = 'editor';
         }
 
-        // Create the question record.
+        
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -122,7 +120,7 @@ class create_essay_question extends external_api {
 
         $questionid = $DB->insert_record('question', $question);
 
-        // Create question_bank_entries record.
+        
         $qbe = new \stdClass();
         $qbe->questioncategoryid = $params['categoryid'];
         $qbe->idnumber = !empty($params['idnumber']) ? $params['idnumber'] : null;
@@ -130,7 +128,7 @@ class create_essay_question extends external_api {
 
         $qbeid = $DB->insert_record('question_bank_entries', $qbe);
 
-        // Create question_versions record.
+        
         $qv = new \stdClass();
         $qv->questionbankentryid = $qbeid;
         $qv->questionid = $questionid;
@@ -139,7 +137,7 @@ class create_essay_question extends external_api {
 
         $DB->insert_record('question_versions', $qv);
 
-        // Create essay options.
+        
         $options = new \stdClass();
         $options->questionid = $questionid;
         $options->responseformat = $params['responseformat'];
@@ -158,7 +156,7 @@ class create_essay_question extends external_api {
 
         $DB->insert_record('qtype_essay_options', $options);
 
-        // Add tags if provided.
+        
         if (!empty($tagsarray)) {
             \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }
