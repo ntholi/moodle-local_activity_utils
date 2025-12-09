@@ -65,7 +65,6 @@ class update_quiz_slot extends external_api {
         if ($updated) {
             $DB->update_record('quiz_slots', $slotrecord);
 
-            // Update quiz sum of grades if maxmark changed
             if ($params['maxmark'] !== null) {
                 $sumgrades = $DB->get_field_sql(
                     'SELECT SUM(maxmark) FROM {quiz_slots} WHERE quizid = ?',

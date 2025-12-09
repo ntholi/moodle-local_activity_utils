@@ -38,7 +38,6 @@ class get_or_create_question_category extends external_api {
             'idnumber' => $idnumber,
         ]);
 
-        // Determine context
         if ($params['courseid'] == 0) {
             $context = \context_system::instance();
         } else {
@@ -50,14 +49,12 @@ class get_or_create_question_category extends external_api {
         require_capability('local/activity_utils:managequestioncategories', $context);
         require_capability('moodle/question:managecategory', $context);
 
-        // If parent is specified, get its context
         $parentcontextid = $context->id;
         if ($params['parent'] > 0) {
             $parentcat = $DB->get_record('question_categories', ['id' => $params['parent']], '*', MUST_EXIST);
             $parentcontextid = $parentcat->contextid;
         }
 
-        // Try to find existing category with same contextid and idnumber
         $conditions = [
             'contextid' => $parentcontextid,
             'idnumber' => $params['idnumber']
@@ -66,7 +63,6 @@ class get_or_create_question_category extends external_api {
         $existingcategory = $DB->get_record('question_categories', $conditions);
 
         if ($existingcategory) {
-            // Category exists - return it
             return [
                 'id' => $existingcategory->id,
                 'name' => $existingcategory->name,
@@ -77,7 +73,6 @@ class get_or_create_question_category extends external_api {
             ];
         }
 
-        // Category doesn't exist - create it
         $category = new \stdClass();
         $category->name = $params['name'];
         $category->contextid = $parentcontextid;

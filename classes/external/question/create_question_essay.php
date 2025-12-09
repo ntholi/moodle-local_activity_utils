@@ -58,7 +58,6 @@ class create_question_essay extends external_api {
             'graderinfo', 'responsetemplate', 'penalty', 'idnumber'
         ));
 
-        // Generate unique idnumber if not provided to avoid duplicate key constraint
         if (empty($params['idnumber'])) {
             $params['idnumber'] = 'essay_' . time() . '_' . uniqid();
         }
@@ -70,7 +69,6 @@ class create_question_essay extends external_api {
         require_capability('local/activity_utils:createquestions', $context);
         require_capability('moodle/question:add', $context);
 
-        // Create question
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -95,14 +93,12 @@ class create_question_essay extends external_api {
         $questionid = $DB->insert_record('question', $question);
         $question->id = $questionid;
 
-        // Create question bank entry (Moodle 4.0+)
         $entry = new \stdClass();
         $entry->questioncategoryid = $params['categoryid'];
         $entry->idnumber = $params['idnumber'];
         $entry->ownerid = $USER->id;
         $entryid = $DB->insert_record('question_bank_entries', $entry);
 
-        // Create question version (Moodle 4.0+)
         $version = new \stdClass();
         $version->questionbankentryid = $entryid;
         $version->questionid = $questionid;
@@ -110,7 +106,6 @@ class create_question_essay extends external_api {
         $version->status = 'ready';
         $DB->insert_record('question_versions', $version);
 
-        // Map response format to database value
         $responseformatmap = [
             'editor' => 'editor',
             'editorfilepicker' => 'editorfilepicker',
@@ -119,7 +114,6 @@ class create_question_essay extends external_api {
             'noinline' => 'noinline'
         ];
 
-        // Insert question type specific options
         $options = new \stdClass();
         $options->questionid = $questionid;
         $options->responseformat = $responseformatmap[$params['responseformat']] ?? 'editor';

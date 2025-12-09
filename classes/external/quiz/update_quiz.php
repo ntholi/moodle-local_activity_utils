@@ -137,7 +137,6 @@ class update_quiz extends external_api {
         require_capability('local/activity_utils:updatequiz', $context);
         require_capability('mod/quiz:manage', $context);
 
-        // Update quiz fields
         if ($params['name'] !== null) {
             $quiz->name = $params['name'];
         }
@@ -244,7 +243,6 @@ class update_quiz extends external_api {
         $quiz->timemodified = time();
         $DB->update_record('quiz', $quiz);
 
-        // Update course module if needed
         $cmupdated = false;
         if ($params['idnumber'] !== null && $cm->idnumber !== $params['idnumber']) {
             $cm->idnumber = $params['idnumber'];
@@ -275,7 +273,6 @@ class update_quiz extends external_api {
             $DB->update_record('course_modules', $cm);
         }
 
-        // Update grade item
         quiz_grade_item_update($quiz);
 
         if ($params['gradepass'] !== null) {

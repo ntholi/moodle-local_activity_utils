@@ -45,14 +45,12 @@ class add_question_to_quiz extends external_api {
         require_capability('local/activity_utils:managequizquestions', $context);
         require_capability('mod/quiz:manage', $context);
 
-        // Get the highest slot number currently in the quiz
         $maxslot = $DB->get_field_sql(
             'SELECT MAX(slot) FROM {quiz_slots} WHERE quizid = ?',
             [$params['quizid']]
         );
         $newslot = $maxslot ? $maxslot + 1 : 1;
 
-        // Create quiz slot
         $slot = new \stdClass();
         $slot->quizid = $params['quizid'];
         $slot->slot = $newslot;
@@ -65,7 +63,6 @@ class add_question_to_quiz extends external_api {
 
         $slotid = $DB->insert_record('quiz_slots', $slot);
 
-        // Update quiz sum of grades
         $sumgrades = $DB->get_field_sql(
             'SELECT SUM(maxmark) FROM {quiz_slots} WHERE quizid = ?',
             [$params['quizid']]
@@ -73,7 +70,6 @@ class add_question_to_quiz extends external_api {
         $quiz->sumgrades = $sumgrades;
         $DB->update_record('quiz', $quiz);
 
-        // Update grade item using the new grade_calculator class
         $quizobj = quiz_settings::create($quiz->id);
         grade_calculator::create($quizobj)->recompute_quiz_sumgrades();
 

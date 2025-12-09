@@ -37,7 +37,6 @@ class duplicate_question extends external_api {
         require_capability('local/activity_utils:createquestions', $context);
         require_capability('moodle/question:add', $context);
 
-        // Determine target category
         $targetcategoryid = $params['newcategoryid'] > 0 ? $params['newcategoryid'] : $question->category;
 
         if ($params['newcategoryid'] > 0) {
@@ -46,14 +45,11 @@ class duplicate_question extends external_api {
             require_capability('moodle/question:add', $targetcontext);
         }
 
-        // Use Moodle's question duplication function
         $newquestionid = question_make_copy($params['questionid'], $targetcategoryid);
 
-        // Update name if provided
         if (!empty($params['newname'])) {
             $DB->set_field('question', 'name', $params['newname'], ['id' => $newquestionid]);
         } else {
-            // Auto-generate name with " (copy)" suffix
             $newquestion = $DB->get_record('question', ['id' => $newquestionid]);
             if (!strpos($newquestion->name, '(copy)')) {
                 $DB->set_field('question', 'name', $newquestion->name . ' (copy)', ['id' => $newquestionid]);

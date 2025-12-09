@@ -42,7 +42,6 @@ class create_question_shortanswer extends external_api {
             'generalfeedback', 'usecase', 'answers', 'penalty', 'idnumber'
         ));
 
-        // Generate unique idnumber if not provided to avoid duplicate key constraint
         if (empty($params['idnumber'])) {
             $params['idnumber'] = 'sa_' . time() . '_' . uniqid();
         }
@@ -54,13 +53,11 @@ class create_question_shortanswer extends external_api {
         require_capability('local/activity_utils:createquestions', $context);
         require_capability('moodle/question:add', $context);
 
-        // Decode answers
         $answersdata = json_decode($params['answers'], true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersdata) || empty($answersdata)) {
             throw new \invalid_parameter_exception('Invalid answers JSON format');
         }
 
-        // Create question
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -85,14 +82,12 @@ class create_question_shortanswer extends external_api {
         $questionid = $DB->insert_record('question', $question);
         $question->id = $questionid;
 
-        // Create question bank entry (Moodle 4.0+)
         $entry = new \stdClass();
         $entry->questioncategoryid = $params['categoryid'];
         $entry->idnumber = $params['idnumber'];
         $entry->ownerid = $USER->id;
         $entryid = $DB->insert_record('question_bank_entries', $entry);
 
-        // Create question version (Moodle 4.0+)
         $version = new \stdClass();
         $version->questionbankentryid = $entryid;
         $version->questionid = $questionid;
@@ -100,14 +95,12 @@ class create_question_shortanswer extends external_api {
         $version->status = 'ready';
         $DB->insert_record('question_versions', $version);
 
-        // Insert question type specific options
         $options = new \stdClass();
         $options->questionid = $questionid;
         $options->usecase = $params['usecase'] ? 1 : 0;
 
         $DB->insert_record('qtype_shortanswer_options', $options);
 
-        // Insert answers
         foreach ($answersdata as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;

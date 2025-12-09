@@ -28,7 +28,6 @@ class get_quiz extends external_api {
         self::validate_context($context);
         require_capability('local/activity_utils:viewquiz', $context);
 
-        // Get quiz slots (questions)
         $slots = $DB->get_records('quiz_slots', ['quizid' => $params['quizid']], 'slot ASC');
         $questions = [];
         foreach ($slots as $slot) {
@@ -44,7 +43,6 @@ class get_quiz extends external_api {
             ];
         }
 
-        // Get feedback
         $feedbacks = $DB->get_records('quiz_feedback', ['quizid' => $params['quizid']], 'mingrade ASC');
         $feedbacklist = [];
         foreach ($feedbacks as $feedback) {

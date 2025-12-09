@@ -31,7 +31,6 @@ class delete_question extends external_api {
 
         $questionname = $question->name;
 
-        // Check if question is being used in any quizzes
         $usage = $DB->get_records('quiz_slots', ['questionid' => $params['questionid']]);
         if (!empty($usage)) {
             $quizcount = count($usage);
@@ -41,7 +40,6 @@ class delete_question extends external_api {
             ];
         }
 
-        // Delete question and all related data
         question_delete_question($params['questionid']);
 
         return [

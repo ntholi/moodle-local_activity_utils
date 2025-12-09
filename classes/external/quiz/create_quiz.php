@@ -176,7 +176,6 @@ class create_quiz extends external_api {
         require_capability('local/activity_utils:createquiz', $context);
         require_capability('mod/quiz:addinstance', $context);
 
-        // Create quiz record
         $quiz = new \stdClass();
         $quiz->course = $params['courseid'];
         $quiz->name = $params['name'];
@@ -221,14 +220,12 @@ class create_quiz extends external_api {
         $quiz->allowofflineattempts = 0;
         $quiz->reviewmaxmarks = 0; // Required field for quiz table
 
-        // Insert quiz record directly
         $quizid = $DB->insert_record('quiz', $quiz);
 
         if (!$quizid) {
             throw new \moodle_exception('erroraddingquiz', 'local_activity_utils');
         }
 
-        // Create course module record
         $moduleid = $DB->get_field('modules', 'id', ['name' => 'quiz'], MUST_EXIST);
 
         $cm = new \stdClass();
@@ -258,13 +255,10 @@ class create_quiz extends external_api {
 
         $cmid = $DB->insert_record('course_modules', $cm);
 
-        // Add module to section sequence, handling both regular and delegated (subsection) sections
         helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible'] ? 1 : 0);
 
-        // Rebuild course cache
         rebuild_course_cache($params['courseid'], true);
 
-        // Create grade item
         grade_update('mod/quiz', $params['courseid'], 'mod', 'quiz', $quizid, 0, null, [
             'itemname' => $params['name'],
             'gradetype' => GRADE_TYPE_VALUE,
@@ -272,7 +266,6 @@ class create_quiz extends external_api {
             'grademin' => 0
         ]);
 
-        // Update grade to pass if specified
         if ($params['gradepass'] > 0) {
             $gradeitem = \grade_item::fetch([
                 'courseid' => $params['courseid'],
@@ -286,7 +279,6 @@ class create_quiz extends external_api {
             }
         }
 
-        // Update grade category if specified
         if ($params['gradecategory'] > 0) {
             $gradeitem = \grade_item::fetch([
                 'courseid' => $params['courseid'],

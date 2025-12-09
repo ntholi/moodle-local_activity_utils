@@ -47,7 +47,6 @@ class create_question_truefalse extends external_api {
             'generalfeedback', 'correctanswer', 'feedbacktrue', 'feedbackfalse', 'penalty', 'idnumber'
         ));
 
-        // Generate unique idnumber if not provided to avoid duplicate key constraint
         if (empty($params['idnumber'])) {
             $params['idnumber'] = 'tf_' . time() . '_' . uniqid();
         }
@@ -59,7 +58,6 @@ class create_question_truefalse extends external_api {
         require_capability('local/activity_utils:createquestions', $context);
         require_capability('moodle/question:add', $context);
 
-        // Create question using proper structure for Moodle 4.0+
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -84,14 +82,12 @@ class create_question_truefalse extends external_api {
         $questionid = $DB->insert_record('question', $question);
         $question->id = $questionid;
 
-        // Create question bank entry (Moodle 4.0+)
         $entry = new \stdClass();
         $entry->questioncategoryid = $params['categoryid'];
         $entry->idnumber = $params['idnumber'];
         $entry->ownerid = $USER->id;
         $entryid = $DB->insert_record('question_bank_entries', $entry);
 
-        // Create question version (Moodle 4.0+)
         $version = new \stdClass();
         $version->questionbankentryid = $entryid;
         $version->questionid = $questionid;
@@ -99,7 +95,6 @@ class create_question_truefalse extends external_api {
         $version->status = 'ready';
         $DB->insert_record('question_versions', $version);
 
-        // Create true answer
         $trueanswer = new \stdClass();
         $trueanswer->question = $questionid;
         $trueanswer->answer = 'True';
@@ -109,7 +104,6 @@ class create_question_truefalse extends external_api {
         $trueanswer->feedbackformat = FORMAT_HTML;
         $DB->insert_record('question_answers', $trueanswer);
 
-        // Create false answer
         $falseanswer = new \stdClass();
         $falseanswer->question = $questionid;
         $falseanswer->answer = 'False';

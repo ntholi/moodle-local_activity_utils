@@ -31,23 +31,19 @@ class reorder_quiz_questions extends external_api {
         require_capability('local/activity_utils:managequizquestions', $context);
         require_capability('mod/quiz:manage', $context);
 
-        // Decode slot order
         $order = json_decode($params['slotorder'], true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($order)) {
             throw new \invalid_parameter_exception('Invalid slotorder JSON format');
         }
 
-        // Get all current slots
         $currentslots = $DB->get_records('quiz_slots', ['quizid' => $params['quizid']], '', 'slot,id,page,requireprevious,questionid,maxmark');
 
-        // Verify all slots exist
         foreach ($order as $oldslot) {
             if (!isset($currentslots[$oldslot])) {
                 throw new \invalid_parameter_exception("Slot $oldslot does not exist in quiz");
             }
         }
 
-        // Update slot numbers according to new order
         $newslot = 1;
         foreach ($order as $oldslot) {
             $slotrecord = $currentslots[$oldslot];

@@ -46,7 +46,6 @@ class create_question_numerical extends external_api {
             'generalfeedback', 'answers', 'unitpenalty', 'showunits', 'unitsleft', 'penalty', 'idnumber'
         ));
 
-        // Generate unique idnumber if not provided to avoid duplicate key constraint
         if (empty($params['idnumber'])) {
             $params['idnumber'] = 'num_' . time() . '_' . uniqid();
         }
@@ -58,13 +57,11 @@ class create_question_numerical extends external_api {
         require_capability('local/activity_utils:createquestions', $context);
         require_capability('moodle/question:add', $context);
 
-        // Decode answers
         $answersdata = json_decode($params['answers'], true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersdata) || empty($answersdata)) {
             throw new \invalid_parameter_exception('Invalid answers JSON format');
         }
 
-        // Create question
         $question = new \stdClass();
         $question->category = $params['categoryid'];
         $question->parent = 0;
@@ -89,14 +86,12 @@ class create_question_numerical extends external_api {
         $questionid = $DB->insert_record('question', $question);
         $question->id = $questionid;
 
-        // Create question bank entry (Moodle 4.0+)
         $entry = new \stdClass();
         $entry->questioncategoryid = $params['categoryid'];
         $entry->idnumber = $params['idnumber'];
         $entry->ownerid = $USER->id;
         $entryid = $DB->insert_record('question_bank_entries', $entry);
 
-        // Create question version (Moodle 4.0+)
         $version = new \stdClass();
         $version->questionbankentryid = $entryid;
         $version->questionid = $questionid;
@@ -104,7 +99,6 @@ class create_question_numerical extends external_api {
         $version->status = 'ready';
         $DB->insert_record('question_versions', $version);
 
-        // Insert question type specific options
         $options = new \stdClass();
         $options->question = $questionid;
         $options->showunits = $params['showunits'];
@@ -114,7 +108,6 @@ class create_question_numerical extends external_api {
 
         $DB->insert_record('question_numerical_options', $options);
 
-        // Insert answers
         foreach ($answersdata as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;
@@ -126,7 +119,6 @@ class create_question_numerical extends external_api {
 
             $answerid = $DB->insert_record('question_answers', $answer);
 
-            // Insert numerical answer options (tolerance)
             $numoptions = new \stdClass();
             $numoptions->answer = $answerid;
             $numoptions->tolerance = $answerdata['tolerance'] ?? 0;

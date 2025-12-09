@@ -35,10 +35,8 @@ class remove_question_from_quiz extends external_api {
 
         $slotrecord = $DB->get_record('quiz_slots', ['quizid' => $params['quizid'], 'slot' => $params['slot']], '*', MUST_EXIST);
 
-        // Delete the slot
         $DB->delete_records('quiz_slots', ['id' => $slotrecord->id]);
 
-        // Renumber remaining slots
         $slots = $DB->get_records('quiz_slots', ['quizid' => $params['quizid']], 'slot ASC');
         $newslot = 1;
         foreach ($slots as $s) {
@@ -48,7 +46,6 @@ class remove_question_from_quiz extends external_api {
             $newslot++;
         }
 
-        // Update quiz sum of grades
         $sumgrades = $DB->get_field_sql(
             'SELECT SUM(maxmark) FROM {quiz_slots} WHERE quizid = ?',
             [$params['quizid']]
@@ -56,7 +53,6 @@ class remove_question_from_quiz extends external_api {
         $quiz->sumgrades = $sumgrades ?: 0;
         $DB->update_record('quiz', $quiz);
 
-        // Update grade item using the new grade_calculator class
         $quizobj = quiz_settings::create($quiz->id);
         grade_calculator::create($quizobj)->recompute_quiz_sumgrades();
 

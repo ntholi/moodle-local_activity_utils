@@ -38,7 +38,6 @@ class add_quiz_feedback extends external_api {
         require_capability('local/activity_utils:managequizfeedback', $context);
         require_capability('mod/quiz:manage', $context);
 
-        // Convert percentages to decimal fractions
         $mingradepercent = $params['mingrade'] / 100;
         $maxgradepercent = $params['maxgrade'] / 100;
 
