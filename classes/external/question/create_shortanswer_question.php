@@ -17,24 +17,12 @@ class create_shortanswer_question extends external_api {
             'categoryid' => new external_value(PARAM_INT, 'Question category ID'),
             'name' => new external_value(PARAM_TEXT, 'Question name'),
             'questiontext' => new external_value(PARAM_RAW, 'Question text (HTML)'),
-            'answers' => new external_multiple_structure(
-                new external_single_structure([
-                    'text' => new external_value(PARAM_RAW, 'Accepted answer text'),
-                    'fraction' => new external_value(PARAM_FLOAT, 'Grade fraction (1.0 = 100%, 0.5 = 50%)', VALUE_DEFAULT, 1.0),
-                    'feedback' => new external_value(PARAM_RAW, 'Feedback for this answer', VALUE_DEFAULT, ''),
-                ]),
-                'Array of accepted answers'
-            ),
+            'answers' => new external_value(PARAM_RAW, 'JSON array of accepted answers: [{"text":"Answer","fraction":1.0,"feedback":""}]'),
             'defaultmark' => new external_value(PARAM_FLOAT, 'Default mark (points)', VALUE_DEFAULT, 1.0),
             'usecase' => new external_value(PARAM_INT, 'Case sensitive matching: 1 = yes, 0 = no', VALUE_DEFAULT, 0),
             'generalfeedback' => new external_value(PARAM_RAW, 'General feedback shown after attempt', VALUE_DEFAULT, ''),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for the question', VALUE_DEFAULT, ''),
-            'tags' => new external_multiple_structure(
-                new external_value(PARAM_TEXT, 'Tag name'),
-                'Tags for the question',
-                VALUE_DEFAULT,
-                []
-            ),
+            'tags' => new external_value(PARAM_RAW, 'JSON array of tag names: ["tag1","tag2"]', VALUE_DEFAULT, '[]'),
         ]);
     }
 
@@ -42,12 +30,12 @@ class create_shortanswer_question extends external_api {
         int $categoryid,
         string $name,
         string $questiontext,
-        array $answers,
+        string $answers,
         float $defaultmark = 1.0,
         int $usecase = 0,
         string $generalfeedback = '',
         string $idnumber = '',
-        array $tags = []
+        string $tags = '[]'
     ): array {
         global $CFG, $DB, $USER;
 
@@ -66,6 +54,23 @@ class create_shortanswer_question extends external_api {
             'tags' => $tags,
         ]);
 
+        // Decode JSON arrays.
+        $answersarray = json_decode($params['answers'], true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersarray)) {
+            return [
+                'questionid' => 0,
+                'questionbankentryid' => 0,
+                'name' => '',
+                'success' => false,
+                'message' => 'Invalid answers format. Expected JSON array.',
+            ];
+        }
+
+        $tagsarray = json_decode($params['tags'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $tagsarray = [];
+        }
+
         // Validate category exists.
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
@@ -75,7 +80,7 @@ class create_shortanswer_question extends external_api {
         require_capability('moodle/question:add', $context);
 
         // Validate answers.
-        if (empty($params['answers'])) {
+        if (empty($answersarray)) {
             return [
                 'questionid' => 0,
                 'questionbankentryid' => 0,
@@ -131,7 +136,7 @@ class create_shortanswer_question extends external_api {
         $DB->insert_record('qtype_shortanswer_options', $options);
 
         // Create answers.
-        foreach ($params['answers'] as $answerdata) {
+        foreach ($answersarray as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;
             $answer->answer = $answerdata['text'];
@@ -144,8 +149,8 @@ class create_shortanswer_question extends external_api {
         }
 
         // Add tags if provided.
-        if (!empty($params['tags'])) {
-            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $params['tags']);
+        if (!empty($tagsarray)) {
+            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }
 
         return [

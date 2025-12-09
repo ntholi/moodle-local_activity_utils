@@ -17,14 +17,7 @@ class create_multichoice_question extends external_api {
             'categoryid' => new external_value(PARAM_INT, 'Question category ID'),
             'name' => new external_value(PARAM_TEXT, 'Question name'),
             'questiontext' => new external_value(PARAM_RAW, 'Question text (HTML)'),
-            'answers' => new external_multiple_structure(
-                new external_single_structure([
-                    'text' => new external_value(PARAM_RAW, 'Answer text (HTML)'),
-                    'fraction' => new external_value(PARAM_FLOAT, 'Grade fraction (1.0 = 100%, 0.5 = 50%, 0 = 0%, negative for penalties)'),
-                    'feedback' => new external_value(PARAM_RAW, 'Feedback for this answer', VALUE_DEFAULT, ''),
-                ]),
-                'Array of answer options'
-            ),
+            'answers' => new external_value(PARAM_RAW, 'JSON array of answer options: [{"text":"Answer text","fraction":1.0,"feedback":""}]'),
             'defaultmark' => new external_value(PARAM_FLOAT, 'Default mark (points)', VALUE_DEFAULT, 1.0),
             'single' => new external_value(PARAM_INT, '1 = single answer (radio), 0 = multiple answers (checkboxes)', VALUE_DEFAULT, 1),
             'shuffleanswers' => new external_value(PARAM_INT, 'Shuffle answer order (1=yes, 0=no)', VALUE_DEFAULT, 1),
@@ -34,12 +27,7 @@ class create_multichoice_question extends external_api {
             'incorrectfeedback' => new external_value(PARAM_RAW, 'Feedback for incorrect answer', VALUE_DEFAULT, ''),
             'generalfeedback' => new external_value(PARAM_RAW, 'General feedback shown after attempt', VALUE_DEFAULT, ''),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for the question', VALUE_DEFAULT, ''),
-            'tags' => new external_multiple_structure(
-                new external_value(PARAM_TEXT, 'Tag name'),
-                'Tags for the question',
-                VALUE_DEFAULT,
-                []
-            ),
+            'tags' => new external_value(PARAM_RAW, 'JSON array of tag names: ["tag1","tag2"]', VALUE_DEFAULT, '[]'),
         ]);
     }
 
@@ -47,7 +35,7 @@ class create_multichoice_question extends external_api {
         int $categoryid,
         string $name,
         string $questiontext,
-        array $answers,
+        string $answers,
         float $defaultmark = 1.0,
         int $single = 1,
         int $shuffleanswers = 1,
@@ -57,7 +45,7 @@ class create_multichoice_question extends external_api {
         string $incorrectfeedback = '',
         string $generalfeedback = '',
         string $idnumber = '',
-        array $tags = []
+        string $tags = '[]'
     ): array {
         global $CFG, $DB, $USER;
 
@@ -82,6 +70,23 @@ class create_multichoice_question extends external_api {
             'tags' => $tags,
         ]);
 
+        // Decode JSON arrays.
+        $answersarray = json_decode($params['answers'], true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersarray)) {
+            return [
+                'questionid' => 0,
+                'questionbankentryid' => 0,
+                'name' => '',
+                'success' => false,
+                'message' => 'Invalid answers format. Expected JSON array.',
+            ];
+        }
+
+        $tagsarray = json_decode($params['tags'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $tagsarray = [];
+        }
+
         // Validate category exists.
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
@@ -91,7 +96,7 @@ class create_multichoice_question extends external_api {
         require_capability('moodle/question:add', $context);
 
         // Validate answers.
-        if (empty($params['answers']) || count($params['answers']) < 2) {
+        if (empty($answersarray) || count($answersarray) < 2) {
             return [
                 'questionid' => 0,
                 'questionbankentryid' => 0,
@@ -163,7 +168,7 @@ class create_multichoice_question extends external_api {
         $DB->insert_record('qtype_multichoice_options', $options);
 
         // Create answers.
-        foreach ($params['answers'] as $answerdata) {
+        foreach ($answersarray as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;
             $answer->answer = $answerdata['text'];
@@ -176,8 +181,8 @@ class create_multichoice_question extends external_api {
         }
 
         // Add tags if provided.
-        if (!empty($params['tags'])) {
-            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $params['tags']);
+        if (!empty($tagsarray)) {
+            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }
 
         return [

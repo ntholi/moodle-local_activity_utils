@@ -17,37 +17,16 @@ class create_numerical_question extends external_api {
             'categoryid' => new external_value(PARAM_INT, 'Question category ID'),
             'name' => new external_value(PARAM_TEXT, 'Question name'),
             'questiontext' => new external_value(PARAM_RAW, 'Question text (HTML)'),
-            'answers' => new external_multiple_structure(
-                new external_single_structure([
-                    'answer' => new external_value(PARAM_RAW, 'Numerical answer value'),
-                    'tolerance' => new external_value(PARAM_FLOAT, 'Tolerance (error margin)', VALUE_DEFAULT, 0),
-                    'fraction' => new external_value(PARAM_FLOAT, 'Grade fraction (1.0 = 100%)', VALUE_DEFAULT, 1.0),
-                    'feedback' => new external_value(PARAM_RAW, 'Feedback for this answer', VALUE_DEFAULT, ''),
-                ]),
-                'Array of accepted numerical answers'
-            ),
+            'answers' => new external_value(PARAM_RAW, 'JSON array of numerical answers: [{"answer":"42","tolerance":0,"fraction":1.0,"feedback":""}]'),
             'defaultmark' => new external_value(PARAM_FLOAT, 'Default mark (points)', VALUE_DEFAULT, 1.0),
             'unitgradingtype' => new external_value(PARAM_INT, 'Unit grading: 0 = not graded, 1 = fraction of response grade, 2 = fraction of total grade', VALUE_DEFAULT, 0),
             'unitpenalty' => new external_value(PARAM_FLOAT, 'Penalty for wrong unit (0-1)', VALUE_DEFAULT, 0.1),
             'showunits' => new external_value(PARAM_INT, 'Show units: 0 = text input, 1 = multichoice, 2 = dropdown, 3 = not visible', VALUE_DEFAULT, 3),
             'unitsleft' => new external_value(PARAM_INT, 'Units position: 0 = right, 1 = left', VALUE_DEFAULT, 0),
-            'units' => new external_multiple_structure(
-                new external_single_structure([
-                    'unit' => new external_value(PARAM_RAW, 'Unit name (e.g., "m", "kg")'),
-                    'multiplier' => new external_value(PARAM_FLOAT, 'Multiplier for this unit', VALUE_DEFAULT, 1.0),
-                ]),
-                'Array of units',
-                VALUE_DEFAULT,
-                []
-            ),
+            'units' => new external_value(PARAM_RAW, 'JSON array of units: [{"unit":"m","multiplier":1.0}]', VALUE_DEFAULT, '[]'),
             'generalfeedback' => new external_value(PARAM_RAW, 'General feedback shown after attempt', VALUE_DEFAULT, ''),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for the question', VALUE_DEFAULT, ''),
-            'tags' => new external_multiple_structure(
-                new external_value(PARAM_TEXT, 'Tag name'),
-                'Tags for the question',
-                VALUE_DEFAULT,
-                []
-            ),
+            'tags' => new external_value(PARAM_RAW, 'JSON array of tag names: ["tag1","tag2"]', VALUE_DEFAULT, '[]'),
         ]);
     }
 
@@ -55,16 +34,16 @@ class create_numerical_question extends external_api {
         int $categoryid,
         string $name,
         string $questiontext,
-        array $answers,
+        string $answers,
         float $defaultmark = 1.0,
         int $unitgradingtype = 0,
         float $unitpenalty = 0.1,
         int $showunits = 3,
         int $unitsleft = 0,
-        array $units = [],
+        string $units = '[]',
         string $generalfeedback = '',
         string $idnumber = '',
-        array $tags = []
+        string $tags = '[]'
     ): array {
         global $CFG, $DB, $USER;
 
@@ -87,6 +66,28 @@ class create_numerical_question extends external_api {
             'tags' => $tags,
         ]);
 
+        // Decode JSON arrays.
+        $answersarray = json_decode($params['answers'], true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($answersarray)) {
+            return [
+                'questionid' => 0,
+                'questionbankentryid' => 0,
+                'name' => '',
+                'success' => false,
+                'message' => 'Invalid answers format. Expected JSON array.',
+            ];
+        }
+
+        $unitsarray = json_decode($params['units'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $unitsarray = [];
+        }
+
+        $tagsarray = json_decode($params['tags'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $tagsarray = [];
+        }
+
         // Validate category exists.
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
         $context = \context::instance_by_id($category->contextid);
@@ -96,7 +97,7 @@ class create_numerical_question extends external_api {
         require_capability('moodle/question:add', $context);
 
         // Validate answers.
-        if (empty($params['answers'])) {
+        if (empty($answersarray)) {
             return [
                 'questionid' => 0,
                 'questionbankentryid' => 0,
@@ -155,7 +156,7 @@ class create_numerical_question extends external_api {
         $DB->insert_record('question_numerical_options', $options);
 
         // Create answers and numerical records.
-        foreach ($params['answers'] as $answerdata) {
+        foreach ($answersarray as $answerdata) {
             $answer = new \stdClass();
             $answer->question = $questionid;
             $answer->answer = $answerdata['answer'];
@@ -176,7 +177,7 @@ class create_numerical_question extends external_api {
         }
 
         // Create units if provided.
-        foreach ($params['units'] as $unitdata) {
+        foreach ($unitsarray as $unitdata) {
             $unit = new \stdClass();
             $unit->question = $questionid;
             $unit->unit = $unitdata['unit'];
@@ -186,8 +187,8 @@ class create_numerical_question extends external_api {
         }
 
         // Add tags if provided.
-        if (!empty($params['tags'])) {
-            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $params['tags']);
+        if (!empty($tagsarray)) {
+            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }
 
         return [

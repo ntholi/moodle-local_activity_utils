@@ -31,12 +31,7 @@ class create_essay_question extends external_api {
             'responsetemplate' => new external_value(PARAM_RAW, 'Response template (HTML)', VALUE_DEFAULT, ''),
             'generalfeedback' => new external_value(PARAM_RAW, 'General feedback shown after attempt', VALUE_DEFAULT, ''),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for the question', VALUE_DEFAULT, ''),
-            'tags' => new external_multiple_structure(
-                new external_value(PARAM_TEXT, 'Tag name'),
-                'Tags for the question',
-                VALUE_DEFAULT,
-                []
-            ),
+            'tags' => new external_value(PARAM_RAW, 'JSON array of tag names: ["tag1","tag2"]', VALUE_DEFAULT, '[]'),
         ]);
     }
 
@@ -58,7 +53,7 @@ class create_essay_question extends external_api {
         string $responsetemplate = '',
         string $generalfeedback = '',
         string $idnumber = '',
-        array $tags = []
+        string $tags = '[]'
     ): array {
         global $CFG, $DB, $USER;
 
@@ -85,6 +80,12 @@ class create_essay_question extends external_api {
             'idnumber' => $idnumber,
             'tags' => $tags,
         ]);
+
+        // Decode JSON tags array.
+        $tagsarray = json_decode($params['tags'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $tagsarray = [];
+        }
 
         // Validate category exists.
         $category = $DB->get_record('question_categories', ['id' => $params['categoryid']], '*', MUST_EXIST);
@@ -158,8 +159,8 @@ class create_essay_question extends external_api {
         $DB->insert_record('qtype_essay_options', $options);
 
         // Add tags if provided.
-        if (!empty($params['tags'])) {
-            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $params['tags']);
+        if (!empty($tagsarray)) {
+            \core_tag_tag::set_item_tags('core_question', 'question', $questionid, $context, $tagsarray);
         }
 
         return [
