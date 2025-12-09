@@ -172,6 +172,7 @@ class add_question_to_quiz extends external_api {
             'other' => [
                 'quizid' => $params['quizid'],
                 'slotnumber' => $newslot,
+                'page' => $page,
             ],
         ]);
         $event->trigger();

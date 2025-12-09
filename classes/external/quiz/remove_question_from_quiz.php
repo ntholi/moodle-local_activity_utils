@@ -139,6 +139,7 @@ class remove_question_from_quiz extends external_api {
             'other' => [
                 'quizid' => $params['quizid'],
                 'slotnumber' => $params['slot'],
+                'page' => (int)$slotrecord->page,
             ],
         ]);
         $event->trigger();

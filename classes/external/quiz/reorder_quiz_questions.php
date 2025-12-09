@@ -132,6 +132,7 @@ class reorder_quiz_questions extends external_api {
 
             // Trigger the slot_moved event for each moved slot.
             foreach ($params['slots'] as $slotdata) {
+                $newpage = $slotdata['page'] ?? $existingslotids[$slotdata['slotid']]->page;
                 $event = \mod_quiz\event\slot_moved::create([
                     'context' => $context,
                     'objectid' => $slotdata['slotid'],
@@ -139,6 +140,7 @@ class reorder_quiz_questions extends external_api {
                         'quizid' => $params['quizid'],
                         'previousslot' => $existingslotids[$slotdata['slotid']]->slot,
                         'afterslot' => $slotdata['newslot'] > 1 ? $slotdata['newslot'] - 1 : 0,
+                        'page' => (int)$newpage,
                     ],
                 ]);
                 $event->trigger();
