@@ -40,6 +40,8 @@ POST https://yourmoodle.com/webservice/rest/server.php
 | `wsfunction` | Function name |
 | `moodlewsrestformat` | `json` |
 
+**Important:** Boolean parameters must be passed as integers (`0` = false, `1` = true) when calling via REST API, not JSON booleans.
+
 ---
 
 ## Sections
@@ -501,11 +503,11 @@ Create a quiz with comprehensive settings for timing, grading, display, and secu
 | **Layout** |
 | `questionsperpage` | int | No | Questions per page (0=all, default: 1) |
 | `navmethod` | string | No | free or seq |
-| `shuffleanswers` | bool | No | Shuffle within questions |
+| `shuffleanswers` | int | No | Shuffle within questions (0/1) |
 | `preferredbehaviour` | string | No | Question behaviour (default: deferredfeedback) |
 | **Attempts** |
 | `attempts` | int | No | Allowed attempts (0=unlimited) |
-| `attemptonlast` | bool | No | Each attempt builds on last |
+| `attemptonlast` | int | No | Each attempt builds on last (0/1) |
 | **Review Options** |
 | `reviewattempt` | int | No | Review attempt bitmask |
 | `reviewcorrectness` | int | No | Review correctness bitmask |
@@ -516,7 +518,7 @@ Create a quiz with comprehensive settings for timing, grading, display, and secu
 | `reviewoverallfeedback` | int | No | Review overall feedback bitmask |
 | **Display** |
 | `showuserpicture` | int | No | 0=no, 1=small, 2=large |
-| `showblocks` | bool | No | Show blocks during attempts |
+| `showblocks` | int | No | Show blocks during attempts (0/1) |
 | `decimalpoints` | int | No | Decimal places in grades |
 | **Security** |
 | `password` | string | No | Quiz password |
@@ -525,11 +527,11 @@ Create a quiz with comprehensive settings for timing, grading, display, and secu
 | `delay2` | int | No | Delay between later attempts (sec) |
 | `browsersecurity` | string | No | -, securewindow, safebrowser |
 | **Extra** |
-| `canredoquestions` | bool | No | Allow redo within attempt |
-| `completionattemptsexhausted` | bool | No | Require all attempts completed |
+| `canredoquestions` | int | No | Allow redo within attempt (0/1) |
+| `completionattemptsexhausted` | int | No | Require all attempts completed (0/1) |
 | `completionminattempts` | int | No | Minimum attempts required |
-| `completionpass` | bool | No | Require passing grade |
-| `visible` | bool | No | Visible on course page |
+| `completionpass` | int | No | Require passing grade (0/1) |
+| `visible` | int | No | Visible on course page (0/1) |
 | `availability` | string | No | Availability JSON |
 
 **Question Behaviours:** `deferredfeedback`, `adaptive`, `adaptivenopenalty`, `immediatefeedback`, `immediateadaptive`, `interactive`, `interactivecountback`
@@ -624,7 +626,7 @@ Update individual question slot settings.
 | `slotid` | int | Yes |
 | `maxmark` | float | No |
 | `page` | int | No |
-| `requireprevious` | bool | No |
+| `requireprevious` | int | No (0/1) |
 
 ### Add Quiz Feedback
 `local_activity_utils_add_quiz_feedback`
@@ -691,13 +693,13 @@ Create questions in question banks for use in quizzes.
 | `questiontextformat` | int | No | Text format (default: HTML) |
 | `defaultmark` | float | No | Default mark (default: 1.0) |
 | `generalfeedback` | string | No | General feedback |
-| `single` | bool | No | Single answer (true) or multiple (false) |
-| `shuffleanswers` | bool | No | Shuffle answers |
+| `single` | int | No | Single answer (1) or multiple (0) |
+| `shuffleanswers` | int | No | Shuffle answers (0/1) |
 | `answernumbering` | string | No | abc, ABCD, 123, iii, IIII, none |
 | `correctfeedback` | string | No | Feedback for correct response |
 | `partiallycorrectfeedback` | string | No | Feedback for partial |
 | `incorrectfeedback` | string | No | Feedback for incorrect |
-| `shownumcorrect` | bool | No | Show number correct |
+| `shownumcorrect` | int | No | Show number correct (0/1) |
 | `answers` | string | Yes | JSON array of answer objects |
 | `penalty` | float | No | Penalty factor (0-1) |
 | `idnumber` | string | No | ID number |
@@ -708,12 +710,12 @@ Create questions in question banks for use in quizzes.
 ### Create True/False Question
 `local_activity_utils_create_question_truefalse`
 
-Parameters: `categoryid`, `name`, `questiontext`, `correctanswer` (true/false), `truefeedback`, `falsefeedback`, plus standard question fields
+Parameters: `categoryid`, `name`, `questiontext`, `correctanswer` (0=false/1=true), `truefeedback`, `falsefeedback`, plus standard question fields
 
 ### Create Short Answer Question
 `local_activity_utils_create_question_shortanswer`
 
-Parameters: `categoryid`, `name`, `questiontext`, `usecase` (case sensitive), `answers` (JSON array), plus standard question fields
+Parameters: `categoryid`, `name`, `questiontext`, `usecase` (case sensitive 0/1), `answers` (JSON array), plus standard question fields
 
 ### Create Essay Question
 `local_activity_utils_create_question_essay`
@@ -723,7 +725,7 @@ Parameters: `categoryid`, `name`, `questiontext`, `responseformat` (editor, edit
 ### Create Matching Question
 `local_activity_utils_create_question_matching`
 
-Parameters: `categoryid`, `name`, `questiontext`, `shuffleanswers`, `subquestions` (JSON array with question and answer pairs), plus standard question fields
+Parameters: `categoryid`, `name`, `questiontext`, `shuffleanswers` (0/1), `subquestions` (JSON array with question and answer pairs), plus standard question fields
 
 **Subquestion:** `{"questiontext": "Question", "answertext": "Answer"}`
 
