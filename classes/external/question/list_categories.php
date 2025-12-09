@@ -6,9 +6,13 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
+use core_question\local\bank\question_bank_helper;
 
 /**
  * List all question categories in a course.
+ *
+ * In Moodle 5+, question categories use module context from mod_qbank,
+ * not course context. This function queries the system question bank.
  */
 class list_categories extends external_api {
 
@@ -27,13 +31,27 @@ class list_categories extends external_api {
 
         // Validate course exists.
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
-        $context = \context_course::instance($course->id);
+        $coursecontext = \context_course::instance($course->id);
 
-        self::validate_context($context);
-        require_capability('local/activity_utils:managequestioncategory', $context);
-        require_capability('moodle/question:managecategory', $context);
+        self::validate_context($coursecontext);
+        require_capability('local/activity_utils:managequestioncategory', $coursecontext);
+        require_capability('moodle/question:managecategory', $coursecontext);
 
-        // Get all categories for this course context.
+        // In Moodle 5+, get the system question bank for this course.
+        $qbank = question_bank_helper::get_default_open_instance_system_type($course, false);
+        if (!$qbank) {
+            // No question bank exists yet for this course.
+            return [
+                'categories' => [],
+                'success' => true,
+                'message' => 'No question bank found for course. Create a category first.',
+            ];
+        }
+
+        // Get the module context from the question bank.
+        $context = \context_module::instance($qbank->id);
+
+        // Get all categories for this question bank context.
         $categories = $DB->get_records('question_categories', [
             'contextid' => $context->id,
         ], 'parent ASC, sortorder ASC, name ASC');

@@ -2,7 +2,9 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 4.1 | **Requirements:** Moodle 4.5+ | **Developed for:** Limkokwing University
+**Version:** 5.0 | **Requirements:** Moodle 5.0+ | **Developed for:** Limkokwing University
+
+> **Important Moodle 5.0 Change:** Question categories are now created in the course's system question bank (`mod_qbank`) using module context, not course context. This is handled automatically by the plugin.
 
 ## Features
 
