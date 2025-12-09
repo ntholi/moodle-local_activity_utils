@@ -36,21 +36,6 @@ $string['activity_utils:createurl'] = 'Create URL resources via API';
 $string['activity_utils:updateurl'] = 'Update URL resources via API';
 $string['activity_utils:deleteurl'] = 'Delete URL resources via API';
 
-// Quiz capabilities
-$string['activity_utils:createquiz'] = 'Create quizzes via API';
-$string['activity_utils:updatequiz'] = 'Update quizzes via API';
-$string['activity_utils:deletequiz'] = 'Delete quizzes via API';
-$string['activity_utils:viewquiz'] = 'View quiz details via API';
-$string['activity_utils:managequizquestions'] = 'Manage quiz questions via API';
-$string['activity_utils:managequizfeedback'] = 'Manage quiz feedback via API';
-$string['activity_utils:managequizattempts'] = 'Manage quiz attempts via API';
-
-// Question capabilities
-$string['activity_utils:managequestioncategories'] = 'Manage question categories via API';
-$string['activity_utils:createquestions'] = 'Create questions via API';
-$string['activity_utils:deletequestions'] = 'Delete questions via API';
-
 $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
 $string['subsectionmodulenotfound'] = 'Subsection module not found. This feature requires Moodle 4.0 or later with subsection support.';
-$string['erroraddingquiz'] = 'Failed to create quiz instance. Please check the quiz settings and try again.';
