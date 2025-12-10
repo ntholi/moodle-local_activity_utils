@@ -622,11 +622,19 @@ Updates an existing quiz. All parameters except `quizid` are optional - only pro
 
 `local_activity_utils_get_quiz`
 
-Retrieves complete quiz details including all questions, sections, and settings.
+Retrieves complete quiz details including all questions, sections, settings, answers, and question-type-specific options.
 
 | Parameter | Type | Required |
 | --------- | ---- | -------- |
 | `quizid`  | int  | Yes      |
+
+**Important:** Each question now includes:
+- `answers[]` - Array of all possible answers with their text, fraction (score), and feedback
+  - `fraction`: 1.0 = correct answer, 0.0 = incorrect, values between for partial credit
+- `options` - Question-type-specific settings:
+  - **shortanswer**: `usecase` (case sensitivity)
+  - **truefalse**: `trueanswer`, `falseanswer` (answer IDs)
+  - **multichoice**: `single`, `shuffleanswers`, `answernumbering`, feedback fields
 
 **Response:**
 
@@ -668,7 +676,33 @@ Retrieves complete quiz details including all questions, sections, and settings.
       "questiontext": "<p>What is 2+2?</p>",
       "defaultmark": 10.0,
       "version": 1,
-      "status": "ready"
+      "status": "ready",
+      "answers": [
+        {
+          "id": 101,
+          "answer": "3",
+          "answerformat": 1,
+          "fraction": 0.0,
+          "feedback": "Incorrect",
+          "feedbackformat": 1
+        },
+        {
+          "id": 102,
+          "answer": "4",
+          "answerformat": 1,
+          "fraction": 1.0,
+          "feedback": "Correct!",
+          "feedbackformat": 1
+        }
+      ],
+      "options": {
+        "single": 1,
+        "shuffleanswers": 1,
+        "answernumbering": "abc",
+        "correctfeedback": "Well done!",
+        "partiallycorrectfeedback": "Partially correct",
+        "incorrectfeedback": "Try again"
+      }
     }
   ],
   "success": true,

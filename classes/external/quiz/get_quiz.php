@@ -77,6 +77,54 @@ class get_quiz extends external_api {
 
         $questionsarray = [];
         foreach ($slots as $slot) {
+            $questionid = (int)$slot->questionid;
+
+            $answers = $DB->get_records('question_answers', ['question' => $questionid], 'id ASC');
+            $answersarray = [];
+            foreach ($answers as $answer) {
+                $answersarray[] = [
+                    'id' => (int)$answer->id,
+                    'answer' => $answer->answer ?? '',
+                    'answerformat' => (int)$answer->answerformat,
+                    'fraction' => (float)$answer->fraction,
+                    'feedback' => $answer->feedback ?? '',
+                    'feedbackformat' => (int)$answer->feedbackformat,
+                ];
+            }
+
+            $options = null;
+            if ($slot->qtype === 'shortanswer') {
+                $saopt = $DB->get_record('qtype_shortanswer_options', ['questionid' => $questionid]);
+                if ($saopt) {
+                    $options = [
+                        'usecase' => (int)$saopt->usecase,
+                    ];
+                }
+            } else if ($slot->qtype === 'truefalse') {
+                $tfopt = $DB->get_record('question_truefalse', ['question' => $questionid]);
+                if ($tfopt) {
+                    $options = [
+                        'trueanswer' => (int)$tfopt->trueanswer,
+                        'falseanswer' => (int)$tfopt->falseanswer,
+                    ];
+                }
+            } else if ($slot->qtype === 'multichoice') {
+                $mcopt = $DB->get_record('qtype_multichoice_options', ['questionid' => $questionid]);
+                if ($mcopt) {
+                    $options = [
+                        'single' => (int)$mcopt->single,
+                        'shuffleanswers' => (int)$mcopt->shuffleanswers,
+                        'answernumbering' => $mcopt->answernumbering ?? 'abc',
+                        'correctfeedback' => $mcopt->correctfeedback ?? '',
+                        'correctfeedbackformat' => (int)$mcopt->correctfeedbackformat,
+                        'partiallycorrectfeedback' => $mcopt->partiallycorrectfeedback ?? '',
+                        'partiallycorrectfeedbackformat' => (int)$mcopt->partiallycorrectfeedbackformat,
+                        'incorrectfeedback' => $mcopt->incorrectfeedback ?? '',
+                        'incorrectfeedbackformat' => (int)$mcopt->incorrectfeedbackformat,
+                    ];
+                }
+            }
+
             $questionsarray[] = [
                 'slotid' => (int)$slot->slotid,
                 'slot' => (int)$slot->slot,
@@ -85,7 +133,7 @@ class get_quiz extends external_api {
                 'requireprevious' => (int)$slot->requireprevious,
                 'displaynumber' => $slot->displaynumber ?? '',
                 'questionbankentryid' => (int)$slot->questionbankentryid,
-                'questionid' => (int)$slot->questionid,
+                'questionid' => $questionid,
                 'questionidnumber' => $slot->questionidnumber ?? '',
                 'questionname' => $slot->questionname,
                 'qtype' => $slot->qtype,
@@ -96,6 +144,8 @@ class get_quiz extends external_api {
                 'generalfeedbackformat' => (int)$slot->generalfeedbackformat,
                 'version' => (int)$slot->version,
                 'status' => $slot->status,
+                'answers' => $answersarray,
+                'options' => $options,
             ];
         }
 
@@ -233,6 +283,31 @@ class get_quiz extends external_api {
                     'generalfeedbackformat' => new external_value(PARAM_INT, 'General feedback format'),
                     'version' => new external_value(PARAM_INT, 'Question version'),
                     'status' => new external_value(PARAM_TEXT, 'Question status'),
+                    'answers' => new external_multiple_structure(
+                        new external_single_structure([
+                            'id' => new external_value(PARAM_INT, 'Answer ID'),
+                            'answer' => new external_value(PARAM_RAW, 'Answer text'),
+                            'answerformat' => new external_value(PARAM_INT, 'Answer format'),
+                            'fraction' => new external_value(PARAM_FLOAT, 'Fraction (1.0=correct, 0.0=incorrect)'),
+                            'feedback' => new external_value(PARAM_RAW, 'Feedback for this answer'),
+                            'feedbackformat' => new external_value(PARAM_INT, 'Feedback format'),
+                        ]),
+                        'Question answers'
+                    ),
+                    'options' => new external_single_structure([
+                        'usecase' => new external_value(PARAM_INT, 'Case sensitive (shortanswer only)', VALUE_OPTIONAL),
+                        'trueanswer' => new external_value(PARAM_INT, 'True answer ID (truefalse only)', VALUE_OPTIONAL),
+                        'falseanswer' => new external_value(PARAM_INT, 'False answer ID (truefalse only)', VALUE_OPTIONAL),
+                        'single' => new external_value(PARAM_INT, 'Single answer mode (multichoice only)', VALUE_OPTIONAL),
+                        'shuffleanswers' => new external_value(PARAM_INT, 'Shuffle answers (multichoice only)', VALUE_OPTIONAL),
+                        'answernumbering' => new external_value(PARAM_TEXT, 'Answer numbering style (multichoice only)', VALUE_OPTIONAL),
+                        'correctfeedback' => new external_value(PARAM_RAW, 'Correct feedback (multichoice only)', VALUE_OPTIONAL),
+                        'correctfeedbackformat' => new external_value(PARAM_INT, 'Correct feedback format (multichoice only)', VALUE_OPTIONAL),
+                        'partiallycorrectfeedback' => new external_value(PARAM_RAW, 'Partially correct feedback (multichoice only)', VALUE_OPTIONAL),
+                        'partiallycorrectfeedbackformat' => new external_value(PARAM_INT, 'Partially correct feedback format (multichoice only)', VALUE_OPTIONAL),
+                        'incorrectfeedback' => new external_value(PARAM_RAW, 'Incorrect feedback (multichoice only)', VALUE_OPTIONAL),
+                        'incorrectfeedbackformat' => new external_value(PARAM_INT, 'Incorrect feedback format (multichoice only)', VALUE_OPTIONAL),
+                    ], 'Question type-specific options', VALUE_OPTIONAL),
                 ]),
                 'Quiz questions'
             ),
