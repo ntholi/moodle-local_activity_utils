@@ -8,7 +8,7 @@ REST API endpoints for programmatic Moodle course content management.
 
 ## Features
 
-52 web service functions:
+57 web service functions:
 
 - **Sections** (6): create, update, delete sections and subsections
 - **Assignments** (3): create, update, delete
@@ -20,6 +20,7 @@ REST API endpoints for programmatic Moodle course content management.
 - **BigBlueButton** (3): create, update, delete
 - **Forums** (2): create, delete
 - **Quizzes** (7): create, update, delete, get, add/remove/reorder questions
+- **Quiz Attempts** (5): get attempts, get attempt details, grade essay, add/get feedback
 - **Question Categories** (2): get/create, list
 - **Questions** (7): create multichoice/truefalse/shortanswer/essay/numerical, get, delete
 
@@ -775,6 +776,167 @@ Reorders questions within a quiz by specifying new slot positions.
     { "slotid": 102, "newslot": 1, "page": 1 },
     { "slotid": 103, "newslot": 2, "page": 1 }
   ]
+}
+```
+
+---
+
+## Quiz Attempts & Grading
+
+API for viewing quiz attempts, grading essay questions, and managing feedback.
+
+### Get Quiz Attempts
+
+`local_activity_utils_get_quiz_attempts`
+
+Gets all quiz attempts for a quiz with student info.
+
+| Parameter | Type | Required | Description      |
+| --------- | ---- | -------- | ---------------- |
+| `quizid`  | int  | Yes      | Quiz instance ID |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "attempts": [
+    {
+      "id": 123,
+      "userid": 456,
+      "attempt": 1,
+      "state": "finished",
+      "timestart": 1702234567,
+      "timefinish": 1702238167,
+      "timemodified": 1702238167,
+      "sumgrades": 8.5,
+      "user": {
+        "id": 456,
+        "fullname": "John Doe",
+        "profileimageurl": "https://..."
+      }
+    }
+  ]
+}
+```
+
+**Attempt states:** `inprogress`, `overdue`, `finished`, `abandoned`
+
+### Get Quiz Attempt Details
+
+`local_activity_utils_get_quiz_attempt_details`
+
+Gets detailed attempt with question responses.
+
+| Parameter   | Type | Required | Description   |
+| ----------- | ---- | -------- | ------------- |
+| `attemptid` | int  | Yes      | The attempt ID |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "attempt": {
+    "id": 123,
+    "userid": 456,
+    "state": "finished",
+    "timestart": 1702234567,
+    "timefinish": 1702238167,
+    "sumgrades": 8.5,
+    "grade": 85.0,
+    "questions": [
+      {
+        "slot": 1,
+        "type": "multichoice",
+        "name": "Question 1",
+        "questiontext": "<p>What is 2+2?</p>",
+        "maxmark": 2.0,
+        "mark": 2.0,
+        "response": "A",
+        "rightanswer": "A",
+        "state": "gradedright",
+        "feedback": "Well done!"
+      },
+      {
+        "slot": 2,
+        "type": "essay",
+        "name": "Essay Question",
+        "questiontext": "<p>Describe...</p>",
+        "maxmark": 5.0,
+        "mark": null,
+        "response": "Student's essay response...",
+        "rightanswer": "",
+        "state": "needsgrading",
+        "feedback": null
+      }
+    ]
+  }
+}
+```
+
+**Question states:** `gradedright`, `gradedwrong`, `gradedpartial`, `needsgrading`, `gaveup`, `complete`, `todo`
+
+### Grade Essay Question
+
+`local_activity_utils_grade_essay_question`
+
+Manually grades an essay or other manually-graded question.
+
+| Parameter   | Type   | Required | Default | Description              |
+| ----------- | ------ | -------- | ------- | ------------------------ |
+| `attemptid` | int    | Yes      |         | The attempt ID           |
+| `slot`      | int    | Yes      |         | Question slot number     |
+| `mark`      | float  | Yes      |         | Mark to assign           |
+| `comment`   | string | No       | ''      | Feedback comment         |
+
+**Note:** Mark must be between 0 and the question's maximum mark.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Question graded successfully"
+}
+```
+
+### Add Attempt Feedback
+
+`local_activity_utils_add_attempt_feedback`
+
+Adds overall feedback to a quiz attempt.
+
+| Parameter   | Type   | Required | Description      |
+| ----------- | ------ | -------- | ---------------- |
+| `attemptid` | int    | Yes      | The attempt ID   |
+| `feedback`  | string | Yes      | Feedback text    |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Feedback added successfully"
+}
+```
+
+### Get Attempt Feedback
+
+`local_activity_utils_get_attempt_feedback`
+
+Gets the overall feedback for a quiz attempt.
+
+| Parameter   | Type | Required | Description    |
+| ----------- | ---- | -------- | -------------- |
+| `attemptid` | int  | Yes      | The attempt ID |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "feedback": "Your overall performance was good..."
 }
 ```
 

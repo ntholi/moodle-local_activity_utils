@@ -52,3 +52,7 @@ $string['activity_utils:managequestioncategory'] = 'Manage question categories v
 $string['activity_utils:createquestion'] = 'Create questions via API';
 $string['activity_utils:viewquestions'] = 'View questions via API';
 $string['activity_utils:deletequestion'] = 'Delete questions via API';
+
+// Quiz attempt/submission capabilities
+$string['activity_utils:viewquizattempts'] = 'View quiz attempts via API';
+$string['activity_utils:gradequizattempts'] = 'Grade quiz attempts via API';

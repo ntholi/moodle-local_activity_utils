@@ -443,5 +443,47 @@ $functions = array(
         'ajax' => true,
         'capabilities' => 'local/activity_utils:deletequestion',
     ),
+
+    // Quiz attempt/submission functions
+    'local_activity_utils_get_quiz_attempts' => array(
+        'classname' => 'local_activity_utils\external\quiz\get_quiz_attempts',
+        'methodname' => 'execute',
+        'description' => 'Get all quiz attempts for a quiz with student info',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:viewquizattempts',
+    ),
+    'local_activity_utils_get_quiz_attempt_details' => array(
+        'classname' => 'local_activity_utils\external\quiz\get_quiz_attempt_details',
+        'methodname' => 'execute',
+        'description' => 'Get detailed attempt with question responses',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:viewquizattempts',
+    ),
+    'local_activity_utils_grade_essay_question' => array(
+        'classname' => 'local_activity_utils\external\quiz\grade_essay_question',
+        'methodname' => 'execute',
+        'description' => 'Grade an essay question manually',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:gradequizattempts',
+    ),
+    'local_activity_utils_add_attempt_feedback' => array(
+        'classname' => 'local_activity_utils\external\quiz\add_attempt_feedback',
+        'methodname' => 'execute',
+        'description' => 'Add feedback to a quiz attempt',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:gradequizattempts',
+    ),
+    'local_activity_utils_get_attempt_feedback' => array(
+        'classname' => 'local_activity_utils\external\quiz\get_attempt_feedback',
+        'methodname' => 'execute',
+        'description' => 'Get feedback for a quiz attempt',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/activity_utils:viewquizattempts',
+    ),
 );
 
