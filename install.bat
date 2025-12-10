@@ -408,6 +408,41 @@ if errorlevel 1 (
     exit /b 1
 )
 
+copy /y "%SCRIPT_DIR%classes\external\quiz\get_quiz_attempts.php" "%DEST_PATH%\classes\external\quiz\get_quiz_attempts.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\get_quiz_attempts.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\get_quiz_attempt_details.php" "%DEST_PATH%\classes\external\quiz\get_quiz_attempt_details.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\get_quiz_attempt_details.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\grade_essay_question.php" "%DEST_PATH%\classes\external\quiz\grade_essay_question.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\grade_essay_question.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\add_attempt_feedback.php" "%DEST_PATH%\classes\external\quiz\add_attempt_feedback.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\add_attempt_feedback.php
+    pause
+    exit /b 1
+)
+
+copy /y "%SCRIPT_DIR%classes\external\quiz\get_attempt_feedback.php" "%DEST_PATH%\classes\external\quiz\get_attempt_feedback.php" >nul
+if errorlevel 1 (
+    echo [ERROR] Failed to copy quiz\get_attempt_feedback.php
+    pause
+    exit /b 1
+)
+
 :: Copy question files
 copy /y "%SCRIPT_DIR%classes\external\question\get_or_create_category.php" "%DEST_PATH%\classes\external\question\get_or_create_category.php" >nul
 if errorlevel 1 (
