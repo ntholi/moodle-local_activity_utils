@@ -16,7 +16,7 @@ class get_quiz_attempts extends external_api {
     }
 
     public static function execute(int $quizid): array {
-        global $DB, $CFG;
+        global $DB, $CFG, $PAGE;
         require_once($CFG->dirroot . '/user/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -40,14 +40,14 @@ class get_quiz_attempts extends external_api {
         foreach ($attempts as $attempt) {
             // Get user info (with caching).
             if (!isset($usercache[$attempt->userid])) {
-                $user = $DB->get_record('user', ['id' => $attempt->userid], 'id, firstname, lastname, email, picture, imagealt');
+                $user = $DB->get_record('user', ['id' => $attempt->userid], '*', IGNORE_MISSING);
                 if ($user) {
                     $userpicture = new \user_picture($user);
                     $userpicture->size = 100;
                     $usercache[$attempt->userid] = [
                         'id' => (int)$user->id,
                         'fullname' => fullname($user),
-                        'profileimageurl' => $userpicture->get_url(\context_system::instance())->out(false),
+                        'profileimageurl' => $userpicture->get_url($PAGE)->out(false),
                     ];
                 } else {
                     $usercache[$attempt->userid] = [
