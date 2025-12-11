@@ -277,7 +277,6 @@ $capabilities = array(
         )
     ),
 
-    // Quiz capabilities
     'local/activity_utils:createquiz' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
         'captype' => 'write',
@@ -325,7 +324,6 @@ $capabilities = array(
         )
     ),
 
-    // Question bank capabilities
     'local/activity_utils:managequestioncategory' => array(
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
@@ -364,7 +362,6 @@ $capabilities = array(
         )
     ),
 
-    // Quiz attempt/submission capabilities
     'local/activity_utils:viewquizattempts' => array(
         'riskbitmask' => 0,
         'captype' => 'read',

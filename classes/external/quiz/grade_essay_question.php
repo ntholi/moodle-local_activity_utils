@@ -29,7 +29,6 @@ class grade_essay_question extends external_api {
             'comment' => $comment,
         ]);
 
-        // Get the attempt and validate context.
         $attempt = $DB->get_record('quiz_attempts', ['id' => $params['attemptid']], '*', MUST_EXIST);
         $quiz = $DB->get_record('quiz', ['id' => $attempt->quiz], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
@@ -38,41 +37,32 @@ class grade_essay_question extends external_api {
         require_capability('local/activity_utils:gradequizattempts', $context);
         require_capability('mod/quiz:grade', $context);
 
-        // Check attempt is finished.
         if ($attempt->state !== 'finished') {
             throw new \moodle_exception('attemptnotfinished', 'quiz');
         }
 
-        // Load the question usage.
         $quba = \question_engine::load_questions_usage_by_activity($attempt->uniqueid);
 
-        // Validate the slot exists.
         $slots = $quba->get_slots();
         if (!in_array($params['slot'], $slots)) {
             throw new \invalid_parameter_exception('Invalid slot number');
         }
 
-        // Get the question attempt.
         $qa = $quba->get_question_attempt($params['slot']);
         $maxmark = $qa->get_max_mark();
 
-        // Validate mark is within range.
         if ($params['mark'] < 0 || $params['mark'] > $maxmark) {
             throw new \invalid_parameter_exception("Mark must be between 0 and {$maxmark}");
         }
 
-        // Apply the manual grade.
         $quba->manual_grade($params['slot'], $params['comment'], $params['mark'], FORMAT_HTML);
 
-        // Save the changes.
         \question_engine::save_questions_usage_by_activity($quba);
 
-        // Recompute the attempt sumgrades.
         $attempt->sumgrades = $quba->get_total_mark();
         $attempt->timemodified = time();
         $DB->update_record('quiz_attempts', $attempt);
 
-        // Regrade the quiz attempt to update the gradebook.
         $quizobj = \quiz::create($quiz->id);
         $quizobj->update_grades($attempt);
 

@@ -23,7 +23,6 @@ class get_quiz_attempts extends external_api {
             'quizid' => $quizid,
         ]);
 
-        // Get the quiz and validate context.
         $quiz = $DB->get_record('quiz', ['id' => $params['quizid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
@@ -31,14 +30,12 @@ class get_quiz_attempts extends external_api {
         require_capability('local/activity_utils:viewquizattempts', $context);
         require_capability('mod/quiz:viewreports', $context);
 
-        // Get all attempts for this quiz.
         $attempts = $DB->get_records('quiz_attempts', ['quiz' => $quiz->id], 'userid, attempt ASC');
 
         $attemptsarray = [];
         $usercache = [];
 
         foreach ($attempts as $attempt) {
-            // Get user info (with caching).
             if (!isset($usercache[$attempt->userid])) {
                 $user = $DB->get_record('user', ['id' => $attempt->userid], '*', IGNORE_MISSING);
                 if ($user) {

@@ -22,7 +22,6 @@ class get_attempt_feedback extends external_api {
             'attemptid' => $attemptid,
         ]);
 
-        // Get the attempt and validate context.
         $attempt = $DB->get_record('quiz_attempts', ['id' => $params['attemptid']], '*', MUST_EXIST);
         $quiz = $DB->get_record('quiz', ['id' => $attempt->quiz], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
@@ -31,7 +30,6 @@ class get_attempt_feedback extends external_api {
         require_capability('local/activity_utils:viewquizattempts', $context);
         require_capability('mod/quiz:viewreports', $context);
 
-        // Get feedback for this attempt.
         $feedbackrecord = $DB->get_record('quiz_attempt_feedback', ['attemptid' => $params['attemptid']]);
 
         $feedback = null;

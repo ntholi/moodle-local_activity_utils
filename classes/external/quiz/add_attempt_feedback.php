@@ -24,7 +24,6 @@ class add_attempt_feedback extends external_api {
             'feedback' => $feedback,
         ]);
 
-        // Get the attempt and validate context.
         $attempt = $DB->get_record('quiz_attempts', ['id' => $params['attemptid']], '*', MUST_EXIST);
         $quiz = $DB->get_record('quiz', ['id' => $attempt->quiz], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
@@ -33,23 +32,19 @@ class add_attempt_feedback extends external_api {
         require_capability('local/activity_utils:gradequizattempts', $context);
         require_capability('mod/quiz:grade', $context);
 
-        // Check attempt is finished.
         if ($attempt->state !== 'finished') {
             throw new \moodle_exception('attemptnotfinished', 'quiz');
         }
 
-        // Check if feedback already exists.
         $existing = $DB->get_record('quiz_attempt_feedback', ['attemptid' => $params['attemptid']]);
 
         if ($existing) {
-            // Update existing feedback.
             $existing->feedback = $params['feedback'];
             $existing->feedbackformat = FORMAT_HTML;
             $existing->timemodified = time();
             $existing->userid = $USER->id;
             $DB->update_record('quiz_attempt_feedback', $existing);
         } else {
-            // Insert new feedback.
             $record = new \stdClass();
             $record->attemptid = $params['attemptid'];
             $record->feedback = $params['feedback'];

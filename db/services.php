@@ -2,7 +2,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
-    // Assignment functions
     'local_activity_utils_create_assignment' => array(
         'classname' => 'local_activity_utils\external\assignment\create_assignment',
         'methodname' => 'execute',
@@ -28,7 +27,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:updateassignment',
     ),
 
-    // Book functions
     'local_activity_utils_create_book' => array(
         'classname' => 'local_activity_utils\external\book\create_book',
         'methodname' => 'execute',
@@ -78,7 +76,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deletebook',
     ),
 
-    // File functions
     'local_activity_utils_create_file' => array(
         'classname' => 'local_activity_utils\external\file\create_file',
         'methodname' => 'execute',
@@ -104,7 +101,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deletefile',
     ),
 
-    // Page functions
     'local_activity_utils_create_page' => array(
         'classname' => 'local_activity_utils\external\page\create_page',
         'methodname' => 'execute',
@@ -130,7 +126,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deletepage',
     ),
 
-    // Section functions
     'local_activity_utils_create_section' => array(
         'classname' => 'local_activity_utils\external\section\create_section',
         'methodname' => 'execute',
@@ -180,7 +175,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deletesubsection',
     ),
 
-    // Rubric functions
     'local_activity_utils_create_rubric' => array(
         'classname' => 'local_activity_utils\external\rubric\create_rubric',
         'methodname' => 'execute',
@@ -238,7 +232,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:viewrubricfilling',
     ),
 
-    // BigBlueButton functions
     'local_activity_utils_create_bigbluebuttonbn' => array(
         'classname' => 'local_activity_utils\external\bigbluebuttonbn\create_bigbluebuttonbn',
         'methodname' => 'execute',
@@ -264,7 +257,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deletebigbluebuttonbn',
     ),
 
-    // Forum functions
     'local_activity_utils_create_forum' => array(
         'classname' => 'local_activity_utils\external\forum\create_forum',
         'methodname' => 'execute',
@@ -282,7 +274,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deleteforum',
     ),
 
-    // URL functions
     'local_activity_utils_create_url' => array(
         'classname' => 'local_activity_utils\external\url\create_url',
         'methodname' => 'execute',
@@ -308,7 +299,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deleteurl',
     ),
 
-    // Quiz functions
     'local_activity_utils_create_quiz' => array(
         'classname' => 'local_activity_utils\external\quiz\create_quiz',
         'methodname' => 'execute',
@@ -366,7 +356,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:managequizquestions',
     ),
 
-    // Question category functions
     'local_activity_utils_get_or_create_question_category' => array(
         'classname' => 'local_activity_utils\external\question\get_or_create_category',
         'methodname' => 'execute',
@@ -384,7 +373,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:managequestioncategory',
     ),
 
-    // Question creation functions
     'local_activity_utils_create_multichoice_question' => array(
         'classname' => 'local_activity_utils\external\question\create_multichoice_question',
         'methodname' => 'execute',
@@ -426,7 +414,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:createquestion',
     ),
 
-    // Question management functions
     'local_activity_utils_get_questions' => array(
         'classname' => 'local_activity_utils\external\question\get_questions',
         'methodname' => 'execute',
@@ -444,7 +431,6 @@ $functions = array(
         'capabilities' => 'local/activity_utils:deletequestion',
     ),
 
-    // Quiz attempt/submission functions
     'local_activity_utils_get_quiz_attempts' => array(
         'classname' => 'local_activity_utils\external\quiz\get_quiz_attempts',
         'methodname' => 'execute',

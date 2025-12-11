@@ -24,7 +24,6 @@ class get_quiz_attempt_details extends external_api {
             'attemptid' => $attemptid,
         ]);
 
-        // Get the attempt and validate context.
         $attempt = $DB->get_record('quiz_attempts', ['id' => $params['attemptid']], '*', MUST_EXIST);
         $quiz = $DB->get_record('quiz', ['id' => $attempt->quiz], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, 0, false, MUST_EXIST);
@@ -33,50 +32,39 @@ class get_quiz_attempt_details extends external_api {
         require_capability('local/activity_utils:viewquizattempts', $context);
         require_capability('mod/quiz:viewreports', $context);
 
-        // Load the question usage.
         $quba = \question_engine::load_questions_usage_by_activity($attempt->uniqueid);
 
-        // Calculate the grade percentage.
         $grade = null;
         if ($attempt->sumgrades !== null && $quiz->sumgrades > 0) {
             $grade = ($attempt->sumgrades / $quiz->sumgrades) * 100;
         }
 
-        // Get question information for each slot.
         $questionsarray = [];
         foreach ($quba->get_slots() as $slot) {
             $qa = $quba->get_question_attempt($slot);
             $question = $qa->get_question();
 
-            // Get the mark for this question.
             $mark = $qa->get_mark();
             $maxmark = $qa->get_max_mark();
 
-            // Get the state.
             $state = $qa->get_state();
             $statename = self::map_question_state($state);
 
-            // Get the response summary.
             $response = $qa->get_response_summary();
 
-            // Get the right answer.
             $rightanswer = $qa->get_right_answer_summary();
 
-            // Get any feedback.
             $feedback = null;
             if ($state->is_graded()) {
-                // Get behaviour-specific feedback if available.
                 $behaviour = $qa->get_behaviour();
                 if (method_exists($behaviour, 'get_field')) {
                     $feedback = $behaviour->get_field('_feedback');
                 }
                 if (empty($feedback)) {
-                    // Try general feedback.
                     $feedback = $question->generalfeedback;
                 }
             }
 
-            // Get manual comment if present.
             $behaviour = $qa->get_behaviour();
             if (method_exists($behaviour, 'get_field')) {
                 $comment = $behaviour->get_field('_comment');
@@ -114,12 +102,6 @@ class get_quiz_attempt_details extends external_api {
         ];
     }
 
-    /**
-     * Map Moodle question state to simplified state string.
-     *
-     * @param \question_state $state
-     * @return string
-     */
     private static function map_question_state(\question_state $state): string {
         if ($state == \question_state::$gradedright) {
             return 'gradedright';

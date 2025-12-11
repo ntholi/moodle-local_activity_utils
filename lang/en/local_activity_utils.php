@@ -40,19 +40,16 @@ $string['invalidfilename'] = 'Invalid filename provided';
 $string['invalidsubsection'] = 'The specified section is not a valid subsection';
 $string['subsectionmodulenotfound'] = 'Subsection module not found. This feature requires Moodle 5.0 or later with subsection support.';
 
-// Quiz capabilities
 $string['activity_utils:createquiz'] = 'Create quiz activities via API';
 $string['activity_utils:updatequiz'] = 'Update quiz activities via API';
 $string['activity_utils:deletequiz'] = 'Delete quiz activities via API';
 $string['activity_utils:viewquiz'] = 'View quiz details via API';
 $string['activity_utils:managequizquestions'] = 'Manage quiz questions via API';
 
-// Question bank capabilities
 $string['activity_utils:managequestioncategory'] = 'Manage question categories via API';
 $string['activity_utils:createquestion'] = 'Create questions via API';
 $string['activity_utils:viewquestions'] = 'View questions via API';
 $string['activity_utils:deletequestion'] = 'Delete questions via API';
 
-// Quiz attempt/submission capabilities
 $string['activity_utils:viewquizattempts'] = 'View quiz attempts via API';
 $string['activity_utils:gradequizattempts'] = 'Grade quiz attempts via API';
