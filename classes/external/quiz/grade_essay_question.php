@@ -63,8 +63,7 @@ class grade_essay_question extends external_api {
         $attempt->timemodified = time();
         $DB->update_record('quiz_attempts', $attempt);
 
-        $quizobj = \quiz::create($quiz->id);
-        $quizobj->update_grades($attempt);
+        quiz_update_grades($quiz, $attempt->userid);
 
         return [
             'success' => true,
