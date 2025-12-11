@@ -125,7 +125,7 @@ class get_quiz extends external_api {
                 }
             }
 
-            $questionsarray[] = [
+            $questiondata = [
                 'slotid' => (int)$slot->slotid,
                 'slot' => (int)$slot->slot,
                 'page' => (int)$slot->page,
@@ -145,8 +145,13 @@ class get_quiz extends external_api {
                 'version' => (int)$slot->version,
                 'status' => $slot->status,
                 'answers' => $answersarray,
-                'options' => $options,
             ];
+
+            if ($options !== null) {
+                $questiondata['options'] = $options;
+            }
+
+            $questionsarray[] = $questiondata;
         }
 
         
