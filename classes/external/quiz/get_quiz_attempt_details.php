@@ -65,18 +65,24 @@ class get_quiz_attempt_details extends external_api {
             // Get any feedback.
             $feedback = null;
             if ($state->is_graded()) {
-                // Try to get specific feedback.
-                $feedback = $qa->get_behaviour_field('_feedback', null);
-                if ($feedback === null) {
+                // Get behaviour-specific feedback if available.
+                $behaviour = $qa->get_behaviour();
+                if (method_exists($behaviour, 'get_field')) {
+                    $feedback = $behaviour->get_field('_feedback');
+                }
+                if (empty($feedback)) {
                     // Try general feedback.
                     $feedback = $question->generalfeedback;
                 }
             }
 
             // Get manual comment if present.
-            $comment = $qa->get_behaviour_field('_comment', null);
-            if ($comment !== null) {
-                $feedback = $comment;
+            $behaviour = $qa->get_behaviour();
+            if (method_exists($behaviour, 'get_field')) {
+                $comment = $behaviour->get_field('_comment');
+                if (!empty($comment)) {
+                    $feedback = $comment;
+                }
             }
 
             $questionsarray[] = [
