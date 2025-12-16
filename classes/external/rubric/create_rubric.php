@@ -7,7 +7,6 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-
 class create_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -36,8 +35,11 @@ class create_rubric extends external_api {
                 'showdescriptionteacher' => new external_value(PARAM_INT, 'Show description to teacher (0 or 1)', VALUE_DEFAULT, 1),
                 'showscoreteacher' => new external_value(PARAM_INT, 'Show score to teacher (0 or 1)', VALUE_DEFAULT, 1),
                 'showscorestudent' => new external_value(PARAM_INT, 'Show score to student (0 or 1)', VALUE_DEFAULT, 1),
+                'showrangeteacher' => new external_value(PARAM_INT, 'Show range to teacher (0 or 1)', VALUE_DEFAULT, 1),
+                'showrangestudent' => new external_value(PARAM_INT, 'Show range to student (0 or 1)', VALUE_DEFAULT, 1),
                 'enableremarks' => new external_value(PARAM_INT, 'Enable remarks (0 or 1)', VALUE_DEFAULT, 1),
                 'showremarksstudent' => new external_value(PARAM_INT, 'Show remarks to student (0 or 1)', VALUE_DEFAULT, 1),
+                'alwaysshowdefinition' => new external_value(PARAM_INT, 'Always show definition (0 or 1)', VALUE_DEFAULT, 1),
             ], 'Rubric options', VALUE_DEFAULT, []),
         ]);
     }
@@ -52,7 +54,6 @@ class create_rubric extends external_api {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/grade/grading/lib.php');
-        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'cmid' => $cmid,
@@ -62,7 +63,6 @@ class create_rubric extends external_api {
             'options' => $options,
         ]);
 
-        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -70,32 +70,30 @@ class create_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $context);
         require_capability('moodle/grade:managegradingforms', $context);
 
-        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
-        
         $currentmethod = $gradingmanager->get_active_method();
-        if ($currentmethod === 'rubric') {
-            $controller = $gradingmanager->get_controller('rubric');
+        if ($currentmethod === 'fivedays') {
+            $controller = $gradingmanager->get_controller('fivedays');
             if ($controller->is_form_defined()) {
                 return [
                     'definitionid' => 0,
                     'success' => false,
-                    'message' => 'A rubric already exists for this assignment. Use update_rubric to modify it.',
+                    'message' => 'A FiveDays rubric already exists for this assignment. Use update_rubric to modify it.',
                 ];
             }
+        } else if (!empty($currentmethod)) {
+            return [
+                'definitionid' => 0,
+                'success' => false,
+                'message' => 'Assignment already uses a different grading method: ' . $currentmethod . '. Delete it first.',
+            ];
         }
 
-        
-        $gradingmanager->set_active_method('rubric');
+        $gradingmanager->set_active_method('fivedays');
+        $controller = $gradingmanager->get_controller('fivedays');
 
-        
-        $controller = $gradingmanager->get_controller('rubric');
-        $definitionid = $controller->get_definition() ? $controller->get_definition()->id : null;
-
-        
-        
-        $rubriccriteria = [];
+        $fivedayscriteria = [];
         $sortorder = 1;
         $criterionindex = 1;
         foreach ($params['criteria'] as $criterion) {
@@ -118,12 +116,11 @@ class create_rubric extends external_api {
                 $levelindex++;
             }
 
-            $rubriccriteria[$criterionkey] = $criteriondata;
+            $fivedayscriteria[$criterionkey] = $criteriondata;
             $sortorder++;
             $criterionindex++;
         }
 
-        
         $defaultoptions = [
             'sortlevelsasc' => 1,
             'lockzeropoints' => 1,
@@ -131,34 +128,34 @@ class create_rubric extends external_api {
             'showdescriptionteacher' => 1,
             'showscoreteacher' => 1,
             'showscorestudent' => 1,
+            'showrangeteacher' => 1,
+            'showrangestudent' => 1,
             'enableremarks' => 1,
             'showremarksstudent' => 1,
+            'alwaysshowdefinition' => 1,
         ];
-        $rubricoptions = array_merge($defaultoptions, $params['options']);
+        $fivedaysoptions = array_merge($defaultoptions, $params['options']);
 
-        
         $rubricdata = new \stdClass();
         $rubricdata->name = $params['name'];
         $rubricdata->description_editor = [
             'text' => $params['description'],
             'format' => FORMAT_HTML,
         ];
-        $rubricdata->rubric = [
-            'criteria' => $rubriccriteria,
-            'options' => $rubricoptions,
+        $rubricdata->fivedays = [
+            'criteria' => $fivedayscriteria,
+            'options' => $fivedaysoptions,
         ];
         $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
-        
         $controller->update_definition($rubricdata);
 
-        
         $definition = $controller->get_definition();
 
         return [
             'definitionid' => $definition->id,
             'success' => true,
-            'message' => 'Rubric created successfully',
+            'message' => 'FiveDays rubric created successfully. Assignment now uses FiveDays grading.',
         ];
     }
 

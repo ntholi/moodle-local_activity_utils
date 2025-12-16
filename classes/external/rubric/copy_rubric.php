@@ -6,7 +6,6 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-
 class copy_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -20,22 +19,18 @@ class copy_rubric extends external_api {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/grade/grading/lib.php');
-        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'sourcecmid' => $sourcecmid,
             'targetcmid' => $targetcmid,
         ]);
 
-        
         $sourcecm = get_coursemodule_from_id('assign', $params['sourcecmid'], 0, false, MUST_EXIST);
         $sourcecontext = \context_module::instance($sourcecm->id);
 
-        
         $targetcm = get_coursemodule_from_id('assign', $params['targetcmid'], 0, false, MUST_EXIST);
         $targetcontext = \context_module::instance($targetcm->id);
 
-        
         self::validate_context($sourcecontext);
         require_capability('local/activity_utils:managerubric', $sourcecontext);
 
@@ -43,90 +38,91 @@ class copy_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $targetcontext);
         require_capability('moodle/grade:managegradingforms', $targetcontext);
 
-        
         $sourcegradingmanager = get_grading_manager($sourcecontext, 'mod_assign', 'submissions');
 
-        
-        if ($sourcegradingmanager->get_active_method() !== 'rubric') {
+        if ($sourcegradingmanager->get_active_method() !== 'fivedays') {
             return [
                 'definitionid' => 0,
                 'success' => false,
-                'message' => 'Source assignment does not have a rubric',
+                'message' => 'Source assignment does not have a FiveDays rubric',
             ];
         }
 
-        $sourcecontroller = $sourcegradingmanager->get_controller('rubric');
+        $sourcecontroller = $sourcegradingmanager->get_controller('fivedays');
         if (!$sourcecontroller->is_form_defined()) {
             return [
                 'definitionid' => 0,
                 'success' => false,
-                'message' => 'Source assignment has no rubric defined',
+                'message' => 'Source assignment has no FiveDays rubric defined',
             ];
         }
 
         $sourcedefinition = $sourcecontroller->get_definition();
 
-        
         $targetgradingmanager = get_grading_manager($targetcontext, 'mod_assign', 'submissions');
 
-        
-        if ($targetgradingmanager->get_active_method() === 'rubric') {
-            $targetcontroller = $targetgradingmanager->get_controller('rubric');
+        $targetmethod = $targetgradingmanager->get_active_method();
+        if ($targetmethod === 'fivedays') {
+            $targetcontroller = $targetgradingmanager->get_controller('fivedays');
             if ($targetcontroller->is_form_defined()) {
                 return [
                     'definitionid' => 0,
                     'success' => false,
-                    'message' => 'Target assignment already has a rubric. Delete it first or use update_rubric.',
+                    'message' => 'Target assignment already has a FiveDays rubric. Delete it first or use update_rubric.',
                 ];
             }
+        } else if (!empty($targetmethod)) {
+            return [
+                'definitionid' => 0,
+                'success' => false,
+                'message' => 'Target assignment uses a different grading method: ' . $targetmethod . '. Delete it first.',
+            ];
         }
 
-        
-        $targetgradingmanager->set_active_method('rubric');
-        $targetcontroller = $targetgradingmanager->get_controller('rubric');
+        $targetgradingmanager->set_active_method('fivedays');
+        $targetcontroller = $targetgradingmanager->get_controller('fivedays');
 
-        
-        $sourcecriteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $sourcedefinition->id], 'sortorder ASC');
+        $sourcecriteria = $DB->get_records('gradingform_fivedays_criteria', ['definitionid' => $sourcedefinition->id], 'sortorder ASC');
 
-        $rubriccriteria = [];
+        $fivedayscriteria = [];
+        $criterionindex = 1;
         foreach ($sourcecriteria as $criterion) {
-            $levels = $DB->get_records('gradingform_rubric_levels', ['criterionid' => $criterion->id], 'score ASC');
+            $levels = $DB->get_records('gradingform_fivedays_levels', ['criterionid' => $criterion->id], 'score ASC');
 
             $levelsdata = [];
+            $levelindex = 1;
             foreach ($levels as $level) {
-                $levelsdata[] = [
+                $levelsdata['NEWID' . $levelindex] = [
                     'score' => $level->score,
                     'definition' => $level->definition,
                     'definitionformat' => FORMAT_HTML,
                 ];
+                $levelindex++;
             }
 
-            $rubriccriteria[] = [
+            $fivedayscriteria['NEWID' . $criterionindex] = [
                 'description' => $criterion->description,
                 'descriptionformat' => FORMAT_HTML,
                 'sortorder' => $criterion->sortorder,
                 'levels' => $levelsdata,
             ];
+            $criterionindex++;
         }
 
-        
         $sourceoptions = json_decode($sourcedefinition->options ?? '{}', true) ?: [];
 
-        
-        $rubricdata = [
-            'name' => $sourcedefinition->name . ' (Copy)',
-            'description_editor' => [
-                'text' => $sourcedefinition->description ?? '',
-                'format' => FORMAT_HTML,
-            ],
-            'rubric' => [
-                'criteria' => $rubriccriteria,
-                'options' => $sourceoptions,
-            ],
-            'status' => \gradingform_controller::DEFINITION_STATUS_READY,
+        $rubricdata = new \stdClass();
+        $rubricdata->name = $sourcedefinition->name . ' (Copy)';
+        $rubricdata->description_editor = [
+            'text' => $sourcedefinition->description ?? '',
+            'format' => FORMAT_HTML,
         ];
+        $rubricdata->fivedays = [
+            'criteria' => $fivedayscriteria,
+            'options' => $sourceoptions,
+        ];
+        $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
-        
         $targetcontroller->update_definition($rubricdata);
 
         $newdefinition = $targetcontroller->get_definition();
@@ -134,7 +130,7 @@ class copy_rubric extends external_api {
         return [
             'definitionid' => (int)$newdefinition->id,
             'success' => true,
-            'message' => 'Rubric copied successfully',
+            'message' => 'FiveDays rubric copied successfully. Target assignment now uses FiveDays grading.',
         ];
     }
 

@@ -6,7 +6,6 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-
 class delete_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -24,7 +23,6 @@ class delete_rubric extends external_api {
             'cmid' => $cmid,
         ]);
 
-        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -32,61 +30,50 @@ class delete_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $context);
         require_capability('moodle/grade:managegradingforms', $context);
 
-        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
-        
-        if ($gradingmanager->get_active_method() !== 'rubric') {
+        if ($gradingmanager->get_active_method() !== 'fivedays') {
             return [
                 'success' => false,
-                'message' => 'No rubric is set for this assignment',
+                'message' => 'No FiveDays rubric is set for this assignment',
             ];
         }
 
-        
-        $controller = $gradingmanager->get_controller('rubric');
+        $controller = $gradingmanager->get_controller('fivedays');
 
         if (!$controller->is_form_defined()) {
-            
             $gradingmanager->set_active_method('');
             return [
                 'success' => true,
-                'message' => 'Grading method cleared (no rubric was defined)',
+                'message' => 'Grading method cleared, assignment now uses simple direct grading',
             ];
         }
 
         $definition = $controller->get_definition();
         $definitionid = $definition->id;
 
-        
         $instances = $DB->count_records('grading_instances', ['definitionid' => $definitionid]);
         if ($instances > 0) {
-            
             $instanceids = $DB->get_fieldset_select('grading_instances', 'id', 'definitionid = ?', [$definitionid]);
             foreach ($instanceids as $instanceid) {
-                $DB->delete_records('gradingform_rubric_fillings', ['instanceid' => $instanceid]);
+                $DB->delete_records('gradingform_fivedays_fillings', ['instanceid' => $instanceid]);
             }
             $DB->delete_records('grading_instances', ['definitionid' => $definitionid]);
         }
 
-        
-        $criteriaids = $DB->get_fieldset_select('gradingform_rubric_criteria', 'id', 'definitionid = ?', [$definitionid]);
+        $criteriaids = $DB->get_fieldset_select('gradingform_fivedays_criteria', 'id', 'definitionid = ?', [$definitionid]);
         foreach ($criteriaids as $criteriaid) {
-            $DB->delete_records('gradingform_rubric_levels', ['criterionid' => $criteriaid]);
+            $DB->delete_records('gradingform_fivedays_levels', ['criterionid' => $criteriaid]);
         }
 
-        
-        $DB->delete_records('gradingform_rubric_criteria', ['definitionid' => $definitionid]);
-
-        
+        $DB->delete_records('gradingform_fivedays_criteria', ['definitionid' => $definitionid]);
         $DB->delete_records('grading_definitions', ['id' => $definitionid]);
 
-        
         $gradingmanager->set_active_method('');
 
         return [
             'success' => true,
-            'message' => 'Rubric deleted successfully',
+            'message' => 'FiveDays rubric deleted successfully, assignment now uses simple direct grading',
         ];
     }
 

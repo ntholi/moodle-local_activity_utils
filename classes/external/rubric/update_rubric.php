@@ -7,7 +7,6 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-
 class update_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -40,8 +39,11 @@ class update_rubric extends external_api {
                 'showdescriptionteacher' => new external_value(PARAM_INT, 'Show description to teacher', VALUE_DEFAULT, null),
                 'showscoreteacher' => new external_value(PARAM_INT, 'Show score to teacher', VALUE_DEFAULT, null),
                 'showscorestudent' => new external_value(PARAM_INT, 'Show score to student', VALUE_DEFAULT, null),
+                'showrangeteacher' => new external_value(PARAM_INT, 'Show range to teacher', VALUE_DEFAULT, null),
+                'showrangestudent' => new external_value(PARAM_INT, 'Show range to student', VALUE_DEFAULT, null),
                 'enableremarks' => new external_value(PARAM_INT, 'Enable remarks', VALUE_DEFAULT, null),
                 'showremarksstudent' => new external_value(PARAM_INT, 'Show remarks to student', VALUE_DEFAULT, null),
+                'alwaysshowdefinition' => new external_value(PARAM_INT, 'Always show definition', VALUE_DEFAULT, null),
             ], 'Rubric options', VALUE_DEFAULT, []),
         ]);
     }
@@ -56,7 +58,6 @@ class update_rubric extends external_api {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/grade/grading/lib.php');
-        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'cmid' => $cmid,
@@ -66,7 +67,6 @@ class update_rubric extends external_api {
             'options' => $options,
         ]);
 
-        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -74,32 +74,28 @@ class update_rubric extends external_api {
         require_capability('local/activity_utils:managerubric', $context);
         require_capability('moodle/grade:managegradingforms', $context);
 
-        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
-        
-        if ($gradingmanager->get_active_method() !== 'rubric') {
+        if ($gradingmanager->get_active_method() !== 'fivedays') {
             return [
                 'definitionid' => 0,
                 'success' => false,
-                'message' => 'No rubric is set for this assignment. Use create_rubric first.',
+                'message' => 'No FiveDays rubric is set for this assignment. Use create_rubric first.',
             ];
         }
 
-        
-        $controller = $gradingmanager->get_controller('rubric');
+        $controller = $gradingmanager->get_controller('fivedays');
 
         if (!$controller->is_form_defined()) {
             return [
                 'definitionid' => 0,
                 'success' => false,
-                'message' => 'No rubric definition exists. Use create_rubric first.',
+                'message' => 'No FiveDays rubric definition exists. Use create_rubric first.',
             ];
         }
 
         $definition = $controller->get_definition();
 
-        
         $rubricdata = new \stdClass();
         $rubricdata->name = !empty($params['name']) ? $params['name'] : $definition->name;
         $rubricdata->description_editor = [
@@ -108,10 +104,8 @@ class update_rubric extends external_api {
         ];
         $rubricdata->status = \gradingform_controller::DEFINITION_STATUS_READY;
 
-        
-        
         if (!empty($params['criteria'])) {
-            $rubriccriteria = [];
+            $fivedayscriteria = [];
             $sortorder = 1;
             $newcriterionindex = 1;
 
@@ -123,7 +117,6 @@ class update_rubric extends external_api {
                     'levels' => [],
                 ];
 
-                
                 if (!empty($criterion['id'])) {
                     $criterionkey = $criterion['id'];
                 } else {
@@ -139,7 +132,6 @@ class update_rubric extends external_api {
                         'definitionformat' => FORMAT_HTML,
                     ];
 
-                    
                     if (!empty($level['id'])) {
                         $levelkey = $level['id'];
                     } else {
@@ -150,18 +142,17 @@ class update_rubric extends external_api {
                     $criteriondata['levels'][$levelkey] = $leveldata;
                 }
 
-                $rubriccriteria[$criterionkey] = $criteriondata;
+                $fivedayscriteria[$criterionkey] = $criteriondata;
                 $sortorder++;
             }
 
-            $rubricdata->rubric['criteria'] = $rubriccriteria;
+            $rubricdata->fivedays['criteria'] = $fivedayscriteria;
         } else {
-            
-            $existingcriteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
-            $rubriccriteria = [];
+            $existingcriteria = $DB->get_records('gradingform_fivedays_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
+            $fivedayscriteria = [];
 
             foreach ($existingcriteria as $criterion) {
-                $levels = $DB->get_records('gradingform_rubric_levels', ['criterionid' => $criterion->id], 'score ASC');
+                $levels = $DB->get_records('gradingform_fivedays_levels', ['criterionid' => $criterion->id], 'score ASC');
                 $levelsdata = [];
 
                 foreach ($levels as $level) {
@@ -172,7 +163,7 @@ class update_rubric extends external_api {
                     ];
                 }
 
-                $rubriccriteria[$criterion->id] = [
+                $fivedayscriteria[$criterion->id] = [
                     'description' => $criterion->description,
                     'descriptionformat' => FORMAT_HTML,
                     'sortorder' => $criterion->sortorder,
@@ -180,10 +171,9 @@ class update_rubric extends external_api {
                 ];
             }
 
-            $rubricdata->rubric['criteria'] = $rubriccriteria;
+            $rubricdata->fivedays['criteria'] = $fivedayscriteria;
         }
 
-        
         $existingoptions = json_decode($definition->options ?? '{}', true) ?: [];
         $newoptions = [];
 
@@ -193,15 +183,14 @@ class update_rubric extends external_api {
             }
         }
 
-        $rubricdata->rubric['options'] = array_merge($existingoptions, $newoptions);
+        $rubricdata->fivedays['options'] = array_merge($existingoptions, $newoptions);
 
-        
         $controller->update_definition($rubricdata);
 
         return [
             'definitionid' => (int)$definition->id,
             'success' => true,
-            'message' => 'Rubric updated successfully',
+            'message' => 'FiveDays rubric updated successfully',
         ];
     }
 

@@ -7,7 +7,6 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-
 class get_rubric_filling extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -21,7 +20,6 @@ class get_rubric_filling extends external_api {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/grade/grading/lib.php');
-        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
         require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -29,53 +27,48 @@ class get_rubric_filling extends external_api {
             'userid' => $userid,
         ]);
 
-        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
         self::validate_context($context);
         require_capability('local/activity_utils:viewrubricfilling', $context);
 
-        
         $user = $DB->get_record('user', ['id' => $params['userid']], '*', MUST_EXIST);
 
-        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
         $activemethod = $gradingmanager->get_active_method();
 
-        if ($activemethod !== 'rubric') {
+        if ($activemethod !== 'fivedays') {
             return [
                 'instanceid' => 0,
                 'grade' => 0,
                 'grader' => '',
+                'graderid' => 0,
                 'timecreated' => 0,
                 'timemodified' => 0,
                 'fillings' => [],
                 'success' => false,
-                'message' => 'Assignment does not use rubric grading',
+                'message' => 'Assignment does not use FiveDays rubric grading',
             ];
         }
 
-        
-        $controller = $gradingmanager->get_controller('rubric');
+        $controller = $gradingmanager->get_controller('fivedays');
 
         if (!$controller->is_form_defined()) {
             return [
                 'instanceid' => 0,
                 'grade' => 0,
                 'grader' => '',
+                'graderid' => 0,
                 'timecreated' => 0,
                 'timemodified' => 0,
                 'fillings' => [],
                 'success' => false,
-                'message' => 'Rubric is not defined for this assignment',
+                'message' => 'FiveDays rubric is not defined for this assignment',
             ];
         }
 
-        
         $assignment = new \assign($context, $cm, $cm->course);
-
-        
         $grade = $assignment->get_user_grade($params['userid'], false);
 
         if (!$grade) {
@@ -83,6 +76,7 @@ class get_rubric_filling extends external_api {
                 'instanceid' => 0,
                 'grade' => 0,
                 'grader' => '',
+                'graderid' => 0,
                 'timecreated' => 0,
                 'timemodified' => 0,
                 'fillings' => [],
@@ -91,7 +85,6 @@ class get_rubric_filling extends external_api {
             ];
         }
 
-        
         $instances = $DB->get_records('grading_instances', [
             'definitionid' => $controller->get_definition()->id,
             'itemid' => $grade->id
@@ -102,32 +95,29 @@ class get_rubric_filling extends external_api {
                 'instanceid' => 0,
                 'grade' => (float)$grade->grade,
                 'grader' => '',
+                'graderid' => 0,
                 'timecreated' => 0,
                 'timemodified' => 0,
                 'fillings' => [],
                 'success' => false,
-                'message' => 'No rubric grading found for this user',
+                'message' => 'No FiveDays rubric grading found for this user',
             ];
         }
 
         $instance = reset($instances);
 
-        
         $grader = $DB->get_record('user', ['id' => $instance->raterid], 'id, firstname, lastname');
         $gradername = $grader ? fullname($grader) : 'Unknown';
 
-        
-        $fillingsdb = $DB->get_records('gradingform_rubric_fillings', ['instanceid' => $instance->id]);
+        $fillingsdb = $DB->get_records('gradingform_fivedays_fillings', ['instanceid' => $instance->id]);
 
         $fillings = [];
         foreach ($fillingsdb as $filling) {
-            
-            $criterion = $DB->get_record('gradingform_rubric_criteria', ['id' => $filling->criterionid]);
-            
-            
+            $criterion = $DB->get_record('gradingform_fivedays_criteria', ['id' => $filling->criterionid]);
+
             $leveldata = null;
-            if ($filling->levelid) {
-                $level = $DB->get_record('gradingform_rubric_levels', ['id' => $filling->levelid]);
+            if (!empty($filling->levelid)) {
+                $level = $DB->get_record('gradingform_fivedays_levels', ['id' => $filling->levelid]);
                 if ($level) {
                     $leveldata = [
                         'id' => (int)$level->id,
@@ -140,8 +130,9 @@ class get_rubric_filling extends external_api {
             $fillings[] = [
                 'criterionid' => (int)$filling->criterionid,
                 'criteriondescription' => $criterion ? $criterion->description : '',
-                'levelid' => (int)$filling->levelid,
+                'levelid' => (int)($filling->levelid ?? 0),
                 'level' => $leveldata,
+                'customscore' => $filling->score !== null ? (float)$filling->score : null,
                 'remark' => $filling->remark ?? '',
             ];
         }
@@ -155,7 +146,7 @@ class get_rubric_filling extends external_api {
             'timemodified' => (int)$instance->timemodified,
             'fillings' => $fillings,
             'success' => true,
-            'message' => 'Rubric filling retrieved successfully',
+            'message' => 'FiveDays rubric filling retrieved successfully',
         ];
     }
 
@@ -171,12 +162,13 @@ class get_rubric_filling extends external_api {
                 new external_single_structure([
                     'criterionid' => new external_value(PARAM_INT, 'Criterion ID'),
                     'criteriondescription' => new external_value(PARAM_RAW, 'Criterion description'),
-                    'levelid' => new external_value(PARAM_INT, 'Selected level ID (0 if not selected)'),
+                    'levelid' => new external_value(PARAM_INT, 'Selected level ID (0 if custom score used)'),
                     'level' => new external_single_structure([
                         'id' => new external_value(PARAM_INT, 'Level ID'),
                         'score' => new external_value(PARAM_FLOAT, 'Score for this level'),
                         'definition' => new external_value(PARAM_RAW, 'Level definition'),
                     ], 'Selected level details', VALUE_OPTIONAL),
+                    'customscore' => new external_value(PARAM_FLOAT, 'Custom score if entered', VALUE_OPTIONAL),
                     'remark' => new external_value(PARAM_RAW, 'Remark for this criterion'),
                 ])
             ),

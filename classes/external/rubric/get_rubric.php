@@ -7,7 +7,6 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-
 class get_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -25,19 +24,16 @@ class get_rubric extends external_api {
             'cmid' => $cmid,
         ]);
 
-        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
         self::validate_context($context);
         require_capability('local/activity_utils:managerubric', $context);
 
-        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
-
-        
         $activemethod = $gradingmanager->get_active_method();
-        if ($activemethod !== 'rubric') {
+
+        if (empty($activemethod)) {
             return [
                 'definitionid' => 0,
                 'name' => '',
@@ -46,13 +42,28 @@ class get_rubric extends external_api {
                 'criteria' => [],
                 'options' => self::get_default_options(),
                 'maxscore' => 0,
-                'success' => false,
-                'message' => $activemethod ? 'Assignment uses ' . $activemethod . ' grading, not rubric' : 'No advanced grading method is set for this assignment',
+                'gradingmethod' => 'simple',
+                'success' => true,
+                'message' => 'Assignment uses simple direct grading (no rubric)',
             ];
         }
 
-        
-        $controller = $gradingmanager->get_controller('rubric');
+        if ($activemethod !== 'fivedays') {
+            return [
+                'definitionid' => 0,
+                'name' => '',
+                'description' => '',
+                'status' => 0,
+                'criteria' => [],
+                'options' => self::get_default_options(),
+                'maxscore' => 0,
+                'gradingmethod' => $activemethod,
+                'success' => false,
+                'message' => 'Assignment uses ' . $activemethod . ' grading, not FiveDays rubric',
+            ];
+        }
+
+        $controller = $gradingmanager->get_controller('fivedays');
 
         if (!$controller->is_form_defined()) {
             return [
@@ -63,21 +74,20 @@ class get_rubric extends external_api {
                 'criteria' => [],
                 'options' => self::get_default_options(),
                 'maxscore' => 0,
+                'gradingmethod' => 'fivedays',
                 'success' => false,
-                'message' => 'Rubric is set as grading method but no rubric is defined',
+                'message' => 'FiveDays is set as grading method but no rubric is defined',
             ];
         }
 
         $definition = $controller->get_definition();
-
-        
-        $criteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
+        $criteria = $DB->get_records('gradingform_fivedays_criteria', ['definitionid' => $definition->id], 'sortorder ASC');
 
         $criteriaresult = [];
         $maxscore = 0;
 
         foreach ($criteria as $criterion) {
-            $levels = $DB->get_records('gradingform_rubric_levels', ['criterionid' => $criterion->id], 'score ASC');
+            $levels = $DB->get_records('gradingform_fivedays_levels', ['criterionid' => $criterion->id], 'score ASC');
 
             $levelsresult = [];
             $criterionmaxscore = 0;
@@ -102,7 +112,6 @@ class get_rubric extends external_api {
             $maxscore += $criterionmaxscore;
         }
 
-        
         $options = json_decode($definition->options ?? '{}', true) ?: [];
         $optionsresult = array_merge(self::get_default_options(), $options);
 
@@ -114,8 +123,9 @@ class get_rubric extends external_api {
             'criteria' => $criteriaresult,
             'options' => $optionsresult,
             'maxscore' => (float)$maxscore,
+            'gradingmethod' => 'fivedays',
             'success' => true,
-            'message' => 'Rubric retrieved successfully',
+            'message' => 'FiveDays rubric retrieved successfully',
         ];
     }
 
@@ -127,8 +137,11 @@ class get_rubric extends external_api {
             'showdescriptionteacher' => 1,
             'showscoreteacher' => 1,
             'showscorestudent' => 1,
+            'showrangeteacher' => 1,
+            'showrangestudent' => 1,
             'enableremarks' => 1,
             'showremarksstudent' => 1,
+            'alwaysshowdefinition' => 1,
         ];
     }
 
@@ -159,10 +172,14 @@ class get_rubric extends external_api {
                 'showdescriptionteacher' => new external_value(PARAM_INT, 'Show description to teacher'),
                 'showscoreteacher' => new external_value(PARAM_INT, 'Show score to teacher'),
                 'showscorestudent' => new external_value(PARAM_INT, 'Show score to student'),
+                'showrangeteacher' => new external_value(PARAM_INT, 'Show range to teacher'),
+                'showrangestudent' => new external_value(PARAM_INT, 'Show range to student'),
                 'enableremarks' => new external_value(PARAM_INT, 'Enable remarks'),
                 'showremarksstudent' => new external_value(PARAM_INT, 'Show remarks to student'),
+                'alwaysshowdefinition' => new external_value(PARAM_INT, 'Always show definition'),
             ]),
             'maxscore' => new external_value(PARAM_FLOAT, 'Maximum possible score'),
+            'gradingmethod' => new external_value(PARAM_TEXT, 'Current grading method (simple, fivedays, or other)'),
             'success' => new external_value(PARAM_BOOL, 'Success status'),
             'message' => new external_value(PARAM_TEXT, 'Response message'),
         ]);

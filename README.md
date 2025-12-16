@@ -2,7 +2,7 @@
 
 REST API endpoints for programmatic Moodle course content management.
 
-**Version:** 5.0 | **Requirements:** Moodle 5.0+ | **Developed for:** Limkokwing University
+**Version:** 5.1 | **Requirements:** Moodle 5.0+, gradingform_fivedays plugin | **Developed for:** Limkokwing University
 
 > **Important Moodle 5.0 Change:** Question categories are now created in the course's system question bank (`mod_qbank`) using module context, not course context. This is handled automatically by the plugin.
 
@@ -16,7 +16,7 @@ REST API endpoints for programmatic Moodle course content management.
 - **Files** (3): create, update, delete
 - **URLs** (3): create, update, delete
 - **Books** (6): create, update, delete, add/update chapters, get
-- **Rubrics** (7): create, get, update, delete, copy, fill (grade), get filling
+- **Rubrics** (7): create, get, update, delete, copy, fill (grade), get filling - **uses FiveDays grading form**
 - **BigBlueButton** (3): create, update, delete
 - **Forums** (2): create, delete
 - **Quizzes** (7): create, update, delete, get, add/remove/reorder questions
@@ -24,14 +24,19 @@ REST API endpoints for programmatic Moodle course content management.
 - **Question Categories** (2): get/create, list
 - **Questions** (7): create multichoice/truefalse/shortanswer/essay/numerical, get, delete
 
+## Dependencies
+
+This plugin requires the **gradingform_fivedays** plugin to be installed for rubric functionality. Install it from `moodle-gradingform_fivedays` before installing this plugin.
+
 ## Quick Setup
 
-1. Copy plugin to `local/activity_utils`
-2. Run Moodle upgrade via **Site Administration > Notifications**
-3. Enable web services: **Site Administration > Advanced features**
-4. Enable REST protocol: **Site Administration > Plugins > Web services > Manage protocols**
-5. Create external service with plugin functions
-6. Generate API token
+1. Install `gradingform_fivedays` plugin to `grade/grading/form/fivedays`
+2. Copy this plugin to `local/activity_utils`
+3. Run Moodle upgrade via **Site Administration > Notifications**
+4. Enable web services: **Site Administration > Advanced features**
+5. Enable REST protocol: **Site Administration > Plugins > Web services > Manage protocols**
+6. Create external service with plugin functions
+7. Generate API token
 
 ## API Usage
 
@@ -119,6 +124,8 @@ Parameters: `cmid` (course module ID)
 | `idnumber`                 | string | No       | Gradebook ID        |
 | `grademax`                 | int    | No       | Default: 100        |
 | `introfiles`               | string | No       | JSON array (base64) |
+
+**Note:** By default, assignments use simple direct grading. Add a rubric using `create_rubric` to switch to FiveDays grading.
 
 ### Update Assignment
 
@@ -275,13 +282,24 @@ Parameters: `cmid` (course module ID)
 
 ---
 
-## Rubrics
+## Rubrics (FiveDays Grading Form)
 
-Simplified rubric management (cleaner than `core_grading_save_definitions`).
+Advanced rubric management using the FiveDays grading form plugin. This provides flexible scoring with score ranges and custom scores.
+
+### Grading Method Behavior
+
+| Action | Grading Method |
+|--------|---------------|
+| New assignment created | Simple direct grading (default) |
+| `create_rubric` called | FiveDays advanced grading |
+| `delete_rubric` called | Simple direct grading (reverts) |
+| `copy_rubric` to target | Target uses FiveDays grading |
 
 ### Create Rubric
 
 `local_activity_utils_create_rubric`
+
+Creates a FiveDays rubric for an assignment, switching it from simple direct grading to FiveDays advanced grading.
 
 | Parameter     | Type   | Required |
 | ------------- | ------ | -------- |
@@ -292,14 +310,121 @@ Simplified rubric management (cleaner than `core_grading_save_definitions`).
 | `options`     | object | No       |
 
 **Criterion:** `description` (required), `sortorder`, `levels` (required)
+
 **Level:** `score` (required), `definition` (required)
-**Options:** `sortlevelsasc`, `lockzeropoints`, `showdescriptionstudent`, `showdescriptionteacher`, `showscoreteacher`, `showscorestudent`, `enableremarks`, `showremarksstudent`
+
+**Options:**
+- `sortlevelsasc` - Sort levels ascending (0 or 1, default: 1)
+- `lockzeropoints` - Lock zero points (0 or 1, default: 1)
+- `showdescriptionstudent` - Show description to student (default: 1)
+- `showdescriptionteacher` - Show description to teacher (default: 1)
+- `showscoreteacher` - Show score to teacher (default: 1)
+- `showscorestudent` - Show score to student (default: 1)
+- `showrangeteacher` - Show score ranges to teacher (default: 1)
+- `showrangestudent` - Show score ranges to student (default: 1)
+- `enableremarks` - Enable criterion remarks (default: 1)
+- `showremarksstudent` - Show remarks to student (default: 1)
+- `alwaysshowdefinition` - Always show rubric definition (default: 1)
+
+**Example:**
+
+```json
+{
+  "cmid": 123,
+  "name": "Essay Rubric",
+  "description": "Rubric for grading essays",
+  "criteria": [
+    {
+      "description": "Content Quality",
+      "sortorder": 1,
+      "levels": [
+        { "score": 0, "definition": "Poor - Missing key content" },
+        { "score": 5, "definition": "Fair - Some content present" },
+        { "score": 10, "definition": "Good - Most content covered" },
+        { "score": 15, "definition": "Excellent - Comprehensive content" }
+      ]
+    },
+    {
+      "description": "Writing Style",
+      "sortorder": 2,
+      "levels": [
+        { "score": 0, "definition": "Poor grammar and structure" },
+        { "score": 5, "definition": "Acceptable writing" },
+        { "score": 10, "definition": "Well-written and clear" }
+      ]
+    }
+  ],
+  "options": {
+    "showrangeteacher": 1,
+    "showrangestudent": 1,
+    "enableremarks": 1
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "definitionid": 456,
+  "success": true,
+  "message": "FiveDays rubric created successfully. Assignment now uses FiveDays grading."
+}
+```
 
 ### Get Rubric
 
 `local_activity_utils_get_rubric`
 
+Returns the rubric definition and current grading method for an assignment.
+
 Parameters: `cmid`
+
+**Response:**
+
+```json
+{
+  "definitionid": 456,
+  "name": "Essay Rubric",
+  "description": "Rubric for grading essays",
+  "status": 20,
+  "criteria": [
+    {
+      "id": 1,
+      "description": "Content Quality",
+      "sortorder": 1,
+      "levels": [
+        { "id": 1, "score": 0, "definition": "Poor" },
+        { "id": 2, "score": 5, "definition": "Fair" },
+        { "id": 3, "score": 10, "definition": "Good" },
+        { "id": 4, "score": 15, "definition": "Excellent" }
+      ]
+    }
+  ],
+  "options": {
+    "sortlevelsasc": 1,
+    "lockzeropoints": 1,
+    "showdescriptionstudent": 1,
+    "showdescriptionteacher": 1,
+    "showscoreteacher": 1,
+    "showscorestudent": 1,
+    "showrangeteacher": 1,
+    "showrangestudent": 1,
+    "enableremarks": 1,
+    "showremarksstudent": 1,
+    "alwaysshowdefinition": 1
+  },
+  "maxscore": 25.0,
+  "gradingmethod": "fivedays",
+  "success": true,
+  "message": "FiveDays rubric retrieved successfully"
+}
+```
+
+**Grading Method Values:**
+- `simple` - Assignment uses simple direct grading (no rubric)
+- `fivedays` - Assignment uses FiveDays rubric
+- Other values indicate different grading plugins
 
 ### Update Rubric
 
@@ -307,23 +432,48 @@ Parameters: `cmid`
 
 Parameters: `cmid` (required), `name`, `description`, `criteria`, `options`
 
+**Note:** If `criteria` is provided, it replaces all existing criteria. If not provided, existing criteria are preserved.
+
 ### Delete Rubric
 
 `local_activity_utils_delete_rubric`
 
+Deletes the FiveDays rubric and reverts the assignment to simple direct grading.
+
 Parameters: `cmid`
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "FiveDays rubric deleted successfully, assignment now uses simple direct grading"
+}
+```
 
 ### Copy Rubric
 
 `local_activity_utils_copy_rubric`
 
+Copies a FiveDays rubric from one assignment to another. The target assignment will switch to FiveDays grading.
+
 Parameters: `sourcecmid`, `targetcmid`
+
+**Response:**
+
+```json
+{
+  "definitionid": 789,
+  "success": true,
+  "message": "FiveDays rubric copied successfully. Target assignment now uses FiveDays grading."
+}
+```
 
 ### Fill Rubric (Grade Student)
 
 `local_activity_utils_fill_rubric`
 
-Grade a student's assignment submission by selecting levels for each rubric criterion.
+Grade a student's assignment submission using the FiveDays rubric. Supports both level selection and custom scores.
 
 | Parameter       | Type   | Required | Description                         |
 | --------------- | ------ | -------- | ----------------------------------- |
@@ -332,9 +482,13 @@ Grade a student's assignment submission by selecting levels for each rubric crit
 | `fillings`      | array  | Yes      | Array of rubric fillings            |
 | `overallremark` | string | No       | Overall feedback/remark             |
 
-**Filling object:** `criterionid` (required), `levelid` (required), `remark` (optional feedback for the criterion)
+**Filling object:**
+- `criterionid` (int, required): Criterion ID
+- `levelid` (int, optional): Level ID to select
+- `score` (float, optional): Custom score (overrides levelid if provided)
+- `remark` (string, optional): Feedback for this criterion
 
-**Example:**
+**Example with level selection:**
 
 ```json
 {
@@ -344,15 +498,37 @@ Grade a student's assignment submission by selecting levels for each rubric crit
     {
       "criterionid": 1,
       "levelid": 3,
-      "remark": "Good work on this criterion"
+      "remark": "Good content coverage"
     },
     {
       "criterionid": 2,
-      "levelid": 5,
-      "remark": "Excellent performance"
+      "levelid": 2,
+      "remark": "Writing could be improved"
     }
   ],
-  "overallremark": "Overall very good submission"
+  "overallremark": "Overall good submission"
+}
+```
+
+**Example with custom scores:**
+
+```json
+{
+  "cmid": 123,
+  "userid": 456,
+  "fillings": [
+    {
+      "criterionid": 1,
+      "score": 12.5,
+      "remark": "Between Good and Excellent"
+    },
+    {
+      "criterionid": 2,
+      "score": 7.0,
+      "remark": "Above acceptable level"
+    }
+  ],
+  "overallremark": "Custom scores used for precise grading"
 }
 ```
 
@@ -363,7 +539,7 @@ Grade a student's assignment submission by selecting levels for each rubric crit
   "instanceid": 789,
   "grade": 85.5,
   "success": true,
-  "message": "Rubric filled and grade saved successfully"
+  "message": "FiveDays rubric filled and grade saved successfully"
 }
 ```
 
@@ -371,7 +547,7 @@ Grade a student's assignment submission by selecting levels for each rubric crit
 
 `local_activity_utils_get_rubric_filling`
 
-Retrieve how a teacher graded a student using the rubric.
+Retrieve how a teacher graded a student using the FiveDays rubric.
 
 | Parameter | Type | Required |
 | --------- | ---- | -------- |
@@ -391,20 +567,31 @@ Retrieve how a teacher graded a student using the rubric.
   "fillings": [
     {
       "criterionid": 1,
-      "criteriondescription": "Research Quality",
+      "criteriondescription": "Content Quality",
       "levelid": 3,
       "level": {
         "id": 3,
-        "score": 8.0,
-        "definition": "Good research with minor gaps"
+        "score": 10.0,
+        "definition": "Good - Most content covered"
       },
-      "remark": "Good work on this criterion"
+      "customscore": null,
+      "remark": "Good content coverage"
+    },
+    {
+      "criterionid": 2,
+      "criteriondescription": "Writing Style",
+      "levelid": 0,
+      "level": null,
+      "customscore": 7.0,
+      "remark": "Above acceptable level"
     }
   ],
   "success": true,
-  "message": "Rubric filling retrieved successfully"
+  "message": "FiveDays rubric filling retrieved successfully"
 }
 ```
+
+**Note:** When `customscore` is set, it overrides the level score. When `levelid` is 0 and `customscore` is set, a custom score was entered without selecting a level.
 
 ---
 
@@ -1258,7 +1445,7 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "courseid=2&name=General Discussion&type=general&section=0"
 ```
 
-### Create Rubric
+### Create FiveDays Rubric
 
 ```bash
 curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
@@ -1266,6 +1453,16 @@ curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
   -d "cmid=123&name=Essay Rubric" \
   -d "criteria[0][description]=Content&criteria[0][levels][0][score]=0&criteria[0][levels][0][definition]=Poor" \
   -d "criteria[0][levels][1][score]=10&criteria[0][levels][1][definition]=Excellent"
+```
+
+### Grade with Rubric
+
+```bash
+curl -X POST "https://yourmoodle.com/webservice/rest/server.php" \
+  -d "wstoken=TOKEN&wsfunction=local_activity_utils_fill_rubric&moodlewsrestformat=json" \
+  -d "cmid=123&userid=456" \
+  -d "fillings[0][criterionid]=1&fillings[0][levelid]=3&fillings[0][remark]=Good work" \
+  -d "overallremark=Well done!"
 ```
 
 ### Create Quiz
@@ -1350,7 +1547,9 @@ All capabilities granted to **editing teachers** and **managers** by default.
 | `local/activity_utils:updatebook`             | Update books                      |
 | `local/activity_utils:deletebook`             | Delete books                      |
 | `local/activity_utils:readbook`               | Read books (includes students)    |
-| `local/activity_utils:managerubric`           | Manage rubrics                    |
+| `local/activity_utils:managerubric`           | Manage FiveDays rubrics           |
+| `local/activity_utils:graderubric`            | Grade using FiveDays rubrics      |
+| `local/activity_utils:viewrubricfilling`      | View rubric gradings              |
 | `local/activity_utils:createbigbluebuttonbn`  | Create BigBlueButton              |
 | `local/activity_utils:updatebigbluebuttonbn`  | Update BigBlueButton              |
 | `local/activity_utils:deletebigbluebuttonbn`  | Delete BigBlueButton              |
@@ -1365,6 +1564,8 @@ All capabilities granted to **editing teachers** and **managers** by default.
 | `local/activity_utils:createquestion`         | Create questions                  |
 | `local/activity_utils:viewquestions`          | View questions (teachers+)        |
 | `local/activity_utils:deletequestion`         | Delete questions                  |
+| `local/activity_utils:viewquizattempts`       | View quiz attempts                |
+| `local/activity_utils:gradequizattempts`      | Grade quiz attempts               |
 
 ---
 
@@ -1374,6 +1575,8 @@ All capabilities granted to **editing teachers** and **managers** by default.
 - **File uploads:** Must be base64-encoded
 - **Book chapters:** `subchapter=0` for main, `subchapter=1` for nested under previous main
 - **BigBlueButton:** Requires mod_bigbluebuttonbn to be installed and enabled
+- **Rubrics:** Requires gradingform_fivedays plugin to be installed
+- **Default grading:** Assignments use simple direct grading until a rubric is added
 
 ---
 

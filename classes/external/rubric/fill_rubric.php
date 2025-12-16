@@ -7,7 +7,6 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_value;
 
-
 class fill_rubric extends external_api {
 
     public static function execute_parameters(): external_function_parameters {
@@ -18,9 +17,10 @@ class fill_rubric extends external_api {
                 new external_single_structure([
                     'criterionid' => new external_value(PARAM_INT, 'Criterion ID'),
                     'levelid' => new external_value(PARAM_INT, 'Level ID to select for this criterion', VALUE_DEFAULT, 0),
+                    'score' => new external_value(PARAM_FLOAT, 'Custom score (optional, overrides levelid)', VALUE_DEFAULT, null),
                     'remark' => new external_value(PARAM_RAW, 'Remark/feedback for this criterion', VALUE_DEFAULT, ''),
                 ]),
-                'Rubric fillings (selected levels and remarks for each criterion)'
+                'Rubric fillings (selected levels/scores and remarks for each criterion)'
             ),
             'overallremark' => new external_value(PARAM_RAW, 'Overall feedback/remark for the grading', VALUE_DEFAULT, ''),
         ]);
@@ -35,7 +35,6 @@ class fill_rubric extends external_api {
         global $CFG, $DB, $USER;
 
         require_once($CFG->dirroot . '/grade/grading/lib.php');
-        require_once($CFG->dirroot . '/grade/grading/form/rubric/lib.php');
         require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -45,7 +44,6 @@ class fill_rubric extends external_api {
             'overallremark' => $overallremark,
         ]);
 
-        
         $cm = get_coursemodule_from_id('assign', $params['cmid'], 0, false, MUST_EXIST);
         $context = \context_module::instance($cm->id);
 
@@ -53,7 +51,6 @@ class fill_rubric extends external_api {
         require_capability('local/activity_utils:graderubric', $context);
         require_capability('mod/assign:grade', $context);
 
-        
         $user = $DB->get_record('user', ['id' => $params['userid']], '*', MUST_EXIST);
         if (!is_enrolled($context, $user)) {
             return [
@@ -64,35 +61,30 @@ class fill_rubric extends external_api {
             ];
         }
 
-        
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
         $activemethod = $gradingmanager->get_active_method();
 
-        if ($activemethod !== 'rubric') {
+        if ($activemethod !== 'fivedays') {
             return [
                 'instanceid' => 0,
                 'grade' => 0,
                 'success' => false,
-                'message' => 'Assignment does not use rubric grading',
+                'message' => 'Assignment does not use FiveDays rubric grading',
             ];
         }
 
-        
-        $controller = $gradingmanager->get_controller('rubric');
+        $controller = $gradingmanager->get_controller('fivedays');
 
         if (!$controller->is_form_defined()) {
             return [
                 'instanceid' => 0,
                 'grade' => 0,
                 'success' => false,
-                'message' => 'Rubric is not defined for this assignment',
+                'message' => 'FiveDays rubric is not defined for this assignment',
             ];
         }
 
-        
         $assignment = new \assign($context, $cm, $cm->course);
-
-        
         $submission = $assignment->get_user_submission($params['userid'], false);
 
         if (!$submission) {
@@ -104,14 +96,12 @@ class fill_rubric extends external_api {
             ];
         }
 
-        
         $grade = $assignment->get_user_grade($params['userid'], true);
         $instance = $controller->get_or_create_instance($grade->id, $USER->id, $grade->id);
 
-        
         $definition = $controller->get_definition();
-        $criteria = $DB->get_records('gradingform_rubric_criteria', ['definitionid' => $definition->id], '', 'id');
-        
+        $criteria = $DB->get_records('gradingform_fivedays_criteria', ['definitionid' => $definition->id], '', 'id');
+
         $validfillings = [];
         foreach ($params['fillings'] as $filling) {
             if (!isset($criteria[$filling['criterionid']])) {
@@ -123,9 +113,8 @@ class fill_rubric extends external_api {
                 ];
             }
 
-            if ($filling['levelid'] > 0) {
-                
-                $level = $DB->get_record('gradingform_rubric_levels', [
+            if (!empty($filling['levelid'])) {
+                $level = $DB->get_record('gradingform_fivedays_levels', [
                     'id' => $filling['levelid'],
                     'criterionid' => $filling['criterionid']
                 ]);
@@ -141,40 +130,33 @@ class fill_rubric extends external_api {
             }
 
             $validfillings[$filling['criterionid']] = [
-                'levelid' => $filling['levelid'],
+                'levelid' => $filling['levelid'] ?? null,
+                'score' => $filling['score'] ?? null,
                 'remark' => $filling['remark'] ?? '',
             ];
         }
 
-        
         $instancedata = [
-            'instanceid' => $instance->get_id(),
-            'advancedgrading' => [
-                'criteria' => []
-            ]
+            'criteria' => []
         ];
 
-        
         foreach ($validfillings as $criterionid => $filling) {
-            $instancedata['advancedgrading']['criteria'][$criterionid] = [
+            $instancedata['criteria'][$criterionid] = [
                 'levelid' => $filling['levelid'],
+                'score' => $filling['score'],
                 'remark' => $filling['remark'],
             ];
         }
 
-        
         $instance->update($instancedata);
 
-        
         $gradevalue = $instance->get_grade();
 
-        
         $gradedata = new \stdClass();
         $gradedata->userid = $params['userid'];
         $gradedata->grade = $gradevalue;
         $gradedata->attemptnumber = $submission->attemptnumber;
 
-        
         if (!empty($params['overallremark'])) {
             $gradedata->assignfeedbackcomments_editor = [
                 'text' => $params['overallremark'],
@@ -182,14 +164,13 @@ class fill_rubric extends external_api {
             ];
         }
 
-        
         $assignment->save_grade($params['userid'], $gradedata);
 
         return [
             'instanceid' => $instance->get_id(),
             'grade' => (float)$gradevalue,
             'success' => true,
-            'message' => 'Rubric filled and grade saved successfully',
+            'message' => 'FiveDays rubric filled and grade saved successfully',
         ];
     }
 
