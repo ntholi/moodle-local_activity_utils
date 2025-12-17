@@ -115,11 +115,17 @@ class get_rubric_filling extends external_api {
         foreach ($fillingsdb as $filling) {
             $criterion = $DB->get_record('gradingform_fivedays_criteria', ['id' => $filling->criterionid]);
 
-            $leveldata = null;
+            $fillingdata = [
+                'criterionid' => (int)$filling->criterionid,
+                'criteriondescription' => $criterion ? $criterion->description : '',
+                'levelid' => (int)($filling->levelid ?? 0),
+                'remark' => $filling->remark ?? '',
+            ];
+
             if (!empty($filling->levelid)) {
                 $level = $DB->get_record('gradingform_fivedays_levels', ['id' => $filling->levelid]);
                 if ($level) {
-                    $leveldata = [
+                    $fillingdata['level'] = [
                         'id' => (int)$level->id,
                         'score' => (float)$level->score,
                         'definition' => $level->definition,
@@ -127,14 +133,11 @@ class get_rubric_filling extends external_api {
                 }
             }
 
-            $fillings[] = [
-                'criterionid' => (int)$filling->criterionid,
-                'criteriondescription' => $criterion ? $criterion->description : '',
-                'levelid' => (int)($filling->levelid ?? 0),
-                'level' => $leveldata,
-                'customscore' => $filling->score !== null ? (float)$filling->score : null,
-                'remark' => $filling->remark ?? '',
-            ];
+            if ($filling->score !== null) {
+                $fillingdata['customscore'] = (float)$filling->score;
+            }
+
+            $fillings[] = $fillingdata;
         }
 
         return [
