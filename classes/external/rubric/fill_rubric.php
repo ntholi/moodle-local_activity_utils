@@ -97,8 +97,6 @@ class fill_rubric extends external_api {
         }
 
         $grade = $assignment->get_user_grade($params['userid'], true);
-        $instance = $controller->get_or_create_instance($grade->id, $USER->id, $grade->id);
-
         $definition = $controller->get_definition();
         $criteria = $DB->get_records('gradingform_fivedays_criteria', ['definitionid' => $definition->id], '', 'id');
 
@@ -129,45 +127,90 @@ class fill_rubric extends external_api {
                 }
             }
 
+            $levelid = !empty($filling['levelid']) ? $filling['levelid'] : null;
+            $score = $filling['score'] ?? null;
+
+            if ($levelid && $score === null) {
+                $level = $DB->get_record('gradingform_fivedays_levels', ['id' => $levelid]);
+                if ($level) {
+                    $score = (float) $level->score;
+                }
+            }
+
             $validfillings[$filling['criterionid']] = [
-                'levelid' => $filling['levelid'] ?? null,
-                'score' => $filling['score'] ?? null,
+                'levelid' => $levelid,
+                'score' => $score,
                 'remark' => $filling['remark'] ?? '',
             ];
         }
 
-        $instancedata = [
-            'criteria' => []
-        ];
+        $existinginstance = $DB->get_record_sql(
+            "SELECT gi.* FROM {grading_instances} gi
+             WHERE gi.definitionid = :definitionid
+             AND gi.itemid = :itemid
+             ORDER BY gi.timemodified DESC
+             LIMIT 1",
+            ['definitionid' => $definition->id, 'itemid' => $grade->id]
+        );
 
-        foreach ($validfillings as $criterionid => $filling) {
-            $instancedata['criteria'][$criterionid] = [
-                'levelid' => $filling['levelid'],
-                'score' => $filling['score'],
-                'remark' => $filling['remark'],
-            ];
+        if ($existinginstance) {
+            $instance = $controller->get_or_create_instance($existinginstance->id, $USER->id, $grade->id);
+        } else {
+            $instance = $controller->get_or_create_instance(0, $USER->id, $grade->id);
         }
 
-        $instance->update($instancedata);
+        $instanceid = $instance->get_id();
+
+        foreach ($validfillings as $criterionid => $filling) {
+            $existingfilling = $DB->get_record('gradingform_fivedays_fillings', [
+                'instanceid' => $instanceid,
+                'criterionid' => $criterionid,
+            ]);
+
+            if ($existingfilling) {
+                $DB->update_record('gradingform_fivedays_fillings', [
+                    'id' => $existingfilling->id,
+                    'levelid' => $filling['levelid'],
+                    'score' => $filling['score'],
+                    'remark' => $filling['remark'],
+                    'remarkformat' => FORMAT_HTML,
+                ]);
+            } else {
+                $DB->insert_record('gradingform_fivedays_fillings', [
+                    'instanceid' => $instanceid,
+                    'criterionid' => $criterionid,
+                    'levelid' => $filling['levelid'],
+                    'score' => $filling['score'],
+                    'remark' => $filling['remark'],
+                    'remarkformat' => FORMAT_HTML,
+                ]);
+            }
+        }
+
+        $DB->set_field('grading_instances', 'timemodified', time(), ['id' => $instanceid]);
 
         $gradevalue = $instance->get_grade();
 
-        $gradedata = new \stdClass();
-        $gradedata->userid = $params['userid'];
-        $gradedata->grade = $gradevalue;
-        $gradedata->attemptnumber = $submission->attemptnumber;
+        $grade->grade = $gradevalue;
+        $grade->grader = $USER->id;
+        $grade->timemodified = time();
+        $DB->update_record('assign_grades', $grade);
 
-        if (!empty($params['overallremark'])) {
-            $gradedata->assignfeedbackcomments_editor = [
-                'text' => $params['overallremark'],
-                'format' => FORMAT_HTML,
-            ];
+        $assign = $DB->get_record('assign', ['id' => $cm->instance], '*', MUST_EXIST);
+        $gradeitem = \grade_item::fetch([
+            'itemtype' => 'mod',
+            'itemmodule' => 'assign',
+            'iteminstance' => $assign->id,
+            'courseid' => $cm->course,
+            'itemnumber' => 0,
+        ]);
+
+        if ($gradeitem) {
+            $gradeitem->update_final_grade($params['userid'], $gradevalue, 'gradingform', null, FORMAT_MOODLE, $USER->id);
         }
 
-        $assignment->save_grade($params['userid'], $gradedata);
-
         return [
-            'instanceid' => $instance->get_id(),
+            'instanceid' => $instanceid,
             'grade' => (float)$gradevalue,
             'success' => true,
             'message' => 'FiveDays rubric filled and grade saved successfully',
