@@ -106,7 +106,9 @@ class get_rubric_filling extends external_api {
 
         $instance = reset($instances);
 
-        $grader = $DB->get_record('user', ['id' => $instance->raterid], 'id, firstname, lastname');
+        // Fetch all user name fields required by fullname() to avoid debugging warnings.
+        $grader = $DB->get_record('user', ['id' => $instance->raterid],
+            'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename');
         $gradername = $grader ? fullname($grader) : 'Unknown';
 
         $fillingsdb = $DB->get_records('gradingform_fivedays_fillings', ['instanceid' => $instance->id]);
@@ -140,12 +142,15 @@ class get_rubric_filling extends external_api {
             $fillings[] = $fillingdata;
         }
 
+        // Handle potentially missing timecreated field - use timemodified as fallback.
+        $timecreated = isset($instance->timecreated) ? (int)$instance->timecreated : (int)$instance->timemodified;
+
         return [
             'instanceid' => (int)$instance->id,
             'grade' => (float)$grade->grade,
             'grader' => $gradername,
             'graderid' => (int)$instance->raterid,
-            'timecreated' => (int)$instance->timecreated,
+            'timecreated' => $timecreated,
             'timemodified' => (int)$instance->timemodified,
             'fillings' => $fillings,
             'success' => true,
