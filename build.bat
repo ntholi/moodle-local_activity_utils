@@ -5,12 +5,13 @@ REM This creates an installable ZIP package
 setlocal
 
 REM Set variables
-set PLUGIN_NAME=local_activity_utils
+set PLUGIN_COMPONENT=local_activity_utils
+set PLUGIN_DIRNAME=activity_utils
 set BUILD_DIR=build
-set PACKAGE_DIR=%BUILD_DIR%\%PLUGIN_NAME%
-set OUTPUT_FILE=%BUILD_DIR%\%PLUGIN_NAME%.zip
+set PACKAGE_DIR=%BUILD_DIR%\%PLUGIN_DIRNAME%
+set OUTPUT_FILE=%BUILD_DIR%\%PLUGIN_COMPONENT%.zip
 
-echo Building %PLUGIN_NAME% plugin...
+echo Building %PLUGIN_COMPONENT% plugin...
 echo.
 
 REM Clean up previous build (clear entire build folder)
@@ -33,7 +34,9 @@ copy /Y README.md %PACKAGE_DIR%\
 
 REM Create ZIP archive using PowerShell
 echo Creating ZIP archive...
-powershell -Command "Compress-Archive -Path '%PACKAGE_DIR%\*' -DestinationPath '%OUTPUT_FILE%' -Force"
+pushd %BUILD_DIR%
+powershell -Command "Compress-Archive -Path '%PLUGIN_DIRNAME%' -DestinationPath '%PLUGIN_COMPONENT%.zip' -Force"
+popd
 
 REM Clean up temporary package directory
 echo Cleaning up...
