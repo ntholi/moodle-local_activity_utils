@@ -124,6 +124,7 @@ Parameters: `cmid` (course module ID)
 | `idnumber`                 | string | No       | Gradebook ID        |
 | `grademax`                 | int    | No       | Default: 100        |
 | `introfiles`               | string | No       | JSON array (base64) |
+| `visible`                  | int    | No       | Default: 1          |
 
 **Note:** By default, assignments use simple direct grading. Add a rubric using `create_rubric` to switch to FiveDays grading.
 

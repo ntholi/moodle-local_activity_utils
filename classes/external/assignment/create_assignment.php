@@ -21,6 +21,7 @@ class create_assignment extends external_api {
             'idnumber' => new external_value(PARAM_RAW, 'ID number for gradebook and external system reference', VALUE_DEFAULT, ''),
             'grademax' => new external_value(PARAM_INT, 'Maximum grade (can be negative to indicate use of a scale)', VALUE_DEFAULT, 100),
             'introfiles' => new external_value(PARAM_RAW, 'Additional files as JSON array', VALUE_DEFAULT, '[]'),
+            'visible' => new external_value(PARAM_INT, 'Module visibility (1=visible, 0=hidden)', VALUE_DEFAULT, 1),
         ]);
     }
 
@@ -34,7 +35,8 @@ class create_assignment extends external_api {
         int $section = 0,
         string $idnumber = '',
         int $grademax = 100,
-        string $introfiles = '[]'
+        string $introfiles = '[]',
+        int $visible = 1
     ): array {
         global $CFG, $DB, $USER;
 
@@ -53,6 +55,7 @@ class create_assignment extends external_api {
             'idnumber' => $idnumber,
             'grademax' => $grademax,
             'introfiles' => $introfiles,
+            'visible' => $visible,
         ]);
 
         $course = $DB->get_record('course', ['id' => $params['courseid']], '*', MUST_EXIST);
@@ -110,9 +113,9 @@ class create_assignment extends external_api {
         $cm->added = time();
         $cm->score = 0;
         $cm->indent = 0;
-        $cm->visible = 1;
+        $cm->visible = $params['visible'];
         $cm->visibleoncoursepage = 1;
-        $cm->visibleold = 1;
+        $cm->visibleold = $params['visible'];
         $cm->groupmode = 0;
         $cm->groupingid = 0;
         $cm->completion = 0;
@@ -129,7 +132,7 @@ class create_assignment extends external_api {
         $cmid = $DB->insert_record('course_modules', $cm);
 
         
-        helper::add_module_to_section($params['courseid'], $params['section'], $cmid, 1);
+        helper::add_module_to_section($params['courseid'], $params['section'], $cmid, $params['visible']);
 
         rebuild_course_cache($params['courseid'], true);
 
