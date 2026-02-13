@@ -132,7 +132,7 @@ Parameters: `cmid` (course module ID)
 
 `local_activity_utils_update_assignment`
 
-Parameters: `assignmentid` (required), `name`, `intro`, `activity`, `allowsubmissionsfromdate`, `duedate`, `cutoffdate`, `idnumber`, `grademax`, `visible`
+Parameters: `assignmentid` (required), `name`, `intro`, `activity`, `allowsubmissionsfromdate`, `duedate`, `cutoffdate`, `idnumber`, `grademax`, `introfiles` (JSON array base64), `visible`
 
 ### Delete Assignment
 

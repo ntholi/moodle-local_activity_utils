@@ -20,6 +20,7 @@ class update_assignment extends external_api {
             'cutoffdate' => new external_value(PARAM_INT, 'Cut-off date timestamp', VALUE_DEFAULT, null),
             'idnumber' => new external_value(PARAM_RAW, 'ID number for gradebook and external system reference', VALUE_DEFAULT, null),
             'grademax' => new external_value(PARAM_INT, 'Maximum grade', VALUE_DEFAULT, null),
+            'introfiles' => new external_value(PARAM_RAW, 'Additional files as JSON array', VALUE_DEFAULT, null),
             'visible' => new external_value(PARAM_INT, 'Visibility (1=visible, 0=hidden)', VALUE_DEFAULT, null),
         ]);
     }
@@ -34,9 +35,10 @@ class update_assignment extends external_api {
         ?int $cutoffdate = null,
         ?string $idnumber = null,
         ?int $grademax = null,
+        ?string $introfiles = null,
         ?int $visible = null
     ): array {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER;
 
         require_once($CFG->dirroot . '/course/lib.php');
         require_once($CFG->dirroot . '/mod/assign/lib.php');
@@ -52,6 +54,7 @@ class update_assignment extends external_api {
             'cutoffdate' => $cutoffdate,
             'idnumber' => $idnumber,
             'grademax' => $grademax,
+            'introfiles' => $introfiles,
             'visible' => $visible,
         ]);
 
@@ -122,6 +125,61 @@ class update_assignment extends external_api {
                 'grademax' => $assign->grade,
                 'grademin' => 0
             ]);
+        }
+
+        if ($params['introfiles'] !== null && $params['introfiles'] !== '') {
+            $files = json_decode($params['introfiles'], true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($files)) {
+                throw new \invalid_parameter_exception('Invalid introfiles JSON payload');
+            }
+
+            if (!empty($files)) {
+                $fs = get_file_storage();
+                $modulecontext = \context_module::instance($cm->id);
+
+                foreach ($files as $file) {
+                    if (empty($file['filename']) || !isset($file['content'])) {
+                        continue;
+                    }
+
+                    $filename = clean_param($file['filename'], PARAM_FILE);
+                    if (empty($filename)) {
+                        continue;
+                    }
+
+                    $filepath = '/';
+                    $existingfile = $fs->get_file(
+                        $modulecontext->id,
+                        'mod_assign',
+                        'introattachment',
+                        0,
+                        $filepath,
+                        $filename
+                    );
+                    if ($existingfile) {
+                        $existingfile->delete();
+                    }
+
+                    $filerecord = [
+                        'contextid' => $modulecontext->id,
+                        'component' => 'mod_assign',
+                        'filearea' => 'introattachment',
+                        'itemid' => 0,
+                        'filepath' => $filepath,
+                        'filename' => $filename,
+                        'userid' => $USER->id,
+                        'timecreated' => time(),
+                        'timemodified' => time(),
+                    ];
+
+                    $filecontent = base64_decode($file['content'], true);
+                    if ($filecontent === false) {
+                        $filecontent = $file['content'];
+                    }
+
+                    $fs->create_file_from_string($filerecord, $filecontent);
+                }
+            }
         }
 
         rebuild_course_cache($course->id, true);
