@@ -1,3 +1,5 @@
+> **Moved.** This plugin now lives in [ntholi/fivedays](https://github.com/ntholi/fivedays) (`local_fivedays/`). This repo is archived.
+
 # Activity Utils
 
 REST API endpoints for programmatic Moodle course content management.
